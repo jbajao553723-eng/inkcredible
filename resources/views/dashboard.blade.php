@@ -2,611 +2,233 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Inkcredible Dashboard</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard | Inkcredible</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+@include('partials.client-portal-styles')
+@include('partials.motion-styles')
 
-*{
-    font-family:'Space Grotesk',sans-serif;
+.overview-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(320px, .65fr); gap: 22px; margin-bottom: 22px; }
+.balance-card { position: relative; min-height: 225px; padding: 28px; overflow: hidden; color: #fff; background: linear-gradient(135deg, #312e81, #4f46e5 58%, #7c3aed); border-radius: 16px; box-shadow: 0 18px 35px rgba(79, 70, 229, .2); }
+.balance-card::after { position: absolute; right: -50px; bottom: -90px; width: 230px; height: 230px; pointer-events: none; border: 42px solid rgba(255, 255, 255, .07); border-radius: 50%; content: ''; }
+.balance-card > * { position: relative; z-index: 1; }
+.balance-label { color: #c7d2fe; font-size: 13px; font-weight: 500; }
+.balance-value { margin-top: 10px; overflow-wrap: anywhere; font-size: clamp(28px, 4vw, 38px); font-weight: 700; letter-spacing: -.04em; }
+.balance-meta { display: flex; gap: 36px; margin-top: 32px; }
+.balance-meta-label { color: #c7d2fe; font-size: 11px; }
+.balance-meta-value { margin-top: 5px; font-size: 14px; font-weight: 600; }
+.balance-actions { position: relative; z-index: 1; display: flex; gap: 10px; margin-top: 24px; }
+.balance-actions .button { border-color: rgba(255, 255, 255, .22); }
+.button-white { color: #3730a3; background: #fff; }
+.button-glass { color: #fff; background: rgba(255, 255, 255, .1); }
+.button-glass:hover { background: rgba(255, 255, 255, .18); }
+.next-card { padding: 24px; }
+.next-icon { display: grid; place-items: center; width: 44px; height: 44px; color: var(--primary); background: #eef2ff; border-radius: 12px; }
+.next-icon svg { width: 22px; height: 22px; }
+.next-label { margin-top: 22px; color: var(--muted); font-size: 13px; }
+.next-date { margin-top: 7px; font-size: 24px; font-weight: 700; letter-spacing: -.03em; }
+.next-note { margin-top: 7px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.section-stack { display: grid; gap: 22px; }
+.progress-track { width: 150px; height: 7px; overflow: hidden; background: #eaecf0; border-radius: 999px; }
+.progress-bar { height: 100%; background: linear-gradient(90deg, #6366f1, #8b5cf6); border-radius: inherit; }
+.progress-value { margin-top: 6px; color: var(--muted); font-size: 11px; }
+.panel-link { color: var(--primary); font-size: 12px; font-weight: 600; text-decoration: none; }
+.panel-link:hover { color: var(--primary-dark); }
+
+@media (max-width: 980px) { .overview-grid { grid-template-columns: 1fr; } }
+@media (max-width: 560px) {
+    .balance-value { font-size: 31px; }
+    .balance-meta { gap: 22px; flex-wrap: wrap; }
+    .balance-actions { align-items: stretch; flex-direction: column; }
 }
-
-body{
-    background:#f6f7fb;
-    margin:0;
-}
-
-/* SIDEBAR */
-
-.sidebar{
-    position:fixed;
-    top:0;
-    left:0;
-    width:240px;
-    height:100vh;
-    background:#111827;
-    color:white;
-    padding:20px;
-}
-
-.sidebar h3{
-    margin-bottom:25px;
-}
-
-.sidebar a{
-    display:block;
-    padding:12px;
-    color:#cbd5e1;
-    text-decoration:none;
-    border-radius:10px;
-    margin-bottom:8px;
-    transition:0.2s;
-}
-
-.sidebar a:hover{
-    background:#1f2937;
-    color:white;
-}
-
-/* MAIN */
-
-.main{
-    margin-left:240px;
-    padding:20px;
-}
-
-/* TOPBAR */
-
-.topbar{
-    background:white;
-    padding:15px 20px;
-    border-radius:16px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    box-shadow:0 10px 25px rgba(0,0,0,0.05);
-}
-
-/* CARDS */
-
-.cards{
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:15px;
-    margin-top:20px;
-}
-
-.card-box{
-    background:white;
-    padding:20px;
-    border-radius:16px;
-    box-shadow:0 10px 25px rgba(0,0,0,0.05);
-}
-
-.label{
-    font-size:13px;
-    color:#6b7280;
-}
-
-.value{
-    font-size:24px;
-    font-weight:700;
-    margin-top:5px;
-}
-
-/* TABLE BOX */
-
-.table-box{
-    background:white;
-    padding:20px;
-    border-radius:16px;
-    margin-top:20px;
-    box-shadow:0 10px 25px rgba(0,0,0,0.05);
-}
-
-.table th{
-    font-size:14px;
-}
-
-.table td{
-    vertical-align:middle;
-}
-
-/* BADGES */
-
-.badge{
-    padding:8px 12px;
-    border-radius:20px;
-    font-size:12px;
-}
-
-.progress{
-    height:8px;
-    border-radius:20px;
-}
-
-/* EMPTY */
-
-.empty{
-    color:#9ca3af;
-    text-align:center;
-    padding:20px;
-}
-
 </style>
+@vite('resources/js/app.js')
 </head>
 
 <body>
-
-<!-- SIDEBAR -->
-<div class="sidebar">
-
-    <h3>Inkcredible</h3>
-
-    <a href="/dashboard">Dashboard</a>
-    <a href="/loan/create">Request Loan</a>
-    <a href="/payments">Payments</a>
-
-</div>
-
-<!-- MAIN -->
-<div class="main">
-
-<!-- TOPBAR -->
-<div class="topbar">
-
-    <div>
-        <h5 class="mb-0">Client Dashboard</h5>
-    </div>
-
-    <form method="POST" action="{{ route('logout') }}">
-        @csrf
-        <button class="btn btn-danger btn-sm">
-            Logout
-        </button>
-    </form>
-
-</div>
-
 @php
-
-$loans = $loans ?? collect();
-$pendingPayments = $pendingPayments ?? collect();
-
-/*
-|--------------------------------------------------------------------------
-| NORMALIZE STATUS
-|--------------------------------------------------------------------------
-*/
-
-$loans = $loans->map(function ($loan) {
-
-    $loan->status = strtolower(trim($loan->status ?? 'pending'));
-
-    return $loan;
-});
-
-/*
-|--------------------------------------------------------------------------
-| ACTIVE LOAN
-|--------------------------------------------------------------------------
-*/
-
-$activeLoan = $loans
-    ->where('status', 'approved')
-    ->sortByDesc('created_at')
-    ->first();
-
-/*
-|--------------------------------------------------------------------------
-| TOTAL APPROVED LOANS
-|--------------------------------------------------------------------------
-*/
-
-$totalBorrowed = $loans
-    ->filter(fn($loan) => $loan->status === 'approved')
-    ->sum(fn($loan) => $loan->amount ?? 0);
-
-/*
-|--------------------------------------------------------------------------
-| TOTAL REMAINING
-|--------------------------------------------------------------------------
-*/
-
-$totalRemaining = $loans
-    ->filter(fn($loan) => $loan->status === 'approved')
-    ->sum(function($loan){
-
-        $penalty = $loan->penalty_amount ?? 0;
-
-        $total = ($loan->total_payable ?? 0) + $penalty;
-
-        $paid = $loan->paid_amount ?? 0;
-
-        return max($total - $paid,0);
-
-    });
-
-/*
-|--------------------------------------------------------------------------
-| PAYMENT HISTORY
-|--------------------------------------------------------------------------
-*/
-
-$allPayments = collect();
-
-foreach($loans as $loan){
-
-    foreach($loan->payments ?? [] as $payment){
-
-        $payment->loan_ref = $loan;
-
-        $allPayments->push($payment);
-
-    }
-
-}
-
-$allPayments = $allPayments->sortByDesc('created_at');
-
+    $loans = $loans ?? collect();
+    $pendingPayments = $pendingPayments ?? collect();
+    $totalBorrowed = $loans->whereIn('status', ['approved', 'paid'])->sum('amount');
+    $totalPaid = $loans->sum('paid_amount');
+    $totalRemaining = $loans->where('status', 'approved')->sum(fn ($loan) => $loan->getRemainingBalance());
+    $approvedLoans = $loans->where('status', 'approved');
+    $nextSchedule = $approvedLoans
+        ->flatMap(fn ($loan) => $loan->paymentSchedules->where('status', '!=', 'paid'))
+        ->sortBy('due_date')
+        ->first();
+    $recentPayments = $loans
+        ->flatMap(fn ($loan) => $loan->payments->map(function ($payment) use ($loan) {
+            $payment->setRelation('loan', $loan);
+            return $payment;
+        }))
+        ->sortByDesc(fn ($payment) => $payment->paid_at ?? $payment->created_at)
+        ->take(5);
+    $firstName = explode(' ', trim(auth()->user()->name))[0] ?: 'there';
 @endphp
 
-<!-- CARDS -->
-<div class="cards">
+@include('partials.client-sidebar', ['active' => 'dashboard'])
 
-    <!-- TOTAL LOANS -->
-    <div class="card-box">
-
-        <div class="label">
-            Total Loans
-        </div>
-
-        <div class="value">
-            {{ $loans->count() }}
-        </div>
-
-    </div>
-
-    <!-- TOTAL BORROWED -->
-    <div class="card-box">
-
-        <div class="label">
-            Total Borrowed
-        </div>
-
-        <div class="value">
-            ₱{{ number_format($totalBorrowed,2) }}
-        </div>
-
-    </div>
-
-    <!-- TOTAL REMAINING -->
-    <div class="card-box">
-
-        <div class="label">
-            Remaining Balance
-        </div>
-
-        <div class="value">
-            ₱{{ number_format($totalRemaining,2) }}
-        </div>
-
-    </div>
-
-    <!-- NEXT PAYMENT -->
-    <div class="card-box">
-
-        <div class="label">
-            Next Payment
-        </div>
-
-        @if($activeLoan && $activeLoan->next_payment_date)
-
-            <div class="value text-danger">
-                {{ \Carbon\Carbon::parse($activeLoan->next_payment_date)->format('M d, Y') }}
+<main class="main">
+    <div class="page-shell">
+        <header class="topbar">
+            <div>
+                <div class="eyebrow">Account overview</div>
+                <h1>Welcome back, {{ $firstName }}</h1>
+                <p class="subtitle">Here is a clear view of your loans, balances, and recent activity.</p>
             </div>
-
-        @else
-
-            <div class="value text-muted">
-                None
+            <div class="top-actions">
+                <a class="button button-primary" href="{{ route('loan.create') }}">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 6v12m6-6H6"/></svg>
+                    Request loan
+                </a>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button class="button button-secondary" type="submit">Log out</button>
+                </form>
             </div>
+        </header>
 
+        @if(session('success'))
+            <div class="alert alert-success" role="status">{{ session('success') }}</div>
         @endif
 
-    </div>
-
-</div>
-
-<!-- LOANS TABLE -->
-<div class="table-box">
-
-<h5 class="mb-3">
-    My Loans
-</h5>
-
-<table class="table table-hover">
-
-<thead>
-
-<tr>
-
-    <th>Loan Type</th>
-    <th>Amount</th>
-    <th>Total Payable</th>
-    <th>Paid</th>
-    <th>Remaining</th>
-    <th>Progress</th>
-    <th>Status</th>
-
-</tr>
-
-</thead>
-
-<tbody>
-
-@forelse($loans as $loan)
-
-@php
-
-    $penalty = $loan->penalty_amount ?? 0;
-
-    $paid = $loan->paid_amount ?? 0;
-
-    $total = ($loan->total_payable ?? 0) + $penalty;
-
-    $remaining = max($total - $paid,0);
-
-    $progress = 0;
-
-    if($total > 0){
-
-        $progress = ($paid / $total) * 100;
-
-    }
-
-@endphp
-
-<tr>
-
-    <!-- TYPE -->
-    <td>
-
-        {{ optional($loan->loanType)->display_name
-            ?? optional($loan->loanType)->name
-            ?? 'No Type' }}
-
-    </td>
-
-    <!-- AMOUNT -->
-    <td>
-        ₱{{ number_format($loan->amount ?? 0,2) }}
-    </td>
-
-    <!-- TOTAL -->
-    <td>
-        ₱{{ number_format($total,2) }}
-    </td>
-
-    <!-- PAID -->
-    <td>
-        ₱{{ number_format($paid,2) }}
-    </td>
-
-    <!-- REMAINING -->
-    <td>
-
-        @if($remaining <= 0)
-
-            <span class="badge bg-success">
-                Fully Paid
-            </span>
-
-        @else
-
-            ₱{{ number_format($remaining,2) }}
-
-        @endif
-
-    </td>
-
-    <!-- PROGRESS -->
-    <td style="width:180px;">
-
-        <div class="progress">
-
-            <div class="progress-bar"
-                 role="progressbar"
-                 style="width: {{ min($progress,100) }}%">
-
+        @if(! auth()->user()->isClientVerified())
+            <div class="verification-banner">
+                <div><strong>Account verification required</strong>Complete your employment, income, ID, and selfie verification before requesting a loan.</div>
+                <a href="{{ route('profile.verification.edit') }}">Complete verification</a>
             </div>
-
-        </div>
-
-        <small>
-            {{ number_format(min($progress,100),0) }}%
-        </small>
-
-    </td>
-
-    <!-- STATUS -->
-    <td>
-
-        @switch($loan->status)
-
-            @case('approved')
-
-                <span class="badge bg-success">
-                    Approved
-                </span>
-
-                @break
-
-            @case('pending')
-
-                <span class="badge bg-warning text-dark">
-                    Pending
-                </span>
-
-                @break
-
-            @case('rejected')
-
-                <span class="badge bg-danger">
-                    Rejected
-                </span>
-
-                @break
-
-            @case('paid')
-
-                <span class="badge bg-primary">
-                    Paid
-                </span>
-
-                @break
-
-            @default
-
-                <span class="badge bg-secondary">
-                    Unknown
-                </span>
-
-        @endswitch
-
-    </td>
-
-</tr>
-
-@empty
-
-<tr>
-
-    <td colspan="7" class="empty">
-        No loans found
-    </td>
-
-</tr>
-
-@endforelse
-
-</tbody>
-
-</table>
-
-</div>
-
-<!-- PAYMENT HISTORY -->
-<div class="table-box">
-
-<h5 class="mb-3">
-    Payment History
-</h5>
-
-<table class="table table-hover">
-
-<thead>
-
-<tr>
-
-    <th>Loan Type</th>
-    <th>Amount</th>
-    <th>Method</th>
-    <th>Status</th>
-    <th>Date</th>
-
-</tr>
-
-</thead>
-
-<tbody>
-
-@forelse($allPayments as $payment)
-
-<tr>
-
-    <!-- TYPE -->
-    <td>
-
-        {{ optional($payment->loan_ref->loanType)->display_name
-            ?? optional($payment->loan_ref->loanType)->name
-            ?? 'Loan' }}
-
-    </td>
-
-    <!-- AMOUNT -->
-    <td>
-        ₱{{ number_format($payment->amount ?? 0,2) }}
-    </td>
-
-    <!-- METHOD -->
-    <td>
-        {{ strtoupper($payment->method ?? 'N/A') }}
-    </td>
-
-    <!-- STATUS -->
-    <td>
-
-        @if($payment->status == 'approved')
-
-            <span class="badge bg-success">
-                Approved
-            </span>
-
-        @elseif($payment->status == 'pending')
-
-            <span class="badge bg-warning text-dark">
-                Pending
-            </span>
-
-        @elseif($payment->status == 'rejected')
-
-            <span class="badge bg-danger">
-                Rejected
-            </span>
-
-        @else
-
-            <span class="badge bg-secondary">
-                Unknown
-            </span>
-
         @endif
 
-    </td>
+        <section class="stats-grid" aria-label="Account summary">
+            <article class="stat-card">
+                <div class="stat-head"><span class="stat-label">Total loans</span><span class="stat-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 4h12v16H6zM9 8h6M9 12h6"/></svg></span></div>
+                <div class="stat-value">{{ $loans->count() }}</div>
+                <div class="stat-note">All submitted applications</div>
+            </article>
+            <article class="stat-card">
+                <div class="stat-head"><span class="stat-label">Total borrowed</span><span class="stat-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" stroke-width="1.8"/><path stroke-linecap="round" stroke-width="1.8" d="M9 9.5c.5-1 1.5-1.5 3-1.5 2 0 3 1 3 2s-1 2-3 2-3 1-3 2 1 2 3 2c1.5 0 2.5-.5 3-1.5M12 6v12"/></svg></span></div>
+                <div class="stat-value">₱{{ number_format($totalBorrowed, 2) }}</div>
+                <div class="stat-note">Approved principal amount</div>
+            </article>
+            <article class="stat-card">
+                <div class="stat-head"><span class="stat-label">Amount paid</span><span class="stat-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="m5 12 4 4L19 6"/></svg></span></div>
+                <div class="stat-value">₱{{ number_format($totalPaid, 2) }}</div>
+                <div class="stat-note">Confirmed across all loans</div>
+            </article>
+            <article class="stat-card">
+                <div class="stat-head"><span class="stat-label">Pending payments</span><span class="stat-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" stroke-width="1.8"/><path stroke-linecap="round" stroke-width="1.8" d="M12 8v4l2.5 1.5"/></svg></span></div>
+                <div class="stat-value">{{ $pendingPayments->count() }}</div>
+                <div class="stat-note">Awaiting confirmation</div>
+            </article>
+        </section>
 
-    <!-- DATE -->
-    <td>
+        <section class="overview-grid">
+            <article class="balance-card">
+                <div class="balance-label">Total outstanding balance</div>
+                <div class="balance-value">₱{{ number_format($totalRemaining, 2) }}</div>
+                <div class="balance-meta">
+                    <div><div class="balance-meta-label">Active loans</div><div class="balance-meta-value">{{ $approvedLoans->count() }}</div></div>
+                    <div><div class="balance-meta-label">Repayment status</div><div class="balance-meta-value">{{ $totalRemaining > 0 ? 'Payment active' : 'No balance due' }}</div></div>
+                </div>
+                <div class="balance-actions">
+                    <a class="button button-white" href="{{ route('payments.index') }}">Make a payment</a>
+                    <a class="button button-glass" href="{{ route('loan.create') }}">New loan request</a>
+                </div>
+            </article>
 
-        {{ \Carbon\Carbon::parse($payment->created_at)->format('M d, Y h:i A') }}
+            <article class="panel next-card">
+                <div class="next-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2" stroke-width="1.8"/><path stroke-linecap="round" stroke-width="1.8" d="M8 3v4m8-4v4M4 10h16"/></svg></div>
+                <div class="next-label">Next scheduled payment</div>
+                <div class="next-date">{{ $nextSchedule?->due_date ? \Carbon\Carbon::parse($nextSchedule->due_date)->format('M d, Y') : 'No payment due' }}</div>
+                <div class="next-note">{{ $nextSchedule ? 'Stay on schedule to keep your account in good standing.' : 'Your next due date will appear after a repayment schedule is created.' }}</div>
+            </article>
+        </section>
 
-    </td>
+        <div class="section-stack">
+            <section class="panel">
+                <div class="panel-header">
+                    <div><h2 class="panel-title">My loans</h2><p class="panel-description">Balances and repayment progress for every application.</p></div>
+                    <a class="panel-link" href="{{ route('loan.create') }}">Request a loan →</a>
+                </div>
+                @if($loans->isEmpty())
+                    <div class="empty-state"><strong>No loans yet</strong>Start a loan request when you are ready.</div>
+                @else
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>Loan</th><th>Principal</th><th>Total payable</th><th>Remaining</th><th>Progress</th><th>Status</th></tr></thead>
+                            <tbody>
+                                @foreach($loans as $loan)
+                                    @php
+                                        $total = $loan->getTotalWithPenalty();
+                                        $paid = (float) ($loan->paid_amount ?? 0);
+                                        $remaining = $loan->getRemainingBalance();
+                                        $progress = $total > 0 ? min(100, ($paid / $total) * 100) : 0;
+                                        $loanStatusClass = match ($loan->status) {
+                                            'approved' => 'badge-success',
+                                            'pending' => 'badge-warning',
+                                            'rejected' => 'badge-danger',
+                                            'paid' => 'badge-purple',
+                                            default => 'badge-neutral',
+                                        };
+                                    @endphp
+                                    <tr>
+                                        <td><div class="cell-title">{{ $loan->loanType?->display_name ?? $loan->loanType?->name ?? 'Loan' }}</div><div class="cell-secondary">{{ $loan->loan_code ?: 'Loan #'.$loan->id }}</div></td>
+                                        <td class="amount">₱{{ number_format($loan->amount, 2) }}</td>
+                                        <td>₱{{ number_format($total, 2) }}</td>
+                                        <td>{{ $remaining <= 0 ? 'Fully paid' : '₱'.number_format($remaining, 2) }}</td>
+                                        <td><div class="progress-track"><div class="progress-bar" style="width: {{ $progress }}%"></div></div><div class="progress-value">{{ number_format($progress) }}% paid</div></td>
+                                        <td><span class="badge {{ $loanStatusClass }}">{{ ucfirst($loan->status) }}</span></td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            </section>
 
-</tr>
-
-@empty
-
-<tr>
-
-    <td colspan="5" class="empty">
-        No payment history yet
-    </td>
-
-</tr>
-
-@endforelse
-
-</tbody>
-
-</table>
-
-</div>
-
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
+            <section class="panel">
+                <div class="panel-header">
+                    <div><h2 class="panel-title">Recent payments</h2><p class="panel-description">Your five latest payment transactions in Philippine Time.</p></div>
+                    <a class="panel-link" href="{{ route('payments.index') }}">View all payments →</a>
+                </div>
+                @if($recentPayments->isEmpty())
+                    <div class="empty-state"><strong>No payments yet</strong>Your recent transactions will appear here.</div>
+                @else
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>Reference</th><th>Loan</th><th>Date &amp; time</th><th>Method</th><th>Status</th><th>Amount</th></tr></thead>
+                            <tbody>
+                                @foreach($recentPayments as $payment)
+                                    @php
+                                        $paymentTime = ($payment->paid_at ?? $payment->created_at)?->copy()->timezone('Asia/Manila');
+                                        $paymentStatusClass = match ($payment->status) {
+                                            'paid', 'approved' => 'badge-success',
+                                            'pending' => 'badge-warning',
+                                            'failed', 'rejected' => 'badge-danger',
+                                            'refunded' => 'badge-purple',
+                                            default => 'badge-neutral',
+                                        };
+                                    @endphp
+                                    <tr>
+                                        <td><div class="cell-title">{{ $payment->reference ?: 'Pending reference' }}</div><div class="cell-secondary">Transaction #{{ $payment->id }}</div></td>
+                                        <td>{{ $payment->loan?->loanType?->display_name ?? $payment->loan?->loanType?->name ?? 'Loan' }}</td>
+                                        <td><div>{{ $paymentTime?->format('M d, Y') ?? '—' }}</div><div class="cell-secondary">{{ $paymentTime?->format('h:i A') ?? '' }} PHT</div></td>
+                                        <td>{{ $payment->method === 'gcash' ? 'GCash / QR Ph' : ucfirst($payment->method) }}</td>
+                                        <td><span class="badge {{ $paymentStatusClass }}">{{ in_array($payment->status, ['paid', 'approved'], true) ? 'Paid' : ucfirst($payment->status) }}</span></td>
+                                        <td class="amount">₱{{ number_format($payment->amount, 2) }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            </section>
+        </div>
+    </div>
+</main>
 </body>
 </html>

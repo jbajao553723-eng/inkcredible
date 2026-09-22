@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Loan;
 use App\Models\Payment;
 
@@ -10,6 +9,10 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        if (auth()->user()->role === 'admin') {
+            return redirect()->route('admin.dashboard');
+        }
+
         $userId = auth()->id();
 
         $loans = Loan::with(['loanType', 'paymentSchedules', 'payments'])

@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\LoanType;
 use Illuminate\Database\Seeder;
 
 class LoanTypesSeeder extends Seeder
@@ -46,7 +46,10 @@ class LoanTypesSeeder extends Seeder
         ];
 
         foreach ($loanTypes as $loanType) {
-            \DB::table('loan_types')->insert($loanType);
+            LoanType::updateOrCreate(
+                ['name' => $loanType['name']],
+                $loanType,
+            );
         }
     }
 }

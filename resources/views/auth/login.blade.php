@@ -1,171 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Inkcredible - Login</title>
-
-    <!-- MODERN BOLD FONT -->
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <style>
-        * {
-            font-family: 'Space Grotesk', sans-serif;
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            min-height: 100vh;
-            background: #f6f7fb;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .auth-card {
-            width: 100%;
-            max-width: 920px;
-            display: flex;
-            border-radius: 24px;
-            overflow: hidden;
-            background: white;
-            box-shadow: 0 25px 70px rgba(0,0,0,0.10);
-        }
-
-        /* LEFT PANEL */
-        .left {
-            flex: 1;
-            background: linear-gradient(135deg, #0f172a, #1e3a8a);
-            color: white;
-            padding: 60px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-        }
-
-        .brand {
-            font-size: 40px;
-            font-weight: 800;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-        }
-
-        .subtitle {
-            margin-top: 12px;
-            font-size: 14px;
-            opacity: 0.8;
-        }
-
-        /* RIGHT PANEL */
-        .right {
-            flex: 1;
-            padding: 60px 55px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .title {
-            font-size: 26px;
-            font-weight: 700;
-            margin-bottom: 6px;
-        }
-
-        .desc {
-            font-size: 14px;
-            color: #6b7280;
-            margin-bottom: 28px;
-        }
-
-        .form-control {
-            border-radius: 12px;
-            padding: 13px;
-            margin-bottom: 16px;
-        }
-
-        .form-control:focus {
-            border-color: #6366f1;
-            box-shadow: 0 0 0 4px rgba(99,102,241,0.12);
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #4f46e5, #6366f1);
-            border: none;
-            border-radius: 12px;
-            padding: 13px;
-            font-weight: 600;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 28px rgba(99,102,241,0.25);
-        }
-
-        .link {
-            font-size: 13px;
-            color: #4f46e5;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .link:hover {
-            text-decoration: underline;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign In | Inkcredible</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>@include('partials.auth-styles') @include('partials.motion-styles')</style>
+@vite('resources/js/app.js')
 </head>
 
 <body>
+<main class="auth-page">
+    <section class="brand-panel" aria-label="About Inkcredible">
+        <a class="brand" href="{{ route('login') }}"><span class="brand-mark">I</span><span>Inkcredible</span></a>
 
-<div class="auth-card">
+        <div class="brand-content">
+            <div class="brand-eyebrow">Lending made clearer</div>
+            <h2 class="brand-title">Your finances, organized in one place.</h2>
+            <p class="brand-description">Review your loans, monitor balances, and make secure payments from one straightforward account.</p>
+            <ul class="feature-list">
+                <li><span class="feature-check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 12 4 4 8-9"/></svg></span>Clear balances and repayment progress</li>
+                <li><span class="feature-check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 12 4 4 8-9"/></svg></span>Organized payment history</li>
+                <li><span class="feature-check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 12 4 4 8-9"/></svg></span>Secure PayMongo checkout</li>
+            </ul>
+        </div>
 
+        <div class="brand-footer">Inkcredible Lending Management System</div>
+    </section>
 
-    <!-- LEFT -->
-    <div class="left">
-        <div class="brand">Inkcredible</div>
-        <div class="subtitle">Lending Management System</div>
-    </div>
+    <section class="form-panel">
+        <div class="form-shell">
+            <a class="brand mobile-brand" href="{{ route('login') }}"><span class="brand-mark">I</span><span>Inkcredible</span></a>
+            <div class="form-eyebrow">Account access</div>
+            <h1>Welcome back</h1>
+            <p class="form-description">Enter your account details to continue to your dashboard.</p>
 
-    <!-- RIGHT -->
-    <div class="right">
+            @if(session('status'))
+                <div class="alert alert-success" role="status">{{ session('status') }}</div>
+            @endif
 
-        <div class="title">Welcome back</div>
-        <div class="desc">Sign in to continue</div>
+            @if($errors->any())
+                <div class="alert alert-error" role="alert">
+                    We could not sign you in. Please check your email and password.
+                </div>
+            @endif
 
-        <form method="POST" action="{{ route('login') }}">
-            @csrf
+            <form method="POST" action="{{ route('login') }}" id="login-form">
+                @csrf
 
-            <input type="email" name="email" class="form-control" placeholder="Email address" required>
+                <div class="form-group">
+                    <label class="form-label" for="email">Email address</label>
+                    <input type="email" name="email" id="email" class="form-control @error('email') is-invalid @enderror"
+                           value="{{ old('email') }}" placeholder="you@example.com" autocomplete="username" autofocus required>
+                    @error('email')<p class="field-error">{{ $message }}</p>@enderror
+                </div>
 
-            <input type="password" name="password" id="password" class="form-control" placeholder="Password" required>
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <div class="input-wrap">
+                        <input type="password" name="password" id="password" class="form-control password-input @error('password') is-invalid @enderror"
+                               placeholder="Enter your password" autocomplete="current-password" required>
+                        <button class="password-toggle" type="button" data-toggle-password="password" aria-label="Show password">Show</button>
+                    </div>
+                    @error('password')<p class="field-error">{{ $message }}</p>@enderror
+                </div>
 
-            <div class="form-check mb-3">
-                <input type="checkbox" onclick="togglePassword()" class="form-check-input">
-                <label class="form-check-label">Show password</label>
-            </div>
+                <div class="form-options">
+                    <label class="checkbox-label"><input type="checkbox" name="remember" value="1" @checked(old('remember'))> Keep me signed in</label>
+                    @if(Route::has('password.request'))
+                        <a class="text-link" href="{{ route('password.request') }}">Forgot password?</a>
+                    @endif
+                </div>
 
-            <button class="btn btn-primary w-100">Sign In</button>
+                <button class="submit-button" type="submit" id="submit-login"><span>Sign in</span></button>
+            </form>
 
-            <div class="text-center mt-3">
-                <a href="/register" class="link">Create account</a>
-            </div>
-
-        </form>
-
-    </div>
-
-</div>
+            <div class="divider">New to Inkcredible?</div>
+            <p class="auth-switch">Create an account to submit and manage your loans. <a class="text-link" href="{{ route('register') }}">Create account</a></p>
+        </div>
+    </section>
+</main>
 
 <script>
-function togglePassword() {
-    let p = document.getElementById("password");
-    p.type = p.type === "password" ? "text" : "password";
-}
-</script>
+document.querySelectorAll('[data-toggle-password]').forEach((button) => {
+    button.addEventListener('click', function () {
+        const input = document.getElementById(this.dataset.togglePassword);
+        const showing = input.type === 'text';
+        input.type = showing ? 'password' : 'text';
+        this.textContent = showing ? 'Show' : 'Hide';
+        this.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+    });
+});
 
+document.getElementById('login-form').addEventListener('submit', function () {
+    const button = document.getElementById('submit-login');
+    button.disabled = true;
+    button.querySelector('span').textContent = 'Signing in…';
+});
+</script>
 </body>
 </html>

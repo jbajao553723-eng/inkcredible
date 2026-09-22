@@ -22,11 +22,37 @@ class ProfileController extends Controller
     }
 
     /**
+     * Display the client's verification settings.
+     */
+    public function verification(Request $request): View
+    {
+        $request->user()->load('clientVerification');
+
+        return view('profile.verification', [
+            'user' => $request->user(),
+        ]);
+    }
+
+    /**
+     * Display password and account security settings.
+     */
+    public function security(Request $request): View
+    {
+        return view('profile.security', [
+            'user' => $request->user(),
+            'hasExistingLoans' => $request->user()->loans()->exists(),
+        ]);
+    }
+
+    /**
      * Update the user's profile information.
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $validated = $request->validated();
+        $validated['name'] = trim($validated['first_name'].' '.$validated['last_name']);
+
+        $request->user()->fill($validated);
 
         if ($request->user()->isDirty('email')) {
             $request->user()->email_verified_at = null;
@@ -47,6 +73,12 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
+
+        if ($user->loans()->exists()) {
+            return Redirect::route('profile.security.edit')->withErrors([
+                'account_deletion' => 'Your account cannot be deleted while it has existing loan records.',
+            ], 'userDeletion');
+        }
 
         Auth::logout();
 

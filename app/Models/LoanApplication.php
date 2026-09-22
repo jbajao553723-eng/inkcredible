@@ -18,6 +18,8 @@ class LoanApplication extends Model
         'reviewed_by',
         'submitted_at',
         'reviewed_at',
+        'terms_accepted_at',
+        'terms_version',
     ];
 
     protected $casts = [
@@ -26,10 +28,13 @@ class LoanApplication extends Model
         'total_payable' => 'decimal:2',
         'submitted_at' => 'datetime',
         'reviewed_at' => 'datetime',
+        'terms_accepted_at' => 'datetime',
     ];
 
     const STATUS_PENDING = 'pending';
+
     const STATUS_APPROVED = 'approved';
+
     const STATUS_REJECTED = 'rejected';
 
     public function user()

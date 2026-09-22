@@ -1,165 +1,153 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Inkcredible - Register</title>
-
-    <!-- SAME FONT -->
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <style>
-        * {
-            font-family: 'Space Grotesk', sans-serif;
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            min-height: 100vh;
-            background: #f6f7fb;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .auth-card {
-            width: 100%;
-            max-width: 950px;
-            display: flex;
-            border-radius: 24px;
-            overflow: hidden;
-            background: white;
-            box-shadow: 0 25px 70px rgba(0,0,0,0.10);
-        }
-
-        /* LEFT */
-        .left {
-            flex: 1;
-            background: linear-gradient(135deg, #065f46, #0f172a);
-            color: white;
-            padding: 60px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-        }
-
-        .brand {
-            font-size: 40px;
-            font-weight: 800;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-        }
-
-        .subtitle {
-            margin-top: 12px;
-            font-size: 14px;
-            opacity: 0.8;
-        }
-
-        /* RIGHT */
-        .right {
-            flex: 1.2;
-            padding: 55px;
-        }
-
-        .title {
-            font-size: 26px;
-            font-weight: 700;
-            margin-bottom: 6px;
-        }
-
-        .desc {
-            font-size: 14px;
-            color: #6b7280;
-            margin-bottom: 22px;
-        }
-
-        .form-control {
-            border-radius: 12px;
-            padding: 12px;
-            margin-bottom: 14px;
-        }
-
-        .form-control:focus {
-            border-color: #16a34a;
-            box-shadow: 0 0 0 4px rgba(34,197,94,0.15);
-        }
-
-        .btn-success {
-            background: linear-gradient(135deg, #16a34a, #22c55e);
-            border: none;
-            border-radius: 12px;
-            padding: 13px;
-            font-weight: 600;
-        }
-
-        .btn-success:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 28px rgba(34,197,94,0.25);
-        }
-
-        .link {
-            font-size: 13px;
-            color: #16a34a;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .link:hover {
-            text-decoration: underline;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create Account | Inkcredible</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>@include('partials.auth-styles') @include('partials.motion-styles')</style>
+@vite('resources/js/app.js')
 </head>
 
 <body>
+<main class="auth-page">
+    <section class="brand-panel" aria-label="About Inkcredible">
+        <a class="brand" href="{{ route('login') }}"><span class="brand-mark">I</span><span>Inkcredible</span></a>
 
-<div class="auth-card">
+        <div class="brand-content">
+            <div class="brand-eyebrow">Get started</div>
+            <h2 class="brand-title">A simpler way to manage your loan journey.</h2>
+            <p class="brand-description">Create your account to request a loan, follow its approval status, and stay on top of every payment.</p>
+            <ul class="feature-list">
+                <li><span class="feature-check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 12 4 4 8-9"/></svg></span>Quick online loan requests</li>
+                <li><span class="feature-check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 12 4 4 8-9"/></svg></span>Real-time balance overview</li>
+                <li><span class="feature-check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 12 4 4 8-9"/></svg></span>Clear transaction records</li>
+            </ul>
+        </div>
 
-    <!-- LEFT -->
-    <div class="left">
-        <div class="brand">Inkcredible</div>
-        <div class="subtitle">Create your account</div>
-    </div>
+        <div class="brand-footer">Inkcredible Lending Management System</div>
+    </section>
 
-    <!-- RIGHT -->
-    <div class="right">
+    <section class="form-panel">
+        <div class="form-shell register">
+            <a class="brand mobile-brand" href="{{ route('login') }}"><span class="brand-mark">I</span><span>Inkcredible</span></a>
+            <div class="form-eyebrow">Client registration</div>
+            <h1>Create your account</h1>
+            <p class="form-description">Set up your profile to start submitting and managing loan requests.</p>
 
-        <div class="title">Create account</div>
-        <div class="desc">Register to start your loan journey</div>
+            @if($errors->any())
+                <div class="alert alert-error" role="alert">
+                    <ul>
+                        @foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach
+                    </ul>
+                </div>
+            @endif
 
-        <form method="POST" action="{{ route('register') }}">
-            @csrf
+            <form method="POST" action="{{ route('register') }}" id="register-form">
+                @csrf
 
-            <input type="text" name="name" class="form-control" placeholder="Full Name" required>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="first-name">First name</label>
+                        <input type="text" name="first_name" id="first-name" class="form-control @error('first_name') is-invalid @enderror"
+                               value="{{ old('first_name') }}" placeholder="Juan" autocomplete="given-name" maxlength="100" autofocus required>
+                        @error('first_name')<p class="field-error">{{ $message }}</p>@enderror
+                    </div>
 
-            <input type="email" name="email" class="form-control" placeholder="Email Address" required>
+                    <div class="form-group">
+                        <label class="form-label" for="last-name">Last name</label>
+                        <input type="text" name="last_name" id="last-name" class="form-control @error('last_name') is-invalid @enderror"
+                               value="{{ old('last_name') }}" placeholder="Dela Cruz" autocomplete="family-name" maxlength="100" required>
+                        @error('last_name')<p class="field-error">{{ $message }}</p>@enderror
+                    </div>
+                </div>
 
-            <input type="text" name="contact_number" class="form-control" placeholder="Contact Number" required>
+                <div class="form-group">
+                    <label class="form-label" for="email">Email address</label>
+                    <input type="email" name="email" id="email" class="form-control @error('email') is-invalid @enderror"
+                           value="{{ old('email') }}" placeholder="you@example.com" autocomplete="email" required>
+                    @error('email')<p class="field-error">{{ $message }}</p>@enderror
+                </div>
 
-            <input type="number" name="age" class="form-control" placeholder="Age" required>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="contact-number">Contact number</label>
+                        <input type="tel" name="contact_number" id="contact-number" class="form-control @error('contact_number') is-invalid @enderror"
+                               value="{{ old('contact_number') }}" placeholder="09XX XXX XXXX" autocomplete="tel" maxlength="30" required>
+                        @error('contact_number')<p class="field-error">{{ $message }}</p>@enderror
+                    </div>
 
-            <textarea name="address" class="form-control" placeholder="Address" required></textarea>
+                    <div class="form-group">
+                        <label class="form-label" for="age">Age</label>
+                        <input type="number" name="age" id="age" class="form-control @error('age') is-invalid @enderror"
+                               value="{{ old('age') }}" min="18" max="120" placeholder="Your age" inputmode="numeric" required>
+                        @error('age')<p class="field-error">{{ $message }}</p>@enderror
+                    </div>
+                </div>
 
-            <input type="password" name="password" class="form-control" placeholder="Password" required>
+                <div class="form-group">
+                    <label class="form-label" for="address">Complete address</label>
+                    <textarea name="address" id="address" class="form-control @error('address') is-invalid @enderror"
+                              placeholder="Street, barangay, city, and province" autocomplete="street-address" maxlength="500" required>{{ old('address') }}</textarea>
+                    @error('address')<p class="field-error">{{ $message }}</p>@enderror
+                </div>
 
-            <input type="password" name="password_confirmation" class="form-control" placeholder="Confirm Password" required>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="password">Password</label>
+                        <div class="input-wrap">
+                            <input type="password" name="password" id="password" class="form-control password-input @error('password') is-invalid @enderror"
+                                   placeholder="Create a password" autocomplete="new-password" required>
+                            <button class="password-toggle" type="button" data-toggle-password="password" aria-label="Show password">Show</button>
+                        </div>
+                        <p class="field-help">Use at least 8 characters.</p>
+                        @error('password')<p class="field-error">{{ $message }}</p>@enderror
+                    </div>
 
-            <button class="btn btn-success w-100">Create Account</button>
+                    <div class="form-group">
+                        <label class="form-label" for="password-confirmation">Confirm password</label>
+                        <div class="input-wrap">
+                            <input type="password" name="password_confirmation" id="password-confirmation" class="form-control password-input"
+                                   placeholder="Repeat your password" autocomplete="new-password" required>
+                            <button class="password-toggle" type="button" data-toggle-password="password-confirmation" aria-label="Show password confirmation">Show</button>
+                        </div>
+                    </div>
+                </div>
 
-            <div class="text-center mt-3">
-                <a href="/login" class="link">Already have account? Login</a>
-            </div>
+                <label class="consent-box">
+                    <input type="checkbox" name="terms_accepted" value="1" @checked(old('terms_accepted')) required>
+                    <span>I confirm that my information is accurate and I have read and agree to the <a href="{{ route('terms') }}" target="_blank" rel="noopener">Terms and Conditions</a>, including the privacy, acceptable-use, and account provisions.</span>
+                </label>
+                @error('terms_accepted')<p class="field-error" style="margin-top:-12px; margin-bottom:16px">You must accept the Terms and Conditions to create an account.</p>@enderror
 
-        </form>
+                <button class="submit-button" type="submit" id="submit-register"><span>Create account</span></button>
+                <p class="terms-note">Terms version {{ config('legal.account_terms_version') }} · Your acceptance date is recorded.</p>
+            </form>
 
-    </div>
+            <div class="divider">Already registered?</div>
+            <p class="auth-switch">Return to your account securely. <a class="text-link" href="{{ route('login') }}">Sign in</a></p>
+        </div>
+    </section>
+</main>
 
-</div>
+<script>
+document.querySelectorAll('[data-toggle-password]').forEach((button) => {
+    button.addEventListener('click', function () {
+        const input = document.getElementById(this.dataset.togglePassword);
+        const showing = input.type === 'text';
+        input.type = showing ? 'password' : 'text';
+        this.textContent = showing ? 'Show' : 'Hide';
+        this.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+    });
+});
 
+document.getElementById('register-form').addEventListener('submit', function () {
+    const button = document.getElementById('submit-register');
+    button.disabled = true;
+    button.querySelector('span').textContent = 'Creating account…';
+});
+</script>
 </body>
 </html>

@@ -2,17 +2,20 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Carbon\Carbon;
 
 class Loan extends Model
 {
     use HasFactory;
 
     const STATUS_PENDING = 'pending';
+
     const STATUS_APPROVED = 'approved';
+
     const STATUS_REJECTED = 'rejected';
+
     const STATUS_PAID = 'paid';
 
     protected $fillable = [
@@ -21,10 +24,13 @@ class Loan extends Model
         'amount',
         'total_payable',
         'paid_amount',
+        'payment_count',
         'status',
         'loan_code',
         'approved_at',
         'disbursed_at',
+        'terms_accepted_at',
+        'terms_version',
     ];
 
     protected $casts = [
@@ -33,6 +39,7 @@ class Loan extends Model
         'paid_amount' => 'decimal:2',
         'approved_at' => 'datetime',
         'disbursed_at' => 'datetime',
+        'terms_accepted_at' => 'datetime',
     ];
 
     /*
@@ -154,7 +161,7 @@ class Loan extends Model
 
     public function getRemainingBalance()
     {
-        return $this->getTotalWithPenalty() - ($this->paid_amount ?? 0);
+        return max(0, $this->getTotalWithPenalty() - ($this->paid_amount ?? 0));
     }
 
     /*
@@ -169,7 +176,9 @@ class Loan extends Model
             ->orderBy('due_date')
             ->first();
 
-        if (!$schedule) return 0;
+        if (! $schedule) {
+            return 0;
+        }
 
         return Carbon::parse($schedule->due_date)->diffInDays(now());
     }

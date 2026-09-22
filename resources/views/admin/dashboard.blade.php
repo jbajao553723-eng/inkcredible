@@ -3,706 +3,91 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Inkcredible Admin Dashboard</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<style>
-
-:root{
-    --blue:#2563eb;
-    --green:#22c55e;
-    --red:#ef4444;
-    --yellow:#f59e0b;
-    --purple:#7c3aed;
-
-    --bg:#f3f4f6;
-    --card:#ffffff;
-    --border:#e5e7eb;
-
-    --text:#111827;
-    --muted:#6b7280;
-}
-
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:'Inter',sans-serif;
-}
-
-body{
-    background:var(--bg);
-    color:var(--text);
-}
-
-/* SIDEBAR */
-
-.sidebar{
-    width:250px;
-    height:100vh;
-    position:fixed;
-    left:0;
-    top:0;
-    background:#111827;
-    padding:25px 18px;
-    overflow-y:auto;
-}
-
-.brand{
-    color:white;
-    font-size:22px;
-    font-weight:800;
-    margin-bottom:30px;
-}
-
-.nav-item{
-    display:block;
-    text-decoration:none;
-    color:#cbd5e1;
-    padding:12px 14px;
-    border-radius:12px;
-    margin-bottom:8px;
-    transition:.2s;
-    font-size:14px;
-    font-weight:500;
-}
-
-.nav-item:hover{
-    background:#1f2937;
-    color:white;
-}
-
-.nav-item.active{
-    background:var(--blue);
-    color:white;
-}
-
-/* MAIN */
-
-.main{
-    margin-left:250px;
-    padding:25px;
-}
-
-/* HEADER */
-
-.header{
-    background:var(--card);
-    border-radius:18px;
-    padding:18px 22px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    box-shadow:0 10px 25px rgba(0,0,0,0.04);
-}
-
-.admin-title{
-    font-size:24px;
-    font-weight:800;
-}
-
-.admin-sub{
-    font-size:13px;
-    color:var(--muted);
-}
-
-.logout-btn{
-    background:var(--red);
-    color:white;
-    border:none;
-    border-radius:10px;
-    padding:10px 15px;
-    font-size:13px;
-    font-weight:600;
-}
-
-/* CARDS */
-
-.stats-grid{
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:18px;
-    margin-top:20px;
-}
-
-.stat-card{
-    background:var(--card);
-    padding:20px;
-    border-radius:18px;
-    box-shadow:0 10px 25px rgba(0,0,0,0.04);
-}
-
-.stat-label{
-    font-size:13px;
-    color:var(--muted);
-    margin-bottom:10px;
-}
-
-.stat-value{
-    font-size:28px;
-    font-weight:800;
-}
-
-/* TABS */
-
-.tabs{
-    display:flex;
-    gap:10px;
-    margin-top:20px;
-    flex-wrap:wrap;
-}
-
-.tab-btn{
-    border:none;
-    background:white;
-    padding:10px 18px;
-    border-radius:12px;
-    font-weight:600;
-    font-size:14px;
-    cursor:pointer;
-}
-
-.tab-btn.active{
-    background:var(--blue);
-    color:white;
-}
-
-/* CONTENT */
-
-.tab-content{
-    background:white;
-    margin-top:20px;
-    padding:20px;
-    border-radius:18px;
-    box-shadow:0 10px 25px rgba(0,0,0,0.04);
-}
-
-/* TABLE */
-
-.table{
-    vertical-align:middle;
-}
-
-.table thead th{
-    font-size:13px;
-    color:var(--muted);
-    font-weight:700;
-}
-
-.table tbody td{
-    font-size:14px;
-}
-
-/* STATUS */
-
-.status{
-    padding:6px 12px;
-    border-radius:30px;
-    font-size:12px;
-    font-weight:700;
-}
-
-.pending{
-    background:rgba(245,158,11,.12);
-    color:var(--yellow);
-}
-
-.approved{
-    background:rgba(34,197,94,.12);
-    color:var(--green);
-}
-
-.rejected{
-    background:rgba(239,68,68,.12);
-    color:var(--red);
-}
-
-.paid{
-    background:rgba(37,99,235,.12);
-    color:var(--blue);
-}
-
-/* CHART */
-
-.chart-box{
-    background:white;
-    border-radius:16px;
-    padding:20px;
-    margin-top:20px;
-}
-
-/* QUICK ACTIONS */
-
-.quick-actions{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:15px;
-    margin-top:20px;
-}
-
-.quick-card{
-    background:white;
-    padding:20px;
-    border-radius:18px;
-    text-decoration:none;
-    color:var(--text);
-    box-shadow:0 10px 25px rgba(0,0,0,0.04);
-    transition:.2s;
-}
-
-.quick-card:hover{
-    transform:translateY(-3px);
-}
-
-.quick-title{
-    font-weight:700;
-    margin-top:10px;
-}
-
-.quick-sub{
-    font-size:13px;
-    color:var(--muted);
-}
-
-/* MOBILE */
-
-@media(max-width:1200px){
-
-    .stats-grid{
-        grid-template-columns:repeat(2,1fr);
-    }
-
-    .quick-actions{
-        grid-template-columns:1fr;
-    }
-}
-
-@media(max-width:768px){
-
-    .sidebar{
-        display:none;
-    }
-
-    .main{
-        margin-left:0;
-    }
-
-    .stats-grid{
-        grid-template-columns:1fr;
-    }
-}
-
-</style>
+<title>Admin Dashboard | Inkcredible</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>@include('partials.admin-styles') @include('partials.motion-styles')</style>
+@vite('resources/js/app.js')
 </head>
-
 <body>
-
-<!-- SIDEBAR -->
-<div class="sidebar">
-
-    <div class="brand">
-        Inkcredible
-    </div>
-
-    <a href="{{ route('admin.dashboard') }}"
-       class="nav-item active">
-       Dashboard
-    </a>
-
-    <a href="{{ route('admin.loans') }}"
-       class="nav-item">
-       Loan Requests
-    </a>
-
-    <a href="{{ route('admin.clients') }}"
-       class="nav-item">
-       Clients
-    </a>
-
-    <a href="{{ route('admin.payments.index') }}"
-       class="nav-item">
-       Payments
-    </a>
-
-</div>
-
-<!-- MAIN -->
-<div class="main">
-
-<!-- HEADER -->
-<div class="header">
-
-    <div>
-        <div class="admin-title">
-            Admin Dashboard
-        </div>
-
-        <div class="admin-sub">
-            Manage loans, payments, clients and analytics
-        </div>
-    </div>
-
-    <form method="POST" action="{{ route('logout') }}">
-        @csrf
-        <button class="logout-btn">
-            Logout
-        </button>
-    </form>
-
-</div>
-
 @php
-
-$totalLoans = $recentLoans->count();
-
-$approvedLoans = $recentLoans
-    ->where('status','approved')
-    ->count();
-
-$pendingLoans = $recentLoans
-    ->where('status','pending')
-    ->count();
-
-$totalReleased = $recentLoans
-    ->where('status','approved')
-    ->sum('amount');
-
-$totalCollected = $recentLoans
-    ->sum('paid_amount');
-
-$totalProfit = $recentLoans
-    ->where('status','approved')
-    ->sum(function($loan){
-
-        $interest = 0;
-
-        $type = strtolower($loan->loanType->name ?? '');
-
-        if($type == 'arawan'){
-            $interest = 0.10;
-        }
-        elseif($type == 'weekly'){
-            $interest = 0.08;
-        }
-        elseif($type == 'emergency'){
-            $interest = 0.12;
-        }
-
-        return ($loan->amount ?? 0) * $interest;
-    });
-
+    $totalForDistribution = max(1, $stats['total_loans']);
+    $statusRows = [
+        ['label' => 'Pending', 'count' => $stats['pending_loans'], 'color' => '#f59e0b'],
+        ['label' => 'Approved', 'count' => $stats['approved_loans'], 'color' => '#079455'],
+        ['label' => 'Paid', 'count' => $stats['paid_loans'], 'color' => '#7c3aed'],
+        ['label' => 'Rejected', 'count' => $stats['rejected_loans'], 'color' => '#d92d20'],
+    ];
 @endphp
 
-<!-- STATS -->
-<div class="stats-grid">
+@include('partials.admin-sidebar', ['active' => 'dashboard'])
 
-    <div class="stat-card">
-        <div class="stat-label">
-            Total Loans
-        </div>
+<main class="main">
+    <div class="page-shell">
+        <header class="topbar">
+            <div><div class="eyebrow">Administration</div><h1>Operations dashboard</h1><p class="subtitle">Monitor lending activity and review items that need attention.</p></div>
+            <div class="top-actions">
+                <a class="button button-primary" href="{{ route('admin.loans') }}">Review requests</a>
+                <form method="POST" action="{{ route('logout') }}">@csrf<button class="button button-secondary" type="submit">Log out</button></form>
+            </div>
+        </header>
 
-        <div class="stat-value">
-            {{ $totalLoans }}
-        </div>
+        @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif
+        @if(session('error'))<div class="alert alert-error" role="alert">{{ session('error') }}</div>@endif
+
+        <section class="stats-grid" aria-label="Administrative summary">
+            <article class="stat-card"><div class="stat-head"><span class="stat-label">Loan requests</span><span class="stat-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 4h12v16H6zM9 8h6M9 12h6"/></svg></span></div><div class="stat-value">{{ $stats['total_loans'] }}</div><div class="stat-note">{{ $stats['pending_loans'] }} awaiting review</div></article>
+            <article class="stat-card"><div class="stat-head"><span class="stat-label">Total released</span><span class="stat-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" stroke-width="1.8"/><path stroke-linecap="round" stroke-width="1.8" d="M9 9.5c.5-1 1.5-1.5 3-1.5 2 0 3 1 3 2s-1 2-3 2-3 1-3 2 1 2 3 2M12 6v12"/></svg></span></div><div class="stat-value">₱{{ number_format($stats['total_released'], 2) }}</div><div class="stat-note">Approved and completed principal</div></article>
+            <article class="stat-card"><div class="stat-head"><span class="stat-label">Total collected</span><span class="stat-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="m5 12 4 4L19 6"/></svg></span></div><div class="stat-value">₱{{ number_format($stats['total_collected'], 2) }}</div><div class="stat-note">Confirmed payment amount</div></article>
+            <article class="stat-card"><div class="stat-head"><span class="stat-label">Registered clients</span><span class="stat-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3" stroke-width="1.8"/><path stroke-linecap="round" stroke-width="1.8" d="M3.5 19c.5-4 2.3-6 5.5-6s5 2 5.5 6"/></svg></span></div><div class="stat-value">{{ $stats['total_clients'] }}</div><div class="stat-note">Active client accounts</div></article>
+        </section>
+
+        <section class="metric-layout">
+            <article class="panel">
+                <div class="panel-header"><div><h2 class="panel-title">Recent loan requests</h2><p class="panel-description">The latest applications across all clients.</p></div><a class="button button-secondary button-small" href="{{ route('admin.loans') }}">View all</a></div>
+                @if($recentLoans->isEmpty())
+                    <div class="empty-state"><strong>No loan requests</strong>New applications will appear here.</div>
+                @else
+                    <div class="table-wrap"><table>
+                        <thead><tr><th>Client</th><th>Loan</th><th>Requested</th><th>Submitted</th><th>Status</th><th></th></tr></thead>
+                        <tbody>
+                        @foreach($recentLoans as $loan)
+                            @php
+                                $statusClass = match ($loan->status) { 'approved' => 'badge-success', 'pending' => 'badge-warning', 'paid' => 'badge-purple', 'rejected' => 'badge-danger', default => 'badge-neutral' };
+                                $submitted = $loan->created_at?->copy()->timezone('Asia/Manila');
+                            @endphp
+                            <tr>
+                                <td><div class="identity"><span class="avatar">{{ strtoupper(substr($loan->user?->name ?? 'U', 0, 1)) }}</span><span><span class="cell-title">{{ $loan->user?->name ?? 'Unknown client' }}</span><span class="cell-secondary">{{ $loan->user?->email ?? 'No email' }}</span></span></div></td>
+                                <td><div class="cell-title">{{ $loan->loanType?->display_name ?? $loan->loanType?->name ?? 'Loan' }}</div><div class="cell-secondary">{{ $loan->loan_code ?: 'Loan #'.$loan->id }}</div></td>
+                                <td class="amount">₱{{ number_format($loan->amount, 2) }}</td>
+                                <td><div>{{ $submitted?->format('M d, Y') }}</div><div class="cell-secondary">{{ $submitted?->format('h:i A') }} PHT</div></td>
+                                <td><span class="badge {{ $statusClass }}">{{ ucfirst($loan->status) }}</span></td>
+                                <td><a class="button button-secondary button-small" href="{{ route('admin.loan.show', $loan->id) }}">Details</a></td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table></div>
+                @endif
+            </article>
+
+            <aside class="panel">
+                <div class="panel-header"><div><h2 class="panel-title">Loan status</h2><p class="panel-description">Distribution across all requests.</p></div></div>
+                <div class="panel-body status-list">
+                    @foreach($statusRows as $row)
+                        <div class="status-row"><span>{{ $row['label'] }}</span><div class="status-track"><div class="status-fill" style="width: {{ ($row['count'] / $totalForDistribution) * 100 }}%; background: {{ $row['color'] }}"></div></div><strong>{{ $row['count'] }}</strong></div>
+                    @endforeach
+                    @if($overdueLoans->isNotEmpty())<div class="notice"><strong>{{ $overdueLoans->count() }} overdue {{ Str::plural('loan', $overdueLoans->count()) }}</strong><br>Review repayment schedules that require attention.</div>@endif
+                </div>
+            </aside>
+        </section>
+
+        <section class="quick-grid">
+            <a class="quick-card" href="{{ route('admin.loans') }}"><span class="quick-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 4h12v16H6zM9 8h6M9 12h6"/></svg></span><div class="quick-title">Manage loan requests</div><div class="quick-note">{{ $stats['pending_loans'] }} requests currently pending</div></a>
+            <a class="quick-card" href="{{ route('admin.payments.index') }}"><span class="quick-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3.5 7.5h17v10h-17zM3.5 10.5h17"/></svg></span><div class="quick-title">Review payments</div><div class="quick-note">{{ $stats['pending_cash_payments'] }} cash payments need review</div></a>
+            <a class="quick-card" href="{{ route('admin.verifications.index') }}"><span class="quick-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3.5 19 6v5c0 4.5-2.7 7.5-7 9.5C7.7 18.5 5 15.5 5 11V6zM9 12l2 2 4-5"/></svg></span><div class="quick-title">Client verifications</div><div class="quick-note">{{ $stats['pending_verifications'] }} submissions need review</div></a>
+        </section>
     </div>
-
-    <div class="stat-card">
-        <div class="stat-label">
-            Approved Loans
-        </div>
-
-        <div class="stat-value">
-            {{ $approvedLoans }}
-        </div>
-    </div>
-
-    <div class="stat-card">
-        <div class="stat-label">
-            Total Released
-        </div>
-
-        <div class="stat-value">
-            ₱{{ number_format($totalReleased,2) }}
-        </div>
-    </div>
-
-    <div class="stat-card">
-        <div class="stat-label">
-            Total Profit
-        </div>
-
-        <div class="stat-value">
-            ₱{{ number_format($totalProfit,2) }}
-        </div>
-    </div>
-
-</div>
-
-<!-- QUICK ACTIONS -->
-<div class="quick-actions">
-
-    <a href="{{ route('admin.loans') }}" class="quick-card">
-        <div style="font-size:30px;">📄</div>
-
-        <div class="quick-title">
-            Manage Loans
-        </div>
-
-        <div class="quick-sub">
-            Approve or reject loan requests
-        </div>
-    </a>
-
-    <a href="{{ route('admin.payments.index') }}" class="quick-card">
-        <div style="font-size:30px;">💳</div>
-
-        <div class="quick-title">
-            Payment Requests
-        </div>
-
-        <div class="quick-sub">
-            Verify submitted payments
-        </div>
-    </a>
-
-    <a href="{{ route('admin.clients') }}" class="quick-card">
-        <div style="font-size:30px;">👥</div>
-
-        <div class="quick-title">
-            Client Management
-        </div>
-
-        <div class="quick-sub">
-            View registered clients
-        </div>
-    </a>
-
-</div>
-
-<!-- TABS -->
-<div class="tabs">
-
-    <button class="tab-btn active"
-        onclick="openTab(event,'loans')">
-        Loans
-    </button>
-
-    <button class="tab-btn"
-        onclick="openTab(event,'analytics')">
-        Analytics
-    </button>
-
-</div>
-
-<!-- LOANS TAB -->
-<div id="loans" class="tab-content">
-
-<h5 class="mb-4">
-    Recent Loans
-</h5>
-
-<div class="table-responsive">
-
-<table class="table align-middle">
-
-<thead>
-<tr>
-    <th>Client</th>
-    <th>Loan Type</th>
-    <th>Amount</th>
-    <th>Total Payable</th>
-    <th>Paid</th>
-    <th>Remaining</th>
-    <th>Status</th>
-</tr>
-</thead>
-
-<tbody>
-
-@forelse($recentLoans as $loan)
-
-@php
-
-$status = strtolower($loan->status ?? 'pending');
-
-$remaining =
-    ($loan->total_payable ?? 0)
-    -
-    ($loan->paid_amount ?? 0);
-
-@endphp
-
-<tr>
-
-    <td>
-        <strong>
-            {{ $loan->user->name ?? 'Unknown User' }}
-        </strong>
-    </td>
-
-    <td>
-        {{ $loan->loanType->display_name
-            ?? $loan->loanType->name
-            ?? 'N/A' }}
-    </td>
-
-    <td>
-        ₱{{ number_format($loan->amount ?? 0,2) }}
-    </td>
-
-    <td>
-        ₱{{ number_format($loan->total_payable ?? 0,2) }}
-    </td>
-
-    <td>
-        ₱{{ number_format($loan->paid_amount ?? 0,2) }}
-    </td>
-
-    <td>
-        ₱{{ number_format(max($remaining,0),2) }}
-    </td>
-
-    <td>
-
-        @if($status == 'approved')
-            <span class="status approved">
-                Approved
-            </span>
-
-        @elseif($status == 'pending')
-            <span class="status pending">
-                Pending
-            </span>
-
-        @elseif($status == 'paid')
-            <span class="status paid">
-                Paid
-            </span>
-
-        @else
-            <span class="status rejected">
-                Rejected
-            </span>
-        @endif
-
-    </td>
-
-</tr>
-
-@empty
-
-<tr>
-    <td colspan="7" class="text-center text-muted">
-        No loans found
-    </td>
-</tr>
-
-@endforelse
-
-</tbody>
-
-</table>
-
-</div>
-
-</div>
-
-<!-- ANALYTICS TAB -->
-<div id="analytics"
-     class="tab-content"
-     style="display:none;">
-
-<h5 class="mb-4">
-    Loan Analytics
-</h5>
-
-<div class="chart-box">
-    <canvas id="loanChart"></canvas>
-</div>
-
-<div class="chart-box">
-    <canvas id="statusChart"></canvas>
-</div>
-
-</div>
-
-</div>
-
-<script>
-
-function openTab(event, tab){
-
-    document.querySelectorAll('.tab-content')
-        .forEach(el => el.style.display='none');
-
-    document.querySelectorAll('.tab-btn')
-        .forEach(el => el.classList.remove('active'));
-
-    document.getElementById(tab).style.display='block';
-
-    event.target.classList.add('active');
-}
-
-/* LOAN TYPE CHART */
-
-new Chart(document.getElementById('loanChart'), {
-
-    type:'bar',
-
-    data:{
-
-        labels:['Arawan','Weekly','Emergency'],
-
-        datasets:[{
-
-            label:'Loan Count',
-
-            data:[
-
-                {{ $recentLoans->filter(fn($l)=>strtolower($l->loanType->name ?? '') == 'arawan')->count() }},
-
-                {{ $recentLoans->filter(fn($l)=>strtolower($l->loanType->name ?? '') == 'weekly')->count() }},
-
-                {{ $recentLoans->filter(fn($l)=>strtolower($l->loanType->name ?? '') == 'emergency')->count() }}
-
-            ]
-
-        }]
-    }
-});
-
-/* STATUS CHART */
-
-new Chart(document.getElementById('statusChart'), {
-
-    type:'doughnut',
-
-    data:{
-
-        labels:['Approved','Pending','Rejected'],
-
-        datasets:[{
-
-            data:[
-
-                {{ $recentLoans->where('status','approved')->count() }},
-
-                {{ $recentLoans->where('status','pending')->count() }},
-
-                {{ $recentLoans->where('status','rejected')->count() }}
-
-            ]
-
-        }]
-    }
-});
-
-</script>
-
+</main>
 </body>
 </html>

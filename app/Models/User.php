@@ -3,13 +3,14 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
+    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
     /**
@@ -18,12 +19,16 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-    'name',
-    'email',
-    'password',
-    'contact_number',
-    'age',
-    'address',
+        'name',
+        'first_name',
+        'last_name',
+        'email',
+        'password',
+        'contact_number',
+        'age',
+        'address',
+        'terms_accepted_at',
+        'terms_version',
 
     ];
 
@@ -47,10 +52,32 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'terms_accepted_at' => 'datetime',
         ];
     }
-public function loans()
-{
-    return $this->hasMany(Loan::class);
-}
+
+    /**
+     * Get the user's display name from the separated name fields.
+     */
+    public function getFullNameAttribute(): string
+    {
+        $fullName = trim($this->first_name.' '.$this->last_name);
+
+        return $fullName !== '' ? $fullName : $this->name;
+    }
+
+    public function loans()
+    {
+        return $this->hasMany(Loan::class);
+    }
+
+    public function clientVerification()
+    {
+        return $this->hasOne(ClientVerification::class);
+    }
+
+    public function isClientVerified(): bool
+    {
+        return $this->clientVerification?->status === ClientVerification::STATUS_APPROVED;
+    }
 }

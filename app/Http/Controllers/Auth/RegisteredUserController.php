@@ -28,23 +28,29 @@ class RegisteredUserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'first_name' => ['required', 'string', 'max:100'],
+            'last_name' => ['required', 'string', 'max:100'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'terms_accepted' => ['accepted'],
 
-            'contact_number' => ['nullable', 'string'],
-            'age' => ['nullable', 'integer'],
-            'address' => ['nullable', 'string'],
+            'contact_number' => ['required', 'string', 'max:30'],
+            'age' => ['required', 'integer', 'min:18', 'max:120'],
+            'address' => ['required', 'string', 'max:500'],
         ]);
 
         $user = User::create([
-            'name' => $request->name,
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'name' => trim($request->first_name.' '.$request->last_name),
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => 'client',
             'contact_number' => $request->contact_number,
             'age' => $request->age,
             'address' => $request->address,
+            'terms_accepted_at' => now(),
+            'terms_version' => config('legal.account_terms_version'),
         ]);
 
         event(new Registered($user));

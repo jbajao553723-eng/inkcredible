@@ -1,17 +1,16 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-
-use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\ClientReportController;
+use App\Http\Controllers\Admin\ClientVerificationAdminController;
+use App\Http\Controllers\Admin\LoanAdminController;
+use App\Http\Controllers\ClientVerificationController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LoanController;
 use App\Http\Controllers\PaymentController;
-
-use App\Http\Controllers\Admin\AdminDashboardController;
-use App\Http\Controllers\Admin\LoanAdminController;
-
-use App\Models\Loan;
+use App\Http\Controllers\ProfileController;
 use App\Models\User;
-use App\Models\Payment;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,9 +18,10 @@ use App\Models\Payment;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', function () {
-    return redirect()->route('login');
-});
+Route::view('/', 'auth.login')->middleware('guest')->name('home');
+
+Route::view('/terms-and-conditions', 'legal.terms')->name('terms');
+Route::view('/loan-terms', 'legal.loan-terms')->name('loan.terms');
 
 /*
 |--------------------------------------------------------------------------
@@ -30,38 +30,8 @@ Route::get('/', function () {
 */
 
 Route::middleware(['auth', 'verified'])
-    ->get('/dashboard', function () {
-
-        $user = auth()->user();
-
-        if (!$user) {
-            return redirect()->route('login');
-        }
-
-        // ADMIN REDIRECT
-        if ($user->role === 'admin') {
-            return redirect()->route('admin.dashboard');
-        }
-
-        // ✅ FIXED: ALWAYS USE MODEL RELATIONS
-        $loans = Loan::with([
-                'loanType',
-                'payments',
-                'paymentSchedules'
-            ])
-            ->where('user_id', $user->id)
-            ->latest()
-            ->get();
-
-        $pendingPayments = Payment::whereHas('loan', function ($q) use ($user) {
-                $q->where('user_id', $user->id);
-            })
-            ->where('status', 'pending')
-            ->get();
-
-        return view('dashboard', compact('loans', 'pendingPayments'));
-
-    })->name('dashboard');
+    ->get('/dashboard', [DashboardController::class, 'index'])
+    ->name('dashboard');
 
 /*
 |--------------------------------------------------------------------------
@@ -73,9 +43,11 @@ Route::middleware(['auth'])
     ->group(function () {
 
         Route::get('/loan/create', [LoanController::class, 'create'])
+            ->middleware('client.verified')
             ->name('loan.create');
 
         Route::post('/loan/store', [LoanController::class, 'store'])
+            ->middleware('client.verified')
             ->name('loan.store');
 
         Route::get('/payments', [PaymentController::class, 'index'])
@@ -84,11 +56,26 @@ Route::middleware(['auth'])
         Route::post('/payments', [PaymentController::class, 'store'])
             ->name('payments.store');
 
+        Route::get('/payments/success/{payment}', [PaymentController::class, 'success'])
+            ->name('payments.success');
+
+        Route::get('/payments/cancel/{payment}', [PaymentController::class, 'cancel'])
+            ->name('payments.cancel');
+
         Route::get('/profile', [ProfileController::class, 'edit'])
             ->name('profile.edit');
 
+        Route::get('/profile/verification', [ProfileController::class, 'verification'])
+            ->name('profile.verification.edit');
+
+        Route::get('/profile/security', [ProfileController::class, 'security'])
+            ->name('profile.security.edit');
+
         Route::patch('/profile', [ProfileController::class, 'update'])
             ->name('profile.update');
+
+        Route::post('/profile/verification', [ClientVerificationController::class, 'store'])
+            ->name('profile.verification.store');
 
         Route::delete('/profile', [ProfileController::class, 'destroy'])
             ->name('profile.destroy');
@@ -117,11 +104,30 @@ Route::middleware(['auth', 'admin'])
         Route::get('/clients', function () {
 
             $clients = User::where('role', 'client')
+                ->with(['loans', 'clientVerification'])
                 ->latest()
                 ->get();
 
             return view('admin.clients.index', compact('clients'));
         })->name('clients');
+
+        Route::get('/client/{client}/report', [ClientReportController::class, 'download'])
+            ->name('clients.report');
+
+        Route::get('/verifications', [ClientVerificationAdminController::class, 'index'])
+            ->name('verifications.index');
+
+        Route::get('/verification/{verification}', [ClientVerificationAdminController::class, 'show'])
+            ->name('verifications.show');
+
+        Route::post('/verification/{verification}/approve', [ClientVerificationAdminController::class, 'approve'])
+            ->name('verifications.approve');
+
+        Route::post('/verification/{verification}/reject', [ClientVerificationAdminController::class, 'reject'])
+            ->name('verifications.reject');
+
+        Route::get('/verification/{verification}/document/{type}', [ClientVerificationAdminController::class, 'document'])
+            ->name('verifications.document');
 
         Route::post('/loan/{id}/approve', [LoanAdminController::class, 'approve'])
             ->name('loan.approve');

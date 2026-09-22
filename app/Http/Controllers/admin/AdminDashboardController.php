@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ClientVerification;
 use App\Models\Loan;
-use App\Models\User;
 use App\Models\Payment;
+use App\Models\User;
 
 class AdminDashboardController extends Controller
 {
@@ -29,9 +30,15 @@ class AdminDashboardController extends Controller
 
             'paid_loans' => Loan::where('status', 'paid')->count(),
 
-            'total_released' => Loan::where('status', 'approved')->sum('amount'),
+            'total_released' => Loan::whereIn('status', ['approved', 'paid'])->sum('amount'),
 
-            'total_collected' => Payment::where('status', 'approved')->sum('amount'),
+            'total_collected' => Payment::whereIn('status', ['paid', 'approved'])->sum('amount'),
+
+            'pending_cash_payments' => Payment::where('status', 'pending')->where('method', 'cash')->count(),
+
+            'total_clients' => User::where('role', 'client')->count(),
+
+            'pending_verifications' => ClientVerification::where('status', ClientVerification::STATUS_PENDING)->count(),
         ];
 
         /*
@@ -41,13 +48,13 @@ class AdminDashboardController extends Controller
         */
 
         $recentLoans = Loan::with([
-                'user',
-                'loanType',
-                'payments',
-                'paymentSchedules'
-            ])
+            'user',
+            'loanType',
+            'payments',
+            'paymentSchedules',
+        ])
             ->latest()
-            ->take(20)
+            ->take(10)
             ->get();
 
         /*
@@ -57,10 +64,10 @@ class AdminDashboardController extends Controller
         */
 
         $overdueLoans = Loan::with([
-                'user',
-                'loanType',
-                'paymentSchedules'
-            ])
+            'user',
+            'loanType',
+            'paymentSchedules',
+        ])
             ->whereHas('paymentSchedules', function ($q) {
                 $q->where('status', 'overdue');
             })

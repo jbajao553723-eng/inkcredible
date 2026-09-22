@@ -1,331 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Payment Details</title>
-
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <style>
-
-        *{
-            font-family:'Space Grotesk',sans-serif;
-        }
-
-        body{
-            background:#f6f7fb;
-            margin:0;
-        }
-
-        .topbar{
-            background:white;
-            padding:20px 35px;
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            box-shadow:0 8px 20px rgba(0,0,0,0.05);
-        }
-
-        .title{
-            font-size:22px;
-            font-weight:700;
-        }
-
-        .subtitle{
-            font-size:13px;
-            color:#6b7280;
-        }
-
-        .btn-back{
-            background:#2563eb;
-            color:white;
-            text-decoration:none;
-            padding:10px 18px;
-            border-radius:10px;
-            font-size:14px;
-            font-weight:600;
-        }
-
-        .btn-back:hover{
-            background:#1d4ed8;
-            color:white;
-        }
-
-        .container-box{
-            padding:30px;
-        }
-
-        .card-box{
-            background:white;
-            border-radius:20px;
-            padding:25px;
-            box-shadow:0 12px 30px rgba(0,0,0,0.05);
-        }
-
-        .detail-row{
-            display:flex;
-            justify-content:space-between;
-            padding:15px 0;
-            border-bottom:1px solid #f3f4f6;
-        }
-
-        .detail-label{
-            font-weight:600;
-            color:#374151;
-        }
-
-        .detail-value{
-            color:#6b7280;
-        }
-
-        .proof-image{
-            max-width:100%;
-            height:auto;
-            border-radius:10px;
-            border:1px solid #ddd;
-            margin-top:10px;
-        }
-
-        .badge-pending{
-            background:#fef3c7;
-            color:#92400e;
-            padding:7px 12px;
-            border-radius:999px;
-            font-size:12px;
-            font-weight:600;
-        }
-
-        .badge-approved{
-            background:#dcfce7;
-            color:#166534;
-            padding:7px 12px;
-            border-radius:999px;
-            font-size:12px;
-            font-weight:600;
-        }
-
-        .badge-rejected{
-            background:#fee2e2;
-            color:#991b1b;
-            padding:7px 12px;
-            border-radius:999px;
-            font-size:12px;
-            font-weight:600;
-        }
-
-        .btn-approve{
-            background:#16a34a;
-            color:white;
-            border:none;
-            padding:10px 20px;
-            border-radius:10px;
-            font-size:14px;
-            font-weight:600;
-            text-decoration:none;
-            display:inline-block;
-        }
-
-        .btn-reject{
-            background:#dc2626;
-            color:white;
-            border:none;
-            padding:10px 20px;
-            border-radius:10px;
-            font-size:14px;
-            font-weight:600;
-            text-decoration:none;
-            display:inline-block;
-        }
-
-        .action-group{
-            display:flex;
-            gap:15px;
-            justify-content:center;
-            margin-top:30px;
-        }
-
-    </style>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payment Details | Inkcredible Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+@vite('resources/js/admin.js')
+<style>@include('partials.admin-styles')</style>
 </head>
-
 <body>
+@php
+    $loan = $payment->loan;
+    $statusClass = match ($payment->status) { 'paid', 'approved' => 'badge-success', 'pending' => 'badge-warning', 'failed', 'rejected' => 'badge-danger', 'refunded' => 'badge-purple', default => 'badge-neutral' };
+    $submitted = $payment->created_at?->copy()->timezone('Asia/Manila');
+    $paidAt = $payment->paid_at?->copy()->timezone('Asia/Manila');
+    $methodLabel = $payment->method === 'gcash' ? 'GCash / QR Ph' : ucfirst($payment->method);
+@endphp
+@include('partials.admin-sidebar', ['active' => 'payments'])
+<main class="main"><div class="page-shell">
+    <header class="topbar">
+        <div><div class="eyebrow">Payment review</div><h1>Transaction #{{ $payment->id }}</h1><p class="subtitle">Review the transaction, client, provider, and proof information.</p></div>
+        <div class="top-actions"><a class="button button-secondary" href="{{ route('admin.payments.index') }}">Back to payments</a><span class="badge {{ $statusClass }}">{{ in_array($payment->status, ['paid', 'approved'], true) ? 'Paid' : ucfirst($payment->status) }}</span></div>
+    </header>
+    @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif
+    @if(session('error'))<div class="alert alert-error" role="alert">{{ session('error') }}</div>@endif
 
-    <!-- TOPBAR -->
+    <section class="stats-grid">
+        <article class="stat-card"><div class="stat-label">Payment amount</div><div class="stat-value">₱{{ number_format($payment->amount, 2) }}</div><div class="stat-note">{{ $payment->currency ?? 'PHP' }} transaction</div></article>
+        <article class="stat-card"><div class="stat-label">Loan balance</div><div class="stat-value">₱{{ number_format($loan->getRemainingBalance(), 2) }}</div><div class="stat-note">Current outstanding amount</div></article>
+        <article class="stat-card"><div class="stat-label">Payment method</div><div class="stat-value" style="font-size:19px">{{ $methodLabel }}</div><div class="stat-note">{{ $payment->provider ? ucfirst($payment->provider).' provider' : 'Manual submission' }}</div></article>
+        <article class="stat-card"><div class="stat-label">Payment status</div><div class="stat-value" style="font-size:19px">{{ in_array($payment->status, ['paid', 'approved'], true) ? 'Paid' : ucfirst($payment->status) }}</div><div class="stat-note">Last updated {{ $payment->updated_at?->diffForHumans() }}</div></article>
+    </section>
 
-    <div class="topbar">
-
+    <div class="detail-layout">
         <div>
+            <section class="panel">
+                <div class="panel-header"><div><h2 class="panel-title">Transaction information</h2><p class="panel-description">Identifiers and processing timestamps.</p></div></div>
+                <div class="panel-body detail-grid">
+                    <div class="detail-item"><div class="detail-label">Reference</div><div class="detail-value">{{ $payment->reference ?: 'Not assigned' }}</div></div>
+                    <div class="detail-item"><div class="detail-label">Provider reference</div><div class="detail-value">{{ $payment->provider_reference ?: 'Not available' }}</div></div>
+                    <div class="detail-item"><div class="detail-label">PayMongo session</div><div class="detail-value">{{ $payment->paymongo_session_id ?: 'Not applicable' }}</div></div>
+                    <div class="detail-item"><div class="detail-label">PayMongo payment</div><div class="detail-value">{{ $payment->paymongo_payment_id ?: 'Not available' }}</div></div>
+                    <div class="detail-item"><div class="detail-label">Submitted</div><div class="detail-value">{{ $submitted?->format('M d, Y · h:i A') }} PHT</div></div>
+                    <div class="detail-item"><div class="detail-label">Confirmed</div><div class="detail-value">{{ $paidAt ? $paidAt->format('M d, Y · h:i A').' PHT' : 'Not confirmed' }}</div></div>
+                </div>
+            </section>
 
-            <div class="title">
-                Payment Details
-            </div>
-
-            <div class="subtitle">
-                Review payment submission details
-            </div>
-
+            <section class="panel">
+                <div class="panel-header"><div><h2 class="panel-title">Client and loan</h2><p class="panel-description">The account and balance connected to this transaction.</p></div><a class="button button-secondary button-small" href="{{ route('admin.loan.show', $loan->id) }}">View loan</a></div>
+                <div class="panel-body detail-grid">
+                    <div class="detail-item"><div class="detail-label">Client</div><div class="detail-value">{{ $loan->user?->name ?? 'Unknown client' }}</div></div>
+                    <div class="detail-item"><div class="detail-label">Email</div><div class="detail-value">{{ $loan->user?->email ?? 'Not provided' }}</div></div>
+                    <div class="detail-item"><div class="detail-label">Loan product</div><div class="detail-value">{{ $loan->loanType?->display_name ?? $loan->loanType?->name ?? 'Loan' }}</div></div>
+                    <div class="detail-item"><div class="detail-label">Loan code</div><div class="detail-value">{{ $loan->loan_code ?: 'Loan #'.$loan->id }}</div></div>
+                    <div class="detail-item"><div class="detail-label">Principal</div><div class="detail-value">₱{{ number_format($loan->amount, 2) }}</div></div>
+                    <div class="detail-item"><div class="detail-label">Total payable</div><div class="detail-value">₱{{ number_format($loan->getTotalWithPenalty(), 2) }}</div></div>
+                </div>
+            </section>
         </div>
 
-        <a href="{{ route('admin.payments.index') }}" class="btn-back">
-            ← Back to Payments
-        </a>
-
-    </div>
-
-    <!-- CONTENT -->
-
-    <div class="container-box">
-
-        <div class="card-box">
-
-            <h5 class="mb-4">Payment Information</h5>
-
-            <!-- PAYMENT DETAILS -->
-
-            <div class="detail-row">
-                <span class="detail-label">Payment ID:</span>
-                <span class="detail-value">#{{ $payment->id }}</span>
-            </div>
-
-            <div class="detail-row">
-                <span class="detail-label">Client Name:</span>
-                <span class="detail-value">{{ $payment->loan->user->name ?? 'Unknown User' }}</span>
-            </div>
-
-            <div class="detail-row">
-                <span class="detail-label">Client Email:</span>
-                <span class="detail-value">{{ $payment->loan->user->email ?? 'No Email' }}</span>
-            </div>
-
-            <div class="detail-row">
-                <span class="detail-label">Loan Type:</span>
-                <span class="detail-value">{{ ucfirst($payment->loan->loan_type ?? 'N/A') }}</span>
-            </div>
-
-            <div class="detail-row">
-                <span class="detail-label">Loan Amount:</span>
-                <span class="detail-value">₱{{ number_format($payment->loan->amount, 2) }}</span>
-            </div>
-
-            <div class="detail-row">
-                <span class="detail-label">Payment Amount:</span>
-                <span class="detail-value">₱{{ number_format($payment->amount, 2) }}</span>
-            </div>
-
-            <div class="detail-row">
-                <span class="detail-label">Payment Method:</span>
-                <span class="detail-value">{{ ucfirst($payment->method) }}</span>
-            </div>
-
-            <div class="detail-row">
-                <span class="detail-label">Status:</span>
-                <span class="detail-value">
-
-                    @if(strtolower($payment->status) == 'pending')
-
-                        <span class="badge-pending">
-                            Pending
-                        </span>
-
-                    @elseif(strtolower($payment->status) == 'approved')
-
-                        <span class="badge-approved">
-                            Approved
-                        </span>
-
+        <aside>
+            <section class="panel">
+                <div class="panel-header"><div><h2 class="panel-title">Payment proof</h2><p class="panel-description">Uploaded evidence for manual cash payments.</p></div></div>
+                <div class="panel-body">
+                    @if($payment->proof)
+                        <a href="{{ asset('storage/'.$payment->proof) }}" target="_blank" rel="noopener"><img class="proof-image" src="{{ asset('storage/'.$payment->proof) }}" alt="Payment proof for transaction {{ $payment->id }}"></a>
+                        <a class="button button-secondary" style="margin-top:14px" href="{{ asset('storage/'.$payment->proof) }}" target="_blank" rel="noopener">Open full size</a>
                     @else
-
-                        <span class="badge-rejected">
-                            Rejected
-                        </span>
-
+                        <div class="empty-state" style="padding:22px 0"><strong>No proof uploaded</strong>{{ $payment->method === 'cash' ? 'This cash payment has no attachment.' : 'Online payments are verified through PayMongo.' }}</div>
                     @endif
-
-                </span>
-            </div>
-
-            <div class="detail-row">
-                <span class="detail-label">Submitted Date:</span>
-                <span class="detail-value">{{ $payment->created_at->format('F d, Y \a\t g:i A') }}</span>
-            </div>
-
-            <!-- PENALTY INFORMATION -->
-            @php
-                $loan = $payment->loan;
-                $overdueDays = $loan->getOverdueDays();
-                $penaltyAmount = $loan->penalty_amount ?? 0;
-            @endphp
-
-            @if($overdueDays > 0)
-            <div class="detail-row" style="background: #fee2e2; padding: 15px; border-radius: 8px; margin-top: 15px;">
-                <div style="width: 100%;">
-                    <p style="margin: 0; color: #991b1b; font-weight: 600;">⚠️ LOAN IS OVERDUE - PENALTY APPLIED</p>
-                    <p style="margin: 5px 0 0 0; color: #991b1b; font-size: 14px;">
-                        Overdue Days: {{ $overdueDays }} | Daily Penalty: {{ $loan->penalty_percentage }}% | Penalty Amount: ₱{{ number_format($penaltyAmount, 2) }}
-                    </p>
                 </div>
-            </div>
+            </section>
+
+            @if($loan->getOverdueDays() > 0)
+                <section class="panel"><div class="panel-body"><div class="notice"><strong>Overdue loan</strong><br>{{ $loan->getOverdueDays() }} days overdue with ₱{{ number_format($loan->penalty_amount, 2) }} in penalties.</div></div></section>
             @endif
 
-            <!-- PROOF IMAGE -->
-
-            @if($payment->proof)
-
-                <div class="mt-4">
-
-                    <h6 class="detail-label mb-3">Payment Proof:</h6>
-
-                    <a href="{{ asset('storage/'.$payment->proof) }}" target="_blank">
-
-                        <img src="{{ asset('storage/'.$payment->proof) }}"
-                             class="proof-image"
-                             alt="Payment Proof">
-
-                    </a>
-
-                    <br>
-
-                    <a href="{{ asset('storage/'.$payment->proof) }}"
-                       target="_blank"
-                       class="btn btn-primary btn-sm mt-2">
-
-                        View Full Size
-
-                    </a>
-
-                </div>
-
+            @if($payment->status === 'pending' && $payment->method === 'cash')
+                <section class="panel"><div class="panel-header"><div><h2 class="panel-title">Verification decision</h2><p class="panel-description">Confirm the proof before taking action.</p></div></div><div class="panel-body action-group">
+                    <form method="POST" action="{{ route('admin.payment.approve', $payment->id) }}" data-confirm="Approve this cash payment?">@csrf<button class="button button-success" type="submit">Approve payment</button></form>
+                    <form method="POST" action="{{ route('admin.payment.reject', $payment->id) }}" data-confirm="Reject this cash payment?">@csrf<button class="button button-danger" type="submit">Reject payment</button></form>
+                </div></section>
+            @elseif($payment->method !== 'cash')
+                <section class="panel"><div class="panel-body"><div class="alert alert-success" style="margin:0">Online payment status is controlled automatically by verified PayMongo data.</div></div></section>
             @endif
-
-            <!-- ACTIONS -->
-
-            @if(strtolower($payment->status) == 'pending')
-
-                <div class="action-group">
-
-                    <form method="POST" action="{{ route('admin.payment.approve', $payment->id) }}" style="display:inline;">
-                        @csrf
-                        <button type="submit" class="btn-approve">
-                            ✓ Approve Payment
-                        </button>
-                    </form>
-
-                    <form method="POST" action="{{ route('admin.payment.reject', $payment->id) }}" style="display:inline;">
-                        @csrf
-                        <button type="submit" class="btn-reject">
-                            ✗ Reject Payment
-                        </button>
-                    </form>
-
-                </div>
-
-            @endif
-
-        </div>
-
+        </aside>
     </div>
-
-</body>
-</html>
+</div></main>
+@include('partials.admin-confirmation')
+</body></html>

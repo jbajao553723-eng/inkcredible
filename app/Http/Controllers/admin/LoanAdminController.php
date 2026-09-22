@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Loan;
 use App\Models\PaymentSchedule;
-use Illuminate\Support\Facades\DB;
 
 class LoanAdminController extends Controller
 {
@@ -17,7 +16,7 @@ class LoanAdminController extends Controller
     public function index()
     {
         // FIX: eager load EVERYTHING needed for dashboard consistency
-        $loans = Loan::with(['user', 'loanType', 'paymentSchedules'])
+        $loans = Loan::with(['user', 'loanType', 'paymentSchedules', 'loanDocuments'])
             ->latest()
             ->get();
 
@@ -31,7 +30,7 @@ class LoanAdminController extends Controller
     */
     public function show($id)
     {
-        $loan = Loan::with(['user', 'loanType', 'paymentSchedules'])
+        $loan = Loan::with(['user', 'loanType', 'paymentSchedules', 'loanDocuments', 'payments'])
             ->findOrFail($id);
 
         return view('admin.loans.show', compact('loan'));
@@ -58,7 +57,7 @@ class LoanAdminController extends Controller
         | CREATE PAYMENT SCHEDULE IF NONE EXISTS
         |--------------------------------------------------------------------------
         */
-        if (!$loan->paymentSchedules()->exists()) {
+        if (! $loan->paymentSchedules()->exists()) {
 
             $dueDays = $loan->loanType->due_days ?? 7;
 
@@ -86,7 +85,7 @@ class LoanAdminController extends Controller
 
         // FIX: consistent status usage (IMPORTANT)
         $loan->update([
-            'status' => Loan::STATUS_REJECTED
+            'status' => Loan::STATUS_REJECTED,
         ]);
 
         return back()->with('success', 'Loan rejected.');

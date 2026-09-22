@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Loan;
-use App\Models\LoanType;
 use App\Models\LoanApplication;
 use App\Models\LoanDocument;
+use App\Models\LoanType;
+use Illuminate\Http\Request;
 
 class LoanController extends Controller
 {
@@ -33,7 +33,11 @@ class LoanController extends Controller
     */
     public function create()
     {
-        return view('client.loans.create');
+        $loanTypes = LoanType::active()
+            ->orderBy('min_amount')
+            ->get();
+
+        return view('client.loans.create', compact('loanTypes'));
     }
 
     /*
@@ -48,6 +52,7 @@ class LoanController extends Controller
             'amount' => 'required|numeric|min:1',
             'government_id' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
             'purpose' => 'nullable|string|max:255',
+            'loan_terms_accepted' => ['accepted'],
         ]);
 
         $loanType = LoanType::where('name', $request->loan_type)
@@ -58,7 +63,12 @@ class LoanController extends Controller
 
         if ($amount < $loanType->min_amount || $amount > $loanType->max_amount) {
             return back()
-                ->with('error', "{$loanType->display_name} must be between ₱{$loanType->min_amount} and ₱{$loanType->max_amount}.")
+                ->with('error', sprintf(
+                    '%s amount must be between PHP %s and PHP %s.',
+                    $loanType->display_name,
+                    number_format((float) $loanType->min_amount, 2),
+                    number_format((float) $loanType->max_amount, 2)
+                ))
                 ->withInput();
         }
 
@@ -81,6 +91,8 @@ class LoanController extends Controller
             'total_payable' => $totalPayable,
             'status' => LoanApplication::STATUS_PENDING,
             'submitted_at' => now(),
+            'terms_accepted_at' => now(),
+            'terms_version' => config('legal.loan_terms_version'),
         ]);
 
         /*
@@ -95,7 +107,9 @@ class LoanController extends Controller
             'total_payable' => $totalPayable,
             'paid_amount' => 0,
             'status' => Loan::STATUS_PENDING,
-            'loan_code' => 'LN-' . date('Ymd') . '-' . rand(1000, 9999),
+            'loan_code' => 'LN-'.date('Ymd').'-'.rand(1000, 9999),
+            'terms_accepted_at' => now(),
+            'terms_version' => config('legal.loan_terms_version'),
         ]);
 
         /*
@@ -127,7 +141,7 @@ class LoanController extends Controller
         $loan = Loan::findOrFail($id);
 
         $loan->update([
-            'status' => Loan::STATUS_APPROVED
+            'status' => Loan::STATUS_APPROVED,
         ]);
 
         return back()->with('success', 'Loan approved successfully.');
@@ -143,7 +157,7 @@ class LoanController extends Controller
         $loan = Loan::findOrFail($id);
 
         $loan->update([
-            'status' => Loan::STATUS_REJECTED
+            'status' => Loan::STATUS_REJECTED,
         ]);
 
         return back()->with('success', 'Loan rejected successfully.');
