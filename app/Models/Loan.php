@@ -5,10 +5,13 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Loan extends Model
 {
     use HasFactory;
+
+    public const DAILY_PENALTY_RATE = 5.00;
 
     const STATUS_PENDING = 'pending';
 
@@ -21,11 +24,15 @@ class Loan extends Model
     protected $fillable = [
         'user_id',
         'loan_type_id',
+        'purpose',
         'amount',
         'total_payable',
+        'installment_count',
+        'repayment_period_days',
         'paid_amount',
         'payment_count',
         'status',
+        'rejection_reason',
         'loan_code',
         'approved_at',
         'disbursed_at',
@@ -36,7 +43,12 @@ class Loan extends Model
     protected $casts = [
         'amount' => 'decimal:2',
         'total_payable' => 'decimal:2',
+        'installment_count' => 'integer',
+        'repayment_period_days' => 'integer',
         'paid_amount' => 'decimal:2',
+        'penalty_percentage' => 'decimal:2',
+        'is_overdue' => 'boolean',
+        'last_penalty_calculated_date' => 'date',
         'approved_at' => 'datetime',
         'disbursed_at' => 'datetime',
         'terms_accepted_at' => 'datetime',
@@ -131,7 +143,66 @@ class Loan extends Model
 
     public function getPenaltyPercentageAttribute()
     {
-        return 2.00;
+        return self::DAILY_PENALTY_RATE;
+    }
+
+    /**
+     * Apply a simple daily penalty to the unpaid part of every overdue installment.
+     */
+    public function calculatePenalty(?Carbon $asOf = null): float
+    {
+        $calculationDate = ($asOf ?? Carbon::now('Asia/Manila'))->copy()->startOfDay();
+
+        return DB::transaction(function () use ($calculationDate) {
+            $loan = self::whereKey($this->getKey())->lockForUpdate()->firstOrFail();
+            $unallocatedPaidAmount = max(0, (float) $loan->paid_amount);
+            $totalPenalty = 0.0;
+            $hasOverdueInstallment = false;
+
+            $schedules = $loan->paymentSchedules()
+                ->orderBy('installment_number')
+                ->lockForUpdate()
+                ->get();
+
+            foreach ($schedules as $schedule) {
+                $scheduledAmount = (float) $schedule->scheduled_amount;
+                $principalPaid = min($unallocatedPaidAmount, $scheduledAmount);
+                $unallocatedPaidAmount -= $principalPaid;
+                $unpaidPrincipal = max(0, $scheduledAmount - $principalPaid);
+                $dueDate = $schedule->due_date->copy()->startOfDay();
+                $daysOverdue = $unpaidPrincipal > 0 && $dueDate->lt($calculationDate)
+                    ? (int) $dueDate->diffInDays($calculationDate)
+                    : 0;
+                $penaltyAmount = round(
+                    $unpaidPrincipal * (self::DAILY_PENALTY_RATE / 100) * $daysOverdue,
+                    2
+                );
+
+                $status = $unpaidPrincipal <= 0
+                    ? PaymentSchedule::STATUS_PAID
+                    : ($daysOverdue > 0 ? PaymentSchedule::STATUS_OVERDUE : PaymentSchedule::STATUS_PENDING);
+
+                $schedule->update([
+                    'paid_amount' => round($principalPaid, 2),
+                    'penalty_amount' => $penaltyAmount,
+                    'status' => $status,
+                ]);
+
+                $totalPenalty += $penaltyAmount;
+                $hasOverdueInstallment = $hasOverdueInstallment || $daysOverdue > 0;
+            }
+
+            $loan->forceFill([
+                'penalty_percentage' => self::DAILY_PENALTY_RATE,
+                'penalty_amount' => round($totalPenalty, 2),
+                'is_overdue' => $hasOverdueInstallment,
+                'last_penalty_calculated_date' => $calculationDate->toDateString(),
+            ])->saveQuietly();
+
+            $this->refresh();
+
+            return round($totalPenalty, 2);
+        });
     }
 
     /*

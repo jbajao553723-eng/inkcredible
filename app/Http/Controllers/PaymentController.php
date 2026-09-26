@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Loan;
 use App\Models\Payment;
+use App\Models\PaymentSchedule;
 use App\Services\PayMongoService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,7 +29,7 @@ class PaymentController extends Controller
 
         $loans = Loan::where('user_id', $user->id)
             ->where('status', 'approved')
-            ->with('loanType')
+            ->with(['loanType', 'paymentSchedules'])
             ->latest()
             ->get();
 
@@ -50,7 +52,7 @@ class PaymentController extends Controller
         $validated = $request->validate([
             'loan_id' => 'required|exists:loans,id',
             'amount' => 'required|numeric|min:0.01|max:100000000',
-            'method' => 'required|in:gcash,paymaya,cash',
+            'method' => 'required|in:gcash,paymaya,bank_transfer,cash',
             'proof' => 'required_if:method,cash|nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
@@ -96,7 +98,7 @@ class PaymentController extends Controller
             'currency' => 'PHP',
             'method' => $validated['method'],
             'proof' => $proofPath,
-            'status' => 'pending',
+            'status' => Payment::STATUS_PENDING,
         ]);
 
         if ($validated['method'] !== 'cash') {
@@ -123,7 +125,7 @@ class PaymentController extends Controller
     {
         $paymentModel = $this->findUserPayment($payment);
 
-        if (! in_array($paymentModel->status, ['paid', 'approved', 'refunded'], true)
+        if ($paymentModel->status === Payment::STATUS_PENDING
             && $paymentModel->paymongo_session_id) {
             try {
                 $session = $payMongo->retrieveCheckoutSession($paymentModel->paymongo_session_id);
@@ -236,13 +238,13 @@ class PaymentController extends Controller
             }
 
             if ($eventType === 'checkout_session.payment.paid' || $eventType === 'payment.paid') {
-                $this->markAsPaid($payment, $checkoutSessionId, $paymongoPaymentId, data_get($paymentAttributes, 'source.type'));
+                $this->markAsApproved($payment, $checkoutSessionId, $paymongoPaymentId, data_get($paymentAttributes, 'source.type'));
             } elseif (in_array($eventType, ['payment.failed', 'checkout_session.payment.failed'], true)
-                && ! in_array($payment->status, ['paid', 'approved', 'refunded'], true)) {
-                $payment->update(['status' => 'failed', 'paymongo_payment_id' => $paymongoPaymentId]);
+                && $payment->status === Payment::STATUS_PENDING) {
+                $payment->update(['status' => Payment::STATUS_REJECTED, 'paymongo_payment_id' => $paymongoPaymentId]);
             } elseif (in_array($eventType, ['refund.succeeded', 'payment.refunded'], true)
-                && in_array($payment->status, ['paid', 'approved'], true)) {
-                $payment->update(['status' => 'refunded']);
+                && $payment->status === Payment::STATUS_APPROVED) {
+                $payment->update(['status' => Payment::STATUS_REJECTED]);
                 $this->recalculateLoan($payment->loan()->lockForUpdate()->first());
             }
         });
@@ -255,14 +257,94 @@ class PaymentController extends Controller
     | ADMIN PAYMENTS LIST
     |----------------------------------------------------------------------
     */
-    public function adminIndex()
+    public function adminIndex(Request $request)
     {
-        $payments = Payment::with(['loan.user', 'loan.loanType'])
+        $validated = $request->validate([
+            'q' => ['nullable', 'string', 'max:100'],
+            'status' => ['nullable', 'in:pending,approved,rejected'],
+            'method' => ['nullable', 'in:gcash,paymaya,bank_transfer,cash'],
+            'date_from' => ['nullable', 'date_format:Y-m-d'],
+            'date_to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:date_from'],
+            'per_page' => ['nullable', 'integer', 'in:25,50,100'],
+        ]);
+
+        $search = trim($validated['q'] ?? '');
+        $status = $validated['status'] ?? null;
+        $method = $validated['method'] ?? null;
+        $dateFrom = isset($validated['date_from'])
+            ? Carbon::createFromFormat('Y-m-d', $validated['date_from'], 'Asia/Manila')->startOfDay()->utc()
+            : null;
+        $dateTo = isset($validated['date_to'])
+            ? Carbon::createFromFormat('Y-m-d', $validated['date_to'], 'Asia/Manila')->endOfDay()->utc()
+            : null;
+        $methodValues = match ($method) {
+            'gcash' => ['gcash', 'qrph'],
+            'bank_transfer' => ['bank_transfer', 'dob', 'brankas'],
+            null => [],
+            default => [$method],
+        };
+
+        $payments = Payment::query()
+            ->with(['loan.user', 'loan.loanType'])
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('reference', 'like', "%{$search}%")
+                        ->orWhere('provider_reference', 'like', "%{$search}%")
+                        ->orWhere('paymongo_payment_id', 'like', "%{$search}%")
+                        ->orWhereHas('loan', function ($loan) use ($search) {
+                            $loan->where('loan_code', 'like', "%{$search}%")
+                                ->orWhereHas('user', function ($user) use ($search) {
+                                    $user->where('name', 'like', "%{$search}%")
+                                        ->orWhere('first_name', 'like', "%{$search}%")
+                                        ->orWhere('last_name', 'like', "%{$search}%")
+                                        ->orWhere('email', 'like', "%{$search}%")
+                                        ->orWhere('contact_number', 'like', "%{$search}%");
+                                });
+                        });
+
+                    if (ctype_digit($search)) {
+                        $query->orWhere('payments.id', (int) $search);
+                    }
+                });
+            })
+            ->when($status, fn ($query) => $query->where('status', $status))
+            ->when($methodValues, fn ($query) => $query->whereIn('method', $methodValues))
+            ->when($dateFrom, fn ($query) => $query->whereRaw('COALESCE(paid_at, created_at) >= ?', [$dateFrom]))
+            ->when($dateTo, fn ($query) => $query->whereRaw('COALESCE(paid_at, created_at) <= ?', [$dateTo]))
+            ->orderByRaw("CASE WHEN status = 'pending' AND method = 'cash' THEN 0 WHEN status = 'pending' THEN 1 ELSE 2 END")
             ->orderByRaw('COALESCE(paid_at, created_at) DESC')
             ->orderByDesc('id')
-            ->get();
+            ->paginate($validated['per_page'] ?? 25)
+            ->withQueryString();
 
-        return view('admin.payments.index', compact('payments'));
+        $stats = [
+            'transactions' => Payment::count(),
+            'collected' => (float) Payment::where('status', Payment::STATUS_APPROVED)->sum('amount'),
+            'pending_cash' => Payment::where('status', Payment::STATUS_PENDING)->where('method', 'cash')->count(),
+            'clients' => Payment::query()
+                ->join('loans', 'payments.loan_id', '=', 'loans.id')
+                ->distinct('loans.user_id')
+                ->count('loans.user_id'),
+        ];
+
+        $clientSummaries = Payment::query()
+            ->join('loans', 'payments.loan_id', '=', 'loans.id')
+            ->selectRaw('loans.user_id, COUNT(payments.id) as payment_count')
+            ->selectRaw("SUM(CASE WHEN payments.status = 'approved' THEN payments.amount ELSE 0 END) as collected")
+            ->groupBy('loans.user_id')
+            ->get()
+            ->keyBy('user_id');
+
+        $filters = [
+            'q' => $search,
+            'status' => $status,
+            'method' => $method,
+            'date_from' => $validated['date_from'] ?? null,
+            'date_to' => $validated['date_to'] ?? null,
+            'per_page' => $validated['per_page'] ?? 25,
+        ];
+
+        return view('admin.payments.index', compact('payments', 'stats', 'clientSummaries', 'filters'));
     }
 
     /*
@@ -291,15 +373,15 @@ class PaymentController extends Controller
             return back()->with('error', 'Online payments are confirmed automatically by PayMongo and cannot be approved manually.');
         }
 
-        if (in_array($payment->status, ['paid', 'approved'], true)) {
+        if ($payment->status === Payment::STATUS_APPROVED) {
             return back()->with('success', 'Payment already approved.');
         }
 
-        if ($payment->status !== 'pending') {
+        if ($payment->status !== Payment::STATUS_PENDING) {
             return back()->with('error', 'Only pending cash payments can be approved.');
         }
 
-        $this->markAsPaid($payment);
+        $this->markAsApproved($payment);
 
         return back()->with('success', 'Payment approved successfully!');
     }
@@ -313,26 +395,26 @@ class PaymentController extends Controller
     {
         $payment = Payment::findOrFail($id);
 
-        if ($payment->method !== 'cash' || $payment->status !== 'pending') {
+        if ($payment->method !== 'cash' || $payment->status !== Payment::STATUS_PENDING) {
             return back()->with('error', 'Only pending cash payments can be rejected manually.');
         }
 
-        $payment->update(['status' => 'rejected']);
+        $payment->update(['status' => Payment::STATUS_REJECTED]);
 
         return back()->with('success', 'Payment rejected!');
     }
 
-    private function markAsPaid(Payment $payment, ?string $sessionId = null, ?string $paymentId = null, ?string $method = null): void
+    private function markAsApproved(Payment $payment, ?string $sessionId = null, ?string $paymentId = null, ?string $method = null): void
     {
         DB::transaction(function () use ($payment, $sessionId, $paymentId, $method) {
             $payment = Payment::whereKey($payment->id)->lockForUpdate()->firstOrFail();
 
-            if (in_array($payment->status, ['paid', 'approved', 'refunded'], true)) {
+            if ($payment->status === Payment::STATUS_APPROVED) {
                 return;
             }
 
             $payment->update([
-                'status' => 'paid',
+                'status' => Payment::STATUS_APPROVED,
                 'paid_at' => now(),
                 'paymongo_session_id' => $sessionId ?: $payment->paymongo_session_id,
                 'paymongo_payment_id' => $paymentId ?: $payment->paymongo_payment_id,
@@ -346,10 +428,32 @@ class PaymentController extends Controller
     private function recalculateLoan(Loan $loan): void
     {
         $successfulPayments = Payment::where('loan_id', $loan->id)
-            ->whereIn('status', ['paid', 'approved'])
+            ->where('status', Payment::STATUS_APPROVED)
             ->get(['amount']);
-        $totalPaid = $successfulPayments->sum('amount');
+        $totalPaid = round((float) $successfulPayments->sum('amount'), 2);
         $totalDue = (float) $loan->getTotalWithPenalty();
+
+        $unallocatedPaidAmount = $totalPaid;
+        $schedules = $loan->paymentSchedules()
+            ->orderBy('installment_number')
+            ->lockForUpdate()
+            ->get();
+
+        foreach ($schedules as $schedule) {
+            $scheduledAmount = (float) $schedule->scheduled_amount;
+            $allocatedAmount = min($unallocatedPaidAmount, $scheduledAmount);
+            $unallocatedPaidAmount = round(max(0, $unallocatedPaidAmount - $allocatedAmount), 2);
+            $isPaid = $allocatedAmount >= $scheduledAmount;
+            $isOverdue = ! $isPaid && $schedule->due_date->isBefore(today());
+
+            $schedule->update([
+                'paid_amount' => round($allocatedAmount, 2),
+                'paid_date' => $isPaid ? ($schedule->paid_date ?? today()) : null,
+                'status' => $isPaid
+                    ? PaymentSchedule::STATUS_PAID
+                    : ($isOverdue ? PaymentSchedule::STATUS_OVERDUE : PaymentSchedule::STATUS_PENDING),
+            ]);
+        }
 
         $loan->update([
             'paid_amount' => $totalPaid,
@@ -386,7 +490,7 @@ class PaymentController extends Controller
             return;
         }
 
-        $this->markAsPaid(
+        $this->markAsApproved(
             $payment,
             $sessionId,
             data_get($providerPayment, 'id'),

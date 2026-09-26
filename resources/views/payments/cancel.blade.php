@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Payment cancelled</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    @vite('resources/js/app.js')
     <style>
         body { background: #f6f7fb; min-height: 100vh; display: grid; place-items: center; }
         .result { max-width: 520px; margin: 24px; padding: 40px; background: #fff; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,.06); text-align: center; }
         .icon { color: #6c757d; font-size: 48px; line-height: 1; }
+        @include('partials.motion-styles')
     </style>
 </head>
 <body>

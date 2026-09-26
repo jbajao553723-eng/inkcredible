@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Inkcredible Lending System</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>@include('partials.motion-styles')</style>
 </head>
 <body class="bg-gray-100">
 

@@ -13,15 +13,19 @@ class PayMongoService
     public function createCheckoutSession(Payment $payment): string
     {
         $secretKey = config('paymongo.secret_key');
-        $checkoutMethod = $payment->method === 'gcash'
-            ? config('paymongo.gcash_checkout_method', 'gcash')
-            : $payment->method;
+        $checkoutMethods = match ($payment->method) {
+            'gcash' => [config('paymongo.gcash_checkout_method', 'gcash')],
+            'bank_transfer' => config('paymongo.bank_transfer_checkout_methods', ['dob', 'brankas']),
+            default => [$payment->method],
+        };
 
         if (! $secretKey) {
             throw new RuntimeException('PayMongo is not configured. Set PAYMONGO_SECRET_KEY first.');
         }
 
-        if (! in_array($checkoutMethod, ['gcash', 'qrph', 'paymaya'], true)) {
+        $allowedCheckoutMethods = ['gcash', 'qrph', 'paymaya', 'dob', 'brankas'];
+
+        if ($checkoutMethods === [] || array_diff($checkoutMethods, $allowedCheckoutMethods) !== []) {
             throw new RuntimeException('The configured PayMongo checkout method is invalid.');
         }
 
@@ -41,7 +45,7 @@ class PayMongoService
                         ]],
                         // Keep checkout on the method selected by the borrower.
                         // PayMongo displays a scannable GCash QR on desktop.
-                        'payment_method_types' => [$checkoutMethod],
+                        'payment_method_types' => $checkoutMethods,
                         'reference_number' => $payment->reference,
                         'success_url' => route('payments.success', ['payment' => $payment->id]),
                         'cancel_url' => route('payments.cancel', ['payment' => $payment->id]),

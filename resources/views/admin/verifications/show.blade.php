@@ -8,12 +8,31 @@
 @vite('resources/js/admin.js')
 <style>
 @include('partials.admin-styles')
-textarea { width:100%; min-height:120px; padding:11px; color:#344054; border:1px solid #d0d5dd; border-radius:9px; resize:vertical; font:inherit; font-size:12px; }
+textarea { width:100%; min-height:96px; padding:11px; color:#344054; border:1px solid #d0d5dd; border-radius:9px; resize:vertical; font:inherit; font-size:12px; }
 textarea:focus { outline:none; border-color:#818cf8; box-shadow:0 0 0 3px rgba(99,102,241,.1); }
+.review-identity { display:grid; grid-template-columns:auto minmax(0,1fr) minmax(185px,.38fr); gap:20px; align-items:center; margin-bottom:22px; padding:22px; border-color:#dfe3ea; box-shadow:0 8px 24px rgba(16,24,40,.045); }
+.review-photo { display:grid; place-items:center; width:86px; height:86px; overflow:hidden; color:#4338ca; background:linear-gradient(145deg,#eef2ff,#e0e7ff); border:4px solid #fff; border-radius:20px; box-shadow:0 6px 18px rgba(16,24,40,.12); font-size:24px; font-weight:700; }
+.review-photo img { width:100%; height:100%; object-fit:cover; }
+.review-kicker { color:#6366f1; font-size:9px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+.review-name { margin:5px 0 0; font-size:20px; letter-spacing:-.025em; }
+.review-contact { display:flex; gap:8px 16px; margin-top:10px; color:#667085; font-size:10px; flex-wrap:wrap; }
+.review-address { margin-top:8px; color:#98a2b3; font-size:10px; line-height:1.45; }
+.review-account { display:grid; gap:10px; padding-left:20px; border-left:1px solid #f2f4f7; }
+.review-account-row { display:flex; justify-content:space-between; gap:12px; }
+.review-account-row span { color:#98a2b3; font-size:9px; }
+.review-account-row strong { color:#344054; font-size:10px; font-weight:600; text-align:right; }
 .document-card { display:block; padding:16px; color:#344054; background:#f9fafb; border:1px solid var(--border); border-radius:12px; text-decoration:none; }
 .document-card:hover { border-color:#c7d2fe; }
 .document-card strong { display:block; margin-bottom:5px; }
 .privacy-note { padding:14px; color:#344054; background:#f8fafc; border:1px solid var(--border); border-radius:10px; font-size:11px; line-height:1.55; }
+.decision-body { display:grid; gap:16px; }
+.decision-reason { display:grid; gap:7px; }
+.decision-help { margin:0; color:var(--muted); font-size:11px; line-height:1.45; }
+.decision-actions { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; padding-top:2px; }
+.decision-actions .button { width:100%; min-height:42px; }
+@media (max-width:760px) { .review-identity { grid-template-columns:auto minmax(0,1fr); } .review-account { grid-column:1/-1; padding:16px 0 0; border-top:1px solid #f2f4f7; border-left:0; } }
+@media (max-width:480px) { .review-identity { grid-template-columns:1fr; justify-items:start; } .review-photo { width:74px; height:74px; } }
+@media (max-width:380px) { .decision-actions { grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
@@ -21,18 +40,42 @@ textarea:focus { outline:none; border-color:#818cf8; box-shadow:0 0 0 3px rgba(9
     $statusClass = match ($verification->status) { 'approved' => 'badge-success', 'rejected' => 'badge-danger', default => 'badge-warning' };
     $submitted = $verification->submitted_at?->copy()->timezone('Asia/Manila');
     $reviewed = $verification->reviewed_at?->copy()->timezone('Asia/Manila');
-    $loanCount = $verification->user?->loans->count() ?? 0;
+    $client = $verification->user;
+    $loanCount = $client?->loans->count() ?? 0;
+    $activeLoanCount = $client?->loans->where('status', 'approved')->count() ?? 0;
+    $registered = $client?->created_at?->copy()->timezone('Asia/Manila');
+    $initials = $client
+        ? collect([$client->first_name, $client->last_name])->filter()->map(fn ($name) => Str::upper(Str::substr($name, 0, 1)))->implode('')
+        : '?';
 @endphp
-@include('partials.admin-sidebar', ['active' => 'verifications'])
+@include('partials.admin-sidebar', ['active' => 'clients'])
 <main class="main"><div class="page-shell">
     <header class="topbar">
-        <div><div class="eyebrow">Verification review</div><h1>{{ $verification->user?->full_name ?? 'Client record' }}</h1><p class="subtitle">Compare the submitted profile and private evidence before recording a decision.</p></div>
-        <div class="top-actions"><a class="button button-secondary" href="{{ route('admin.verifications.index') }}">Back to queue</a><span class="badge {{ $statusClass }}">{{ $verification->status }}</span></div>
+        <div><div class="eyebrow">Verification review</div><h1>Review details</h1><p class="subtitle">Confirm {{ $client?->full_name ?? 'the client' }}'s profile and private evidence before recording a decision.</p></div>
+        <div class="top-actions"><a class="button button-secondary" href="{{ route('admin.clients', ['section' => 'verifications']) }}">Back to queue</a><span class="badge {{ $statusClass }}">{{ $verification->status }}</span></div>
     </header>
 
     @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif
     @if(session('error'))<div class="alert alert-error" role="alert">{{ session('error') }}</div>@endif
     @if($errors->any())<div class="alert alert-error" role="alert">{{ $errors->first() }}</div>@endif
+
+    @if($client)
+        <section class="panel review-identity">
+            <div class="review-photo">@if($client->profile_photo_path)<img src="{{ route('admin.clients.photo', ['client' => $client, 'v' => $client->updated_at?->timestamp]) }}" alt="{{ $client->full_name }} profile photo">@else<span>{{ $initials ?: 'U' }}</span>@endif</div>
+            <div>
+                <div class="review-kicker">Client #{{ $client->id }}</div>
+                <h2 class="review-name">{{ $client->full_name }}</h2>
+                <div class="review-contact"><span>{{ $client->email }}</span><span>{{ $client->contact_number ?: 'No contact number' }}</span><span>Age {{ $client->age ?: 'not provided' }}</span></div>
+                <div class="review-address">{{ $client->address ?: 'Address not provided' }}</div>
+            </div>
+            <div class="review-account">
+                <div class="review-account-row"><span>Verification</span><strong><span class="badge {{ $statusClass }}">{{ ucfirst($verification->status) }}</span></strong></div>
+                <div class="review-account-row"><span>Email</span><strong>{{ $client->email_verified_at ? 'Verified' : 'Not verified' }}</strong></div>
+                <div class="review-account-row"><span>Registered</span><strong>{{ $registered?->format('M d, Y') ?? 'Unavailable' }}</strong></div>
+                <div class="review-account-row"><span>Active loans</span><strong>{{ $activeLoanCount }}</strong></div>
+            </div>
+        </section>
+    @endif
 
     <section class="stats-grid">
         <article class="stat-card"><div class="stat-label">Monthly income</div><div class="stat-value">PHP {{ number_format((float) $verification->monthly_income, 2) }}</div><div class="stat-note">Client-declared amount</div></article>
@@ -50,6 +93,7 @@ textarea:focus { outline:none; border-color:#818cf8; box-shadow:0 0 0 3px rgba(9
                     <div class="detail-item"><div class="detail-label">Last name</div><div class="detail-value">{{ $verification->user?->last_name ?? 'Unavailable' }}</div></div>
                     <div class="detail-item"><div class="detail-label">Email address</div><div class="detail-value">{{ $verification->user?->email ?? 'Unavailable' }}</div></div>
                     <div class="detail-item"><div class="detail-label">Contact number</div><div class="detail-value">{{ $verification->user?->contact_number ?: 'Not provided' }}</div></div>
+                    <div class="detail-item"><div class="detail-label">Age</div><div class="detail-value">{{ $verification->user?->age ?: 'Not provided' }}</div></div>
                     <div class="detail-item"><div class="detail-label">Address</div><div class="detail-value">{{ $verification->user?->address ?: 'Not provided' }}</div></div>
                     <div class="detail-item"><div class="detail-label">Employment status</div><div class="detail-value">{{ str($verification->employment_status)->replace('_', ' ')->title() }}</div></div>
                     <div class="detail-item"><div class="detail-label">Company / business</div><div class="detail-value">{{ $verification->company_name ?: 'Not applicable' }}</div></div>
@@ -88,14 +132,18 @@ textarea:focus { outline:none; border-color:#818cf8; box-shadow:0 0 0 3px rgba(9
             @if($verification->status === 'pending')
                 <section class="panel">
                     <div class="panel-header"><div><h2 class="panel-title">Verification decision</h2><p class="panel-description">Approval immediately enables loan requests.</p></div></div>
-                    <div class="panel-body" style="display:grid;gap:18px">
-                        <form method="POST" action="{{ route('admin.verifications.approve', $verification) }}" data-confirm="Approve this client verification?">@csrf<button class="button button-success" style="width:100%" type="submit">Approve verification</button></form>
-                        <form method="POST" action="{{ route('admin.verifications.reject', $verification) }}" data-confirm="Reject this submission and return it to the client?">
+                    <div class="panel-body decision-body">
+                        <form id="approve-verification" method="POST" action="{{ route('admin.verifications.approve', $verification) }}" data-confirm="Approve this client verification?">@csrf</form>
+                        <form id="reject-verification" class="decision-reason" method="POST" action="{{ route('admin.verifications.reject', $verification) }}" data-confirm="Reject this submission and return it to the client?">
                             @csrf
                             <label class="detail-label" for="rejection_reason">Reason for rejection</label>
                             <textarea id="rejection_reason" name="rejection_reason" required maxlength="1000" placeholder="Explain what must be corrected or resubmitted...">{{ old('rejection_reason') }}</textarea>
-                            <button class="button button-danger" style="width:100%;margin-top:10px" type="submit">Reject and request changes</button>
+                            <p class="decision-help">Required only when requesting changes. The client will see this message.</p>
                         </form>
+                        <div class="decision-actions">
+                            <button class="button button-danger" type="submit" form="reject-verification">Request changes</button>
+                            <button class="button button-success" type="submit" form="approve-verification">Approve verification</button>
+                        </div>
                     </div>
                 </section>
             @else

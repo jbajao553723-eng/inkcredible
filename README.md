@@ -17,9 +17,12 @@ APP_URL=https://your-domain.example
 PAYMONGO_SECRET_KEY=sk_test_your_key
 PAYMONGO_WEBHOOK_SECRET=your_webhook_secret
 PAYMONGO_GCASH_METHOD=gcash
+PAYMONGO_BANK_TRANSFER_METHODS=dob,brankas
 ```
 
 If the PayMongo test account has QR Ph enabled but not the separate GCash capability, set `PAYMONGO_GCASH_METHOD=qrph`. The checkout will generate a bill-specific QR that can be scanned using GCash.
+
+Bank transfer uses PayMongo Direct Online Banking. Keep `dob` for BPI and UnionBank and `brankas` for BDO, Landbank, and Metrobank. These methods must be activated for the PayMongo account; remove an unavailable rail from `PAYMONGO_BANK_TRANSFER_METHODS` if necessary.
 
 4. Run `php artisan migrate` and clear cached configuration with `php artisan config:clear`.
 5. In the PayMongo dashboard, add this webhook endpoint:

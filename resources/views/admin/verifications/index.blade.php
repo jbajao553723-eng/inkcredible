@@ -40,7 +40,7 @@
         @if($verifications->isEmpty())
             <div class="empty-state"><strong>No verification submissions</strong>Client submissions will appear here for review.</div>
         @else
-            <div class="table-wrap"><table><thead><tr><th>Client</th><th>Employment</th><th>Declared income</th><th>Submitted</th><th>Status</th><th>Action</th></tr></thead>
+            <div class="table-wrap"><table><thead><tr><th>Client</th><th>Email</th><th>Employment</th><th>Declared income</th><th>Submitted</th><th>Status</th><th>Action</th></tr></thead>
                 <tbody id="verification-table">
                 @foreach($verifications as $verification)
                     @php
@@ -48,7 +48,8 @@
                         $statusClass = match ($verification->status) { 'approved' => 'badge-success', 'rejected' => 'badge-danger', default => 'badge-warning' };
                     @endphp
                     <tr data-status="{{ $verification->status }}" data-search="{{ strtolower(($verification->user?->first_name ?? '').' '.($verification->user?->last_name ?? '').' '.($verification->user?->email ?? '').' '.$verification->company_name.' '.$verification->job_title) }}">
-                        <td><div class="identity"><span class="avatar">{{ strtoupper(substr($verification->user?->first_name ?? '?', 0, 1)) }}</span><span><span class="cell-title">{{ $verification->user?->full_name ?? 'Deleted client' }}</span><span class="cell-secondary">{{ $verification->user?->email ?? 'Account unavailable' }}</span></span></div></td>
+                        <td><div class="identity"><span class="avatar">{{ strtoupper(substr($verification->user?->first_name ?? '?', 0, 1)) }}</span><span class="cell-title">{{ $verification->user?->full_name ?? 'Deleted client' }}</span></div></td>
+                        <td class="email-cell"><span class="email-value">{{ $verification->user?->email ?? 'Account unavailable' }}</span></td>
                         <td><div class="cell-title">{{ $verification->job_title ?: str($verification->employment_status)->replace('_', ' ')->title() }}</div><div class="cell-secondary">{{ $verification->company_name ?: $verification->source_of_income }}</div></td>
                         <td class="amount">PHP {{ number_format((float) $verification->monthly_income, 2) }}<div class="cell-secondary">per month</div></td>
                         <td><div>{{ $submitted?->format('M d, Y') }}</div><div class="cell-secondary">{{ $submitted?->format('h:i A') }} PHT</div></td>

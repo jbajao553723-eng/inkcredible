@@ -27,6 +27,7 @@ class User extends Authenticatable
         'contact_number',
         'age',
         'address',
+        'profile_photo_path',
         'terms_accepted_at',
         'terms_version',
 

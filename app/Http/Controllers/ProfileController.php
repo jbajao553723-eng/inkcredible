@@ -5,9 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ProfileUpdateRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProfileController extends Controller
 {
@@ -16,6 +17,8 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): View
     {
+        $request->user()->load('clientVerification');
+
         return view('profile.edit', [
             'user' => $request->user(),
         ]);
@@ -36,12 +39,9 @@ class ProfileController extends Controller
     /**
      * Display password and account security settings.
      */
-    public function security(Request $request): View
+    public function security(): View
     {
-        return view('profile.security', [
-            'user' => $request->user(),
-            'hasExistingLoans' => $request->user()->loans()->exists(),
-        ]);
+        return view('profile.security');
     }
 
     /**
@@ -50,7 +50,14 @@ class ProfileController extends Controller
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
         $validated = $request->validated();
+        unset($validated['profile_photo']);
         $validated['name'] = trim($validated['first_name'].' '.$validated['last_name']);
+
+        $previousPhoto = $request->user()->profile_photo_path;
+
+        if ($request->hasFile('profile_photo')) {
+            $validated['profile_photo_path'] = $request->file('profile_photo')->store('profile-photos', 'public');
+        }
 
         $request->user()->fill($validated);
 
@@ -60,33 +67,24 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
+        if (isset($validated['profile_photo_path']) && $previousPhoto) {
+            Storage::disk('public')->delete($previousPhoto);
+        }
+
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
 
     /**
-     * Delete the user's account.
+     * Display the authenticated client's profile photo.
      */
-    public function destroy(Request $request): RedirectResponse
+    public function photo(Request $request): StreamedResponse
     {
-        $request->validateWithBag('userDeletion', [
-            'password' => ['required', 'current_password'],
+        $path = $request->user()->profile_photo_path;
+
+        abort_unless($path && Storage::disk('public')->exists($path), 404);
+
+        return Storage::disk('public')->response($path, null, [
+            'Cache-Control' => 'private, max-age=300',
         ]);
-
-        $user = $request->user();
-
-        if ($user->loans()->exists()) {
-            return Redirect::route('profile.security.edit')->withErrors([
-                'account_deletion' => 'Your account cannot be deleted while it has existing loan records.',
-            ], 'userDeletion');
-        }
-
-        Auth::logout();
-
-        $user->delete();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return Redirect::to('/');
     }
 }

@@ -30,6 +30,7 @@ class ProfileUpdateRequest extends FormRequest
             'contact_number' => ['required', 'string', 'max:30'],
             'age' => ['required', 'integer', 'min:18', 'max:120'],
             'address' => ['required', 'string', 'max:500'],
+            'profile_photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ];
     }
 }

@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+@vite('resources/js/app.js')
 
 <style>
 :root {
@@ -64,20 +65,27 @@ h1 { margin: 0; font-size: 30px; letter-spacing: -.03em; }
 .stat-value { margin-top: 15px; font-size: 24px; font-weight: 700; letter-spacing: -.03em; }
 .stat-note { margin-top: 5px; color: #98a2b3; font-size: 12px; }
 
-.workspace-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(330px, .75fr); gap: 22px; align-items: start; }
+.workspace-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(340px, .65fr); gap: 22px; align-items: start; }
 .panel { overflow: hidden; }
-.panel-header { padding: 22px 24px 0; }
+.panel-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 21px 24px; border-bottom: 1px solid var(--border); }
 .panel-title { margin: 0; font-size: 18px; letter-spacing: -.015em; }
 .panel-description { margin: 7px 0 0; color: var(--muted); font-size: 13px; }
 .panel-body { padding: 22px 24px 24px; }
 
 .loan-list { display: grid; gap: 12px; }
-.loan-card { padding: 16px; background: #fafafa; border: 1px solid var(--border); border-radius: 13px; }
+.balances-panel { position: sticky; top: 24px; }
+.loan-card { width: 100%; padding: 16px; color: inherit; background: #fafafa; border: 1px solid var(--border); border-radius: 13px; text-align: left; cursor: pointer; transition: .16s ease; }
+.loan-card:hover { background: #fff; border-color: #a5b4fc; box-shadow: 0 8px 20px rgba(16, 24, 40, .06); transform: translateY(-1px); }
+.loan-card.active { background: linear-gradient(145deg, #fafaff, #f4f3ff); border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); }
 .loan-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .loan-name { font-size: 14px; font-weight: 600; }
 .loan-code { margin-top: 3px; color: var(--muted); font-size: 12px; }
 .loan-balance { margin-top: 14px; font-size: 21px; font-weight: 700; letter-spacing: -.02em; }
 .loan-caption { margin-top: 3px; color: var(--muted); font-size: 12px; }
+.loan-meta { display: flex; justify-content: space-between; gap: 12px; margin-top: 13px; padding-top: 12px; border-top: 1px solid #eaecf0; color: var(--muted); font-size: 11px; }
+.loan-meta strong { display: block; margin-top: 3px; color: #344054; font-size: 12px; font-weight: 600; }
+.progress-track { height: 5px; margin-top: 13px; overflow: hidden; background: #e9eaf0; border-radius: 999px; }
+.progress-bar { height: 100%; background: linear-gradient(90deg, #6366f1, #8b5cf6); border-radius: inherit; }
 
 .badge { display: inline-flex; align-items: center; padding: 5px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; text-transform: capitalize; white-space: nowrap; }
 .badge-success { color: #067647; background: #ecfdf3; }
@@ -91,18 +99,54 @@ h1 { margin: 0; font-size: 30px; letter-spacing: -.03em; }
 .form-control { width: 100%; min-height: 45px; padding: 10px 12px; color: var(--navy); background: #fff; border: 1px solid #d0d5dd; border-radius: 10px; outline: none; transition: border-color .15s, box-shadow .15s; }
 .form-control:focus { border-color: #818cf8; box-shadow: 0 0 0 4px rgba(99, 102, 241, .1); }
 .form-help { margin: 7px 0 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+.payment-section + .payment-section { margin-top: 22px; padding-top: 22px; border-top: 1px solid #eaecf0; }
+.payment-step { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.payment-step-number { display: grid; place-items: center; width: 27px; height: 27px; flex: 0 0 27px; color: #fff; background: linear-gradient(135deg, #4f46e5, #7c3aed); border-radius: 8px; font-size: 11px; font-weight: 700; }
+.payment-step-title { font-size: 13px; font-weight: 700; }
+.account-select { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; min-height: 70px; padding: 11px 13px; background: linear-gradient(145deg, #fff, #fafaff); border: 1px solid #d0d5dd; border-radius: 12px; transition: .16s ease; }
+.account-select:hover { border-color: #a5b4fc; }
+.account-select:focus-within { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(99, 102, 241, .1); }
+.account-icon { display: grid; place-items: center; width: 40px; height: 40px; color: var(--primary); background: #eef2ff; border-radius: 10px; }
+.account-icon svg { width: 18px; height: 18px; }
+.account-select-main { min-width: 0; }
+.account-select-label { display: block; margin-bottom: 3px; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+.account-select-control { width: 100%; padding: 0 4px 0 0; color: #1f2a44; background: transparent; border: 0; outline: 0; appearance: none; font-size: 14px; font-weight: 700; cursor: pointer; }
+.account-select-arrow { display: grid; place-items: center; width: 28px; height: 28px; color: #667085; background: #f2f4f7; border-radius: 8px; pointer-events: none; }
+.account-select-arrow svg { width: 15px; height: 15px; }
+.account-preview { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 18px; align-items: center; margin-top: 9px; padding: 11px 13px; background: #f8f9ff; border: 1px solid #e0e4f5; border-radius: 11px; }
+.account-preview[hidden] { display: none; }
+.account-preview-label { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.account-preview-value { display: block; margin-top: 3px; color: #344054; font-size: 12px; font-weight: 700; }
+.amount-control { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 9px; }
+.amount-input { position: relative; }
+.amount-input span { position: absolute; top: 50%; left: 13px; color: #344054; transform: translateY(-50%); font-weight: 700; }
+.amount-input .form-control { padding-left: 35px; font-size: 15px; font-weight: 600; }
+.full-balance-button { padding: 0 14px; color: #4338ca; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; }
+.full-balance-button:hover { background: #e0e7ff; }
+.full-balance-button:disabled { opacity: .5; cursor: not-allowed; }
 
-.method-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.method-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
 .method-option { position: relative; }
 .method-option input { position: absolute; opacity: 0; pointer-events: none; }
-.method-card { display: flex; align-items: center; gap: 11px; min-height: 64px; padding: 12px; border: 1px solid #d0d5dd; border-radius: 11px; cursor: pointer; transition: .15s ease; }
+.method-card { display: flex; align-items: center; gap: 10px; min-height: 72px; padding: 12px; border: 1px solid #d0d5dd; border-radius: 11px; cursor: pointer; transition: .15s ease; }
 .method-card:hover { border-color: #a5b4fc; }
 .method-option input:checked + .method-card { border-color: var(--primary); background: #f5f3ff; box-shadow: 0 0 0 1px var(--primary); }
+.method-option input:focus + .method-card { box-shadow: 0 0 0 4px rgba(99, 102, 241, .1); }
 .method-logo { display: grid; place-items: center; width: 36px; height: 36px; flex: 0 0 36px; color: #fff; background: var(--primary); border-radius: 9px; font-size: 12px; font-weight: 700; }
+.method-logo.maya { background: #00a86b; }
+.method-logo.bank { color: #175cd3; background: #dbeafe; }
+.method-logo.bank svg { width: 19px; height: 19px; }
 .method-logo.cash { color: #067647; background: #d1fadf; }
 .method-name { display: block; font-size: 13px; font-weight: 600; }
 .method-note { display: block; margin-top: 2px; color: var(--muted); font-size: 11px; }
 .proof-section { display: none; }
+.proof-upload { display: flex; align-items: center; gap: 12px; min-height: 78px; padding: 14px; background: #fafbff; border: 1px dashed #aeb7c5; border-radius: 11px; cursor: pointer; transition: .15s ease; }
+.proof-upload:hover { background: #f5f3ff; border-color: #818cf8; }
+.proof-upload-icon { display: grid; place-items: center; width: 37px; height: 37px; flex: 0 0 37px; color: var(--primary); background: #eef2ff; border-radius: 9px; }
+.proof-upload-icon svg { width: 18px; height: 18px; }
+.proof-upload-title { display: block; color: #344054; font-size: 12px; font-weight: 700; }
+.proof-file-name { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; }
+.proof-input { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; }
 
 .submit-button { display: flex; align-items: center; justify-content: center; gap: 9px; width: 100%; min-height: 47px; margin-top: 4px; color: #fff; background: var(--primary); border: 0; border-radius: 10px; font-weight: 600; cursor: pointer; box-shadow: 0 8px 20px rgba(79, 70, 229, .18); transition: .15s ease; }
 .submit-button:hover { background: var(--primary-dark); transform: translateY(-1px); }
@@ -127,6 +171,7 @@ tbody tr:hover { background: #fcfcfd; }
 @media (max-width: 1080px) {
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
     .workspace-grid { grid-template-columns: 1fr; }
+    .balances-panel { position: static; }
 }
 
 @media (max-width: 760px) {
@@ -148,7 +193,13 @@ tbody tr:hover { background: #fcfcfd; }
     .stats-grid { grid-template-columns: 1fr; }
     .subtitle { max-width: 230px; }
     .panel-header, .panel-body, .history-header { padding-left: 18px; padding-right: 18px; }
+    .account-preview { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .account-preview > :first-child { grid-column: 1 / -1; }
+    .amount-control { grid-template-columns: 1fr; }
+    .full-balance-button { min-height: 42px; }
 }
+
+@include('partials.motion-styles')
 </style>
 </head>
 
@@ -156,7 +207,7 @@ tbody tr:hover { background: #fcfcfd; }
 @php
     $payments = $payments ?? collect();
     $totalOutstanding = $loans->sum(fn ($loan) => $loan->getRemainingBalance());
-    $totalPaid = $payments->whereIn('status', ['paid', 'approved'])->sum('amount');
+    $totalPaid = $payments->where('status', 'approved')->sum('amount');
     $pendingCount = $payments->where('status', 'pending')->count();
 @endphp
 
@@ -216,8 +267,8 @@ tbody tr:hover { background: #fcfcfd; }
         <section class="workspace-grid">
             <article class="panel">
                 <div class="panel-header">
-                    <h2 class="panel-title">Make a payment</h2>
-                    <p class="panel-description">Choose a loan and pay through PayMongo or submit a cash payment.</p>
+                    <div><h2 class="panel-title">Make a payment</h2><p class="panel-description">Choose an account, enter an amount, and select how you want to pay.</p></div>
+                    <span class="badge badge-purple">Secure payment</span>
                 </div>
                 <div class="panel-body">
                     @if($loans->isEmpty())
@@ -225,43 +276,85 @@ tbody tr:hover { background: #fcfcfd; }
                     @else
                         <form method="POST" action="{{ route('payments.store') }}" enctype="multipart/form-data" id="payment-form">
                             @csrf
-                            <div class="form-group">
-                                <label class="form-label" for="loan-id">Loan account</label>
-                                <select name="loan_id" class="form-control" required id="loan-id">
-                                    <option value="">Select a loan to pay</option>
-                                    @foreach($loans as $loan)
-                                        <option value="{{ $loan->id }}" data-balance="{{ number_format($loan->getRemainingBalance(), 2, '.', '') }}" @selected((string) old('loan_id') === (string) $loan->id)>
-                                            {{ $loan->loanType->display_name ?? $loan->loanType->name ?? 'Loan' }} &mdash; &#8369;{{ number_format($loan->getRemainingBalance(), 2) }} remaining
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
+                            <section class="payment-section">
+                                <div class="payment-step"><span class="payment-step-number">1</span><span class="payment-step-title">Loan and payment amount</span></div>
+                                <div class="form-group">
+                                    <label class="form-label" for="loan-id">Loan account</label>
+                                    <div class="account-select">
+                                        <span class="account-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 7h16v11H4zM4 10h16M8 15h3"/></svg></span>
+                                        <span class="account-select-main">
+                                            <span class="account-select-label">Choose an account</span>
+                                            <select name="loan_id" class="account-select-control" required id="loan-id">
+                                                <option value="">Select a loan to pay</option>
+                                        @foreach($loans as $loan)
+                                            @php
+                                                $loanName = $loan->loanType->display_name ?? $loan->loanType->name ?? 'Loan';
+                                                $nextSchedule = $loan->paymentSchedules->first(fn ($schedule) => $schedule->status !== 'paid');
+                                                $nextAmount = $nextSchedule
+                                                    ? max(0, (float) $nextSchedule->scheduled_amount + (float) $nextSchedule->penalty_amount - (float) $nextSchedule->paid_amount)
+                                                    : $loan->getRemainingBalance();
+                                            @endphp
+                                                    <option value="{{ $loan->id }}"
+                                                            data-balance="{{ number_format($loan->getRemainingBalance(), 2, '.', '') }}"
+                                                            data-installment="{{ number_format(min($nextAmount, $loan->getRemainingBalance()), 2, '.', '') }}"
+                                                            data-code="{{ $loan->loan_code ?: 'Loan #'.$loan->id }}"
+                                                            data-due="{{ $nextSchedule?->due_date?->format('M d, Y') ?? 'Not scheduled' }}"
+                                                            @selected((string) old('loan_id') === (string) $loan->id)>
+                                                        {{ $loanName }} — &#8369;{{ number_format($loan->getRemainingBalance(), 2) }} remaining
+                                                    </option>
+                                        @endforeach
+                                            </select>
+                                        </span>
+                                        <span class="account-select-arrow"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m7 10 5 5 5-5"/></svg></span>
+                                    </div>
+                                    <div class="account-preview" id="account-preview" hidden>
+                                        <div><span class="account-preview-label">Loan reference</span><strong class="account-preview-value" id="account-preview-code">&mdash;</strong></div>
+                                        <div><span class="account-preview-label">Next due</span><strong class="account-preview-value" id="account-preview-due">&mdash;</strong></div>
+                                        <div><span class="account-preview-label">Installment due</span><strong class="account-preview-value" id="account-preview-installment">&mdash;</strong></div>
+                                        <div><span class="account-preview-label">Outstanding</span><strong class="account-preview-value" id="account-preview-balance">&mdash;</strong></div>
+                                    </div>
+                                </div>
 
-                            <div class="form-group">
-                                <label class="form-label" for="payment-amount">Payment amount</label>
-                                <input type="number" step="0.01" min="0.01" name="amount" class="form-control" id="payment-amount" value="{{ old('amount') }}" placeholder="0.00" required>
-                                <p class="form-help" id="amount-help">Select a loan to load its current outstanding balance.</p>
-                            </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="payment-amount">Payment amount</label>
+                                    <div class="amount-control">
+                                        <div class="amount-input"><span>&#8369;</span><input type="number" step="0.01" min="0.01" name="amount" class="form-control" id="payment-amount" value="{{ old('amount') }}" placeholder="0.00" required></div>
+                                        <button class="full-balance-button" type="button" id="full-balance-button">Pay maximum</button>
+                                    </div>
+                                    <p class="form-help" id="amount-help">Select a loan to load its current outstanding balance.</p>
+                                </div>
+                            </section>
 
-                            <div class="form-group">
-                                <span class="form-label">Payment method</span>
+                            <section class="payment-section">
+                                <div class="payment-step"><span class="payment-step-number">2</span><span class="payment-step-title">Payment method</span></div>
                                 <div class="method-grid">
                                     <label class="method-option">
                                         <input type="radio" name="method" value="gcash" @checked(old('method', 'gcash') === 'gcash')>
-                                        <span class="method-card"><span class="method-logo">QR</span><span><span class="method-name">GCash / QR Ph</span><span class="method-note">Secure PayMongo checkout</span></span></span>
+                                        <span class="method-card"><span class="method-logo">G</span><span><span class="method-name">GCash</span><span class="method-note">PayMongo checkout</span></span></span>
+                                    </label>
+                                    <label class="method-option">
+                                        <input type="radio" name="method" value="paymaya" @checked(old('method') === 'paymaya')>
+                                        <span class="method-card"><span class="method-logo maya">M</span><span><span class="method-name">Maya</span><span class="method-note">PayMongo checkout</span></span></span>
+                                    </label>
+                                    <label class="method-option">
+                                        <input type="radio" name="method" value="bank_transfer" @checked(old('method') === 'bank_transfer')>
+                                        <span class="method-card"><span class="method-logo bank"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3.5 9 12 4l8.5 5M5 10.5h14M6.5 10.5v7m3.5-7v7m4-7v7m3.5-7v7M4 20h16"/></svg></span><span><span class="method-name">Bank transfer</span><span class="method-note">BPI, UBP, BDO &amp; more</span></span></span>
                                     </label>
                                     <label class="method-option">
                                         <input type="radio" name="method" value="cash" @checked(old('method') === 'cash')>
                                         <span class="method-card"><span class="method-logo cash">&#8369;</span><span><span class="method-name">Cash payment</span><span class="method-note">Requires payment proof</span></span></span>
                                     </label>
                                 </div>
-                            </div>
+                            </section>
 
-                            <div class="form-group proof-section" id="proof-section">
-                                <label class="form-label" for="proof">Cash payment proof</label>
-                                <input type="file" name="proof" class="form-control" id="proof" accept="image/jpeg,image/png">
-                                <p class="form-help">Upload a clear JPG or PNG image, up to 2 MB.</p>
-                            </div>
+                            <section class="payment-section proof-section" id="proof-section">
+                                <div class="payment-step"><span class="payment-step-number">3</span><span class="payment-step-title">Cash payment proof</span></div>
+                                <label class="proof-upload" for="proof">
+                                    <span class="proof-upload-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg></span>
+                                    <span><span class="proof-upload-title">Upload payment receipt</span><span class="proof-file-name" id="proof-file-name">Choose a JPG or PNG image up to 2 MB</span></span>
+                                </label>
+                                <input type="file" name="proof" class="proof-input" id="proof" accept="image/jpeg,image/png">
+                            </section>
 
                             <button type="submit" class="submit-button" id="submit-payment">
                                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5 12h14m-5-5 5 5-5 5"/></svg>
@@ -272,19 +365,31 @@ tbody tr:hover { background: #fcfcfd; }
                 </div>
             </article>
 
-            <aside class="panel">
-                <div class="panel-header"><h2 class="panel-title">Active balances</h2><p class="panel-description">Loans currently available for payment.</p></div>
+            <aside class="panel balances-panel">
+                <div class="panel-header"><div><h2 class="panel-title">Active balances</h2><p class="panel-description">Select a balance to load it into the payment form.</p></div><span class="history-count">{{ $loans->count() }} active</span></div>
                 <div class="panel-body">
                     <div class="loan-list">
                         @forelse($loans as $loan)
-                            <div class="loan-card">
+                            @php
+                                $loanTotal = (float) $loan->getTotalWithPenalty();
+                                $loanRemaining = (float) $loan->getRemainingBalance();
+                                $loanProgress = $loanTotal > 0 ? min(100, max(0, ((float) $loan->paid_amount / $loanTotal) * 100)) : 100;
+                                $nextSchedule = $loan->paymentSchedules->first(fn ($schedule) => $schedule->status !== 'paid');
+                                $isOverdue = $loan->paymentSchedules->contains(fn ($schedule) => $schedule->status === 'overdue');
+                            @endphp
+                            <button class="loan-card" type="button" data-loan-choice="{{ $loan->id }}" aria-label="Select {{ $loan->loanType->display_name ?? $loan->loanType->name ?? 'loan' }} for payment">
                                 <div class="loan-card-top">
                                     <div><div class="loan-name">{{ $loan->loanType->display_name ?? $loan->loanType->name ?? 'Loan' }}</div><div class="loan-code">{{ $loan->loan_code ?: 'Loan #'.$loan->id }}</div></div>
-                                    <span class="badge badge-success">{{ $loan->status }}</span>
+                                    <span class="badge {{ $isOverdue ? 'badge-danger' : 'badge-success' }}">{{ $isOverdue ? 'Overdue' : $loan->status }}</span>
                                 </div>
-                                <div class="loan-balance">&#8369;{{ number_format($loan->getRemainingBalance(), 2) }}</div>
-                                <div class="loan-caption">Remaining of &#8369;{{ number_format($loan->getTotalWithPenalty(), 2) }}</div>
-                            </div>
+                                <div class="loan-balance">&#8369;{{ number_format($loanRemaining, 2) }}</div>
+                                <div class="loan-caption">Remaining of &#8369;{{ number_format($loanTotal, 2) }}</div>
+                                <div class="progress-track" aria-hidden="true"><div class="progress-bar" style="width: {{ number_format($loanProgress, 2, '.', '') }}%"></div></div>
+                                <div class="loan-meta">
+                                    <span>Next due<strong>{{ $nextSchedule?->due_date?->format('M d, Y') ?? 'No due date' }}</strong></span>
+                                    <span>Penalty<strong>&#8369;{{ number_format($loan->penalty_amount, 2) }}</strong></span>
+                                </div>
+                            </button>
                         @empty
                             <div class="empty-state"><strong>You're all caught up</strong>There are no active balances to display.</div>
                         @endforelse
@@ -310,19 +415,18 @@ tbody tr:hover { background: #fcfcfd; }
                                 @php
                                     $paymentTime = ($payment->paid_at ?? $payment->created_at)?->copy()->timezone('Asia/Manila');
                                     $statusClass = match ($payment->status) {
-                                        'paid', 'approved' => 'badge-success',
+                                        'approved' => 'badge-success',
                                         'pending' => 'badge-warning',
-                                        'failed', 'rejected' => 'badge-danger',
-                                        'refunded' => 'badge-purple',
+                                        'rejected' => 'badge-danger',
                                         default => 'badge-neutral',
                                     };
                                 @endphp
                                 <tr>
                                     <td><div class="transaction-ref" title="{{ $payment->reference }}">{{ $payment->reference ?: 'Pending reference' }}</div><div class="cell-secondary">Transaction #{{ $payment->id }}</div></td>
                                     <td><div>{{ $payment->loan?->loanType?->display_name ?? $payment->loan?->loanType?->name ?? 'Loan' }}</div><div class="cell-secondary">{{ $payment->loan?->loan_code ?: 'Loan #'.$payment->loan_id }}</div></td>
-                                    <td><div>{{ $paymentTime?->format('M d, Y') ?? '—' }}</div><div class="cell-secondary">{{ $paymentTime?->format('h:i A') ?? '' }} PHT · {{ $payment->paid_at ? 'Paid' : 'Submitted' }}</div></td>
-                                    <td>{{ $payment->method === 'gcash' ? 'GCash / QR Ph' : ucfirst($payment->method) }}</td>
-                                    <td><span class="badge {{ $statusClass }}">{{ in_array($payment->status, ['paid', 'approved'], true) ? 'Paid' : ucfirst($payment->status) }}</span></td>
+                                    <td><div>{{ $paymentTime?->format('M d, Y') ?? '—' }}</div><div class="cell-secondary">{{ $paymentTime?->format('h:i A') ?? '' }} PHT · {{ $payment->paid_at ? 'Confirmed' : 'Submitted' }}</div></td>
+                                    <td>{{ $payment->method_label }}</td>
+                                    <td><span class="badge {{ $statusClass }}">{{ ucfirst($payment->status) }}</span></td>
                                     <td class="amount">&#8369;{{ number_format($payment->amount, 2) }}</td>
                                 </tr>
                             @endforeach
@@ -340,21 +444,64 @@ const paymentForm = document.getElementById('payment-form');
 const loanSelect = document.getElementById('loan-id');
 const amountInput = document.getElementById('payment-amount');
 const amountHelp = document.getElementById('amount-help');
+const fullBalanceButton = document.getElementById('full-balance-button');
 const methodInputs = document.querySelectorAll('input[name="method"]');
 const proofSection = document.getElementById('proof-section');
 const proofInput = document.getElementById('proof');
+const proofFileName = document.getElementById('proof-file-name');
 const submitButton = document.getElementById('submit-payment');
+const loanCards = document.querySelectorAll('[data-loan-choice]');
+const accountPreview = document.getElementById('account-preview');
+const accountPreviewCode = document.getElementById('account-preview-code');
+const accountPreviewDue = document.getElementById('account-preview-due');
+const accountPreviewInstallment = document.getElementById('account-preview-installment');
+const accountPreviewBalance = document.getElementById('account-preview-balance');
 
-function selectedMethod() {
-    return document.querySelector('input[name="method"]:checked').value;
+function peso(value) {
+    return `₱${Number(value).toLocaleString('en-PH', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    })}`;
 }
 
-function syncPaymentAmount() {
-    const selectedLoan = loanSelect.options[loanSelect.selectedIndex];
-    const rawBalance = selectedLoan.dataset.balance;
+function selectedMethod() {
+    return document.querySelector('input[name="method"]:checked')?.value || 'gcash';
+}
+
+function selectedMethodLabel() {
+    return {
+        gcash: 'GCash',
+        paymaya: 'Maya',
+        bank_transfer: 'Bank transfer'
+    }[selectedMethod()] || 'secure checkout';
+}
+
+function selectedLoanOption() {
+    return loanSelect.options[loanSelect.selectedIndex];
+}
+
+function syncSelectedLoan() {
+    const selectedLoan = selectedLoanOption();
+    const hasLoan = Boolean(selectedLoan?.dataset.balance);
+
+    accountPreview.hidden = !hasLoan;
+    loanCards.forEach((card) => card.classList.toggle('active', card.dataset.loanChoice === loanSelect.value));
+
+    if (!hasLoan) return;
+
+    accountPreviewCode.textContent = selectedLoan.dataset.code;
+    accountPreviewDue.textContent = selectedLoan.dataset.due;
+    accountPreviewInstallment.textContent = peso(selectedLoan.dataset.installment);
+    accountPreviewBalance.textContent = peso(selectedLoan.dataset.balance);
+}
+
+function syncPaymentAmount(resetAmount = false) {
+    const selectedLoan = selectedLoanOption();
+    const rawBalance = selectedLoan?.dataset.balance;
 
     if (!rawBalance) {
         amountInput.removeAttribute('max');
+        fullBalanceButton.disabled = true;
         amountHelp.textContent = 'Select a loan to load its current outstanding balance.';
         return;
     }
@@ -362,34 +509,56 @@ function syncPaymentAmount() {
     const balance = Number(rawBalance);
     const maximum = selectedMethod() === 'cash' ? balance : Math.min(balance, 100000);
     amountInput.max = maximum.toFixed(2);
+    fullBalanceButton.disabled = false;
 
-    if (!amountInput.value || Number(amountInput.value) > maximum) {
+    if (resetAmount || !amountInput.value) {
+        amountInput.value = Math.min(Number(selectedLoan.dataset.installment), maximum).toFixed(2);
+    } else if (amountInput.value && Number(amountInput.value) > maximum) {
         amountInput.value = maximum.toFixed(2);
     }
 
-    amountHelp.textContent = `Outstanding balance: \u20B1${balance.toLocaleString('en-PH', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    })}${maximum < balance ? ' · Online limit: \u20B1100,000.00 per transaction' : ''}`;
+    amountHelp.textContent = `Next scheduled payment: ${peso(selectedLoan.dataset.installment)} · Outstanding balance: ${peso(balance)}${maximum < balance ? ' · Online limit: ₱100,000.00 per transaction' : ''}`;
 }
 
 function syncPaymentMethod() {
-    const isCash = selectedMethod() === 'cash';
+    const method = selectedMethod();
+    const isCash = method === 'cash';
     proofSection.style.display = isCash ? 'block' : 'none';
     proofInput.required = isCash;
-    submitButton.querySelector('span').textContent = isCash ? 'Submit cash payment' : 'Continue to secure payment';
+    submitButton.querySelector('span').textContent = isCash
+        ? 'Submit cash payment'
+        : `Continue with ${selectedMethodLabel()}`;
     syncPaymentAmount();
 }
 
-loanSelect.addEventListener('change', syncPaymentAmount);
+loanSelect.addEventListener('change', () => {
+    syncSelectedLoan();
+    syncPaymentAmount(true);
+});
 methodInputs.forEach((input) => input.addEventListener('change', syncPaymentMethod));
+loanCards.forEach((card) => card.addEventListener('click', () => {
+    loanSelect.value = card.dataset.loanChoice;
+    loanSelect.dispatchEvent(new Event('change'));
+    loanSelect.focus();
+}));
+fullBalanceButton.addEventListener('click', () => {
+    if (!amountInput.max) return;
+    amountInput.value = Number(amountInput.max).toFixed(2);
+    amountInput.focus();
+});
+proofInput.addEventListener('change', () => {
+    proofFileName.textContent = proofInput.files[0]?.name || 'Choose a JPG or PNG image up to 2 MB';
+});
 paymentForm.addEventListener('submit', function () {
     submitButton.disabled = true;
-    submitButton.querySelector('span').textContent = selectedMethod() === 'cash' ? 'Submitting payment…' : 'Opening PayMongo…';
+    submitButton.querySelector('span').textContent = selectedMethod() === 'cash' ? 'Submitting payment…' : 'Opening secure checkout…';
 });
 
+if (loanSelect.options.length === 2 && !loanSelect.value) {
+    loanSelect.selectedIndex = 1;
+}
+syncSelectedLoan();
 syncPaymentMethod();
-syncPaymentAmount();
 </script>
 @endif
 </body>

@@ -9,7 +9,6 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LoanController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
-use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -65,6 +64,9 @@ Route::middleware(['auth'])
         Route::get('/profile', [ProfileController::class, 'edit'])
             ->name('profile.edit');
 
+        Route::get('/profile/photo', [ProfileController::class, 'photo'])
+            ->name('profile.photo');
+
         Route::get('/profile/verification', [ProfileController::class, 'verification'])
             ->name('profile.verification.edit');
 
@@ -77,8 +79,6 @@ Route::middleware(['auth'])
         Route::post('/profile/verification', [ClientVerificationController::class, 'store'])
             ->name('profile.verification.store');
 
-        Route::delete('/profile', [ProfileController::class, 'destroy'])
-            ->name('profile.destroy');
     });
 
 /*
@@ -101,20 +101,22 @@ Route::middleware(['auth', 'admin'])
         Route::get('/loan/{id}', [LoanAdminController::class, 'show'])
             ->name('loan.show');
 
-        Route::get('/clients', function () {
+        Route::get('/clients', [ClientVerificationAdminController::class, 'index'])
+            ->name('clients');
 
-            $clients = User::where('role', 'client')
-                ->with(['loans', 'clientVerification'])
-                ->latest()
-                ->get();
+        Route::get('/client/{client}/profile-photo', [ClientVerificationAdminController::class, 'profilePhoto'])
+            ->name('clients.photo');
 
-            return view('admin.clients.index', compact('clients'));
-        })->name('clients');
+        Route::get('/reports', [ClientReportController::class, 'index'])
+            ->name('reports.index');
 
-        Route::get('/client/{client}/report', [ClientReportController::class, 'download'])
-            ->name('clients.report');
+        Route::get('/reports/business/download', [ClientReportController::class, 'downloadBusiness'])
+            ->name('reports.business.download');
 
-        Route::get('/verifications', [ClientVerificationAdminController::class, 'index'])
+        Route::get('/reports/{client}/download', [ClientReportController::class, 'download'])
+            ->name('reports.download');
+
+        Route::get('/verifications', fn () => redirect()->route('admin.clients', ['section' => 'verifications']))
             ->name('verifications.index');
 
         Route::get('/verification/{verification}', [ClientVerificationAdminController::class, 'show'])

@@ -23,7 +23,7 @@
             <ul class="feature-list">
                 <li><span class="feature-check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 12 4 4 8-9"/></svg></span>Clear balances and repayment progress</li>
                 <li><span class="feature-check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 12 4 4 8-9"/></svg></span>Organized payment history</li>
-                <li><span class="feature-check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 12 4 4 8-9"/></svg></span>Secure PayMongo checkout</li>
+                <li><span class="feature-check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 12 4 4 8-9"/></svg></span>Protected and verified payments</li>
             </ul>
         </div>
 
@@ -38,11 +38,11 @@
             <p class="form-description">Enter your account details to continue to your dashboard.</p>
 
             @if(session('status'))
-                <div class="alert alert-success" role="status">{{ session('status') }}</div>
+                <div class="alert alert-success" role="status" aria-live="polite">{{ session('status') }}</div>
             @endif
 
             @if($errors->any())
-                <div class="alert alert-error" role="alert">
+                <div class="alert alert-error" role="alert" tabindex="-1" data-error-summary>
                     We could not sign you in. Please check your email and password.
                 </div>
             @endif
@@ -51,20 +51,22 @@
                 @csrf
 
                 <div class="form-group">
-                    <label class="form-label" for="email">Email address</label>
+                    <label class="form-label" for="email">Email address <span class="required-mark" aria-hidden="true">*</span></label>
                     <input type="email" name="email" id="email" class="form-control @error('email') is-invalid @enderror"
-                           value="{{ old('email') }}" placeholder="you@example.com" autocomplete="username" autofocus required>
-                    @error('email')<p class="field-error">{{ $message }}</p>@enderror
+                           value="{{ old('email') }}" placeholder="you@example.com" autocomplete="username" inputmode="email"
+                           autocapitalize="none" spellcheck="false" @error('email') aria-invalid="true" aria-describedby="email-error" @enderror autofocus required>
+                    @error('email')<p class="field-error" id="email-error">{{ $message }}</p>@enderror
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="password">Password</label>
+                    <label class="form-label" for="password">Password <span class="required-mark" aria-hidden="true">*</span></label>
                     <div class="input-wrap">
                         <input type="password" name="password" id="password" class="form-control password-input @error('password') is-invalid @enderror"
-                               placeholder="Enter your password" autocomplete="current-password" required>
-                        <button class="password-toggle" type="button" data-toggle-password="password" aria-label="Show password">Show</button>
+                               placeholder="Enter your password" autocomplete="current-password" @error('password') aria-invalid="true" aria-describedby="password-error" @enderror required>
+                        <button class="password-toggle" type="button" data-toggle-password="password" aria-controls="password" aria-pressed="false" aria-label="Show password">Show</button>
                     </div>
-                    @error('password')<p class="field-error">{{ $message }}</p>@enderror
+                    @error('password')<p class="field-error" id="password-error">{{ $message }}</p>@enderror
+                    <p class="field-feedback" id="caps-lock-message" aria-live="polite"></p>
                 </div>
 
                 <div class="form-options">
@@ -90,9 +92,19 @@ document.querySelectorAll('[data-toggle-password]').forEach((button) => {
         const showing = input.type === 'text';
         input.type = showing ? 'password' : 'text';
         this.textContent = showing ? 'Show' : 'Hide';
+        this.setAttribute('aria-pressed', String(!showing));
         this.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
     });
 });
+
+const passwordInput = document.getElementById('password');
+const capsLockMessage = document.getElementById('caps-lock-message');
+passwordInput.addEventListener('keyup', (event) => {
+    capsLockMessage.textContent = event.getModifierState('CapsLock') ? 'Caps Lock is on.' : '';
+});
+passwordInput.addEventListener('blur', () => capsLockMessage.textContent = '');
+
+document.querySelector('[data-error-summary]')?.focus({ preventScroll: true });
 
 document.getElementById('login-form').addEventListener('submit', function () {
     const button = document.getElementById('submit-login');

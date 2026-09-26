@@ -24,16 +24,20 @@ class CalculateLoanPenalties extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
-        $loans = Loan::where('status', 'approved')->get();
         $updatedCount = 0;
 
-        foreach ($loans as $loan) {
-            $loan->calculatePenalty();
-            $updatedCount++;
-        }
+        Loan::where('status', Loan::STATUS_APPROVED)
+            ->chunkById(100, function ($loans) use (&$updatedCount) {
+                foreach ($loans as $loan) {
+                    $loan->calculatePenalty();
+                    $updatedCount++;
+                }
+            });
 
-        $this->info("Successfully updated penalties for {$updatedCount} loans.");
+        $this->info("Updated daily penalties for {$updatedCount} active loans at 5% per overdue day.");
+
+        return self::SUCCESS;
     }
 }

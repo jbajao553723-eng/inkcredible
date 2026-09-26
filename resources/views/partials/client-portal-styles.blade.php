@@ -64,6 +64,7 @@ tbody tr:last-child td { border-bottom: 0; }
 tbody tr:hover { background: #fcfcfd; }
 .cell-title { font-weight: 600; }
 .cell-secondary { margin-top: 4px; color: var(--muted); font-size: 11px; }
+.rejection-reason { max-width: 230px; margin-top: 6px; color: #b42318; font-size: 11px; line-height: 1.4; white-space: normal; }
 .amount { font-weight: 700; white-space: nowrap; }
 .empty-state { padding: 48px 24px; color: var(--muted); text-align: center; }
 .empty-state strong { display: block; margin-bottom: 7px; color: #344054; }
@@ -101,3 +102,5 @@ tbody tr:hover { background: #fcfcfd; }
     .panel-header { align-items: flex-start; flex-direction: column; }
     .panel-header, .panel-body { padding-left: 18px; padding-right: 18px; }
 }
+
+@include('partials.motion-styles')

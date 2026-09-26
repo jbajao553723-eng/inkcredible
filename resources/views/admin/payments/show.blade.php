@@ -11,16 +11,16 @@
 <body>
 @php
     $loan = $payment->loan;
-    $statusClass = match ($payment->status) { 'paid', 'approved' => 'badge-success', 'pending' => 'badge-warning', 'failed', 'rejected' => 'badge-danger', 'refunded' => 'badge-purple', default => 'badge-neutral' };
+    $statusClass = match ($payment->status) { 'approved' => 'badge-success', 'pending' => 'badge-warning', 'rejected' => 'badge-danger', default => 'badge-neutral' };
     $submitted = $payment->created_at?->copy()->timezone('Asia/Manila');
     $paidAt = $payment->paid_at?->copy()->timezone('Asia/Manila');
-    $methodLabel = $payment->method === 'gcash' ? 'GCash / QR Ph' : ucfirst($payment->method);
+    $methodLabel = $payment->method_label;
 @endphp
 @include('partials.admin-sidebar', ['active' => 'payments'])
 <main class="main"><div class="page-shell">
     <header class="topbar">
         <div><div class="eyebrow">Payment review</div><h1>Transaction #{{ $payment->id }}</h1><p class="subtitle">Review the transaction, client, provider, and proof information.</p></div>
-        <div class="top-actions"><a class="button button-secondary" href="{{ route('admin.payments.index') }}">Back to payments</a><span class="badge {{ $statusClass }}">{{ in_array($payment->status, ['paid', 'approved'], true) ? 'Paid' : ucfirst($payment->status) }}</span></div>
+        <div class="top-actions"><a class="button button-secondary" href="{{ route('admin.payments.index') }}">Back to payments</a><span class="badge {{ $statusClass }}">{{ ucfirst($payment->status) }}</span></div>
     </header>
     @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif
     @if(session('error'))<div class="alert alert-error" role="alert">{{ session('error') }}</div>@endif
@@ -29,7 +29,7 @@
         <article class="stat-card"><div class="stat-label">Payment amount</div><div class="stat-value">₱{{ number_format($payment->amount, 2) }}</div><div class="stat-note">{{ $payment->currency ?? 'PHP' }} transaction</div></article>
         <article class="stat-card"><div class="stat-label">Loan balance</div><div class="stat-value">₱{{ number_format($loan->getRemainingBalance(), 2) }}</div><div class="stat-note">Current outstanding amount</div></article>
         <article class="stat-card"><div class="stat-label">Payment method</div><div class="stat-value" style="font-size:19px">{{ $methodLabel }}</div><div class="stat-note">{{ $payment->provider ? ucfirst($payment->provider).' provider' : 'Manual submission' }}</div></article>
-        <article class="stat-card"><div class="stat-label">Payment status</div><div class="stat-value" style="font-size:19px">{{ in_array($payment->status, ['paid', 'approved'], true) ? 'Paid' : ucfirst($payment->status) }}</div><div class="stat-note">Last updated {{ $payment->updated_at?->diffForHumans() }}</div></article>
+        <article class="stat-card"><div class="stat-label">Payment status</div><div class="stat-value" style="font-size:19px">{{ ucfirst($payment->status) }}</div><div class="stat-note">Last updated {{ $payment->updated_at?->diffForHumans() }}</div></article>
     </section>
 
     <div class="detail-layout">

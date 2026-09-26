@@ -7,6 +7,7 @@ use App\Models\LoanApplication;
 use App\Models\LoanDocument;
 use App\Models\LoanType;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class LoanController extends Controller
 {
@@ -37,7 +38,9 @@ class LoanController extends Controller
             ->orderBy('min_amount')
             ->get();
 
-        return view('client.loans.create', compact('loanTypes'));
+        $purposeOptions = config('loan_purposes');
+
+        return view('client.loans.create', compact('loanTypes', 'purposeOptions'));
     }
 
     /*
@@ -47,11 +50,15 @@ class LoanController extends Controller
     */
     public function store(Request $request)
     {
+        $purposeOptions = config('loan_purposes');
+        $allowedPurposes = array_keys($purposeOptions[$request->input('loan_type')] ?? []);
+
         $request->validate([
             'loan_type' => 'required|in:arawan,weekly,emergency',
             'amount' => 'required|numeric|min:1',
             'government_id' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
-            'purpose' => 'nullable|string|max:255',
+            'purpose_choice' => ['required', Rule::in($allowedPurposes)],
+            'purpose_other' => ['nullable', 'string', 'max:255', 'required_if:purpose_choice,other', 'regex:/\S/'],
             'loan_terms_accepted' => ['accepted'],
         ]);
 
@@ -74,6 +81,19 @@ class LoanController extends Controller
 
         $interestAmount = $amount * ($loanType->interest_rate / 100);
         $totalPayable = $amount + $interestAmount;
+        $installmentCount = match ($loanType->name) {
+            'arawan' => 30,
+            'weekly', 'emergency' => 4,
+            default => 1,
+        };
+        $repaymentPeriodDays = match ($loanType->name) {
+            'arawan' => 30,
+            'weekly', 'emergency' => 28,
+            default => max(1, (int) $loanType->due_days),
+        };
+        $purpose = $request->purpose_choice === 'other'
+            ? trim($request->purpose_other)
+            : $purposeOptions[$loanType->name][$request->purpose_choice];
 
         $filePath = $request->file('government_id')->store('ids', 'public');
 
@@ -86,9 +106,11 @@ class LoanController extends Controller
             'user_id' => auth()->id(),
             'loan_type_id' => $loanType->id,
             'requested_amount' => $amount,
-            'purpose' => $request->purpose,
+            'purpose' => $purpose,
             'calculated_interest' => $interestAmount,
             'total_payable' => $totalPayable,
+            'installment_count' => $installmentCount,
+            'repayment_period_days' => $repaymentPeriodDays,
             'status' => LoanApplication::STATUS_PENDING,
             'submitted_at' => now(),
             'terms_accepted_at' => now(),
@@ -103,8 +125,11 @@ class LoanController extends Controller
         $loan = Loan::create([
             'user_id' => auth()->id(),
             'loan_type_id' => $loanType->id,
+            'purpose' => $purpose,
             'amount' => $amount,
             'total_payable' => $totalPayable,
+            'installment_count' => $installmentCount,
+            'repayment_period_days' => $repaymentPeriodDays,
             'paid_amount' => 0,
             'status' => Loan::STATUS_PENDING,
             'loan_code' => 'LN-'.date('Ymd').'-'.rand(1000, 9999),

@@ -5,6 +5,7 @@
 <title>Account Security | Inkcredible</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+@vite('resources/js/app.js')
 <style>@include('partials.client-portal-styles') @include('partials.settings-styles')</style>
 </head>
 <body>
@@ -21,18 +22,6 @@
                 <div class="form-group"><label class="form-label" for="confirm-password">Confirm new password</label><input class="form-control" type="password" name="password_confirmation" id="confirm-password" autocomplete="new-password" required></div>
                 <button class="save-button" type="submit">Update password</button>
             </form>
-        </div></section>
-        <section class="panel danger-zone"><div class="panel-header"><div><h2 class="panel-title">Delete account</h2><p class="panel-description">Permanently remove your account and associated records.</p></div></div><div class="panel-body">
-            @foreach($errors->userDeletion->get('account_deletion') as $message)<div class="verification-notice notice-rejected" role="alert"><strong>Account deletion unavailable.</strong> {{ $message }}</div>@endforeach
-            @if($hasExistingLoans)
-                <div class="verification-notice notice-pending"><strong>Account deletion is locked.</strong> You currently have existing loan records. Contact the administrator if you need assistance with your account.</div>
-            @else
-                <div class="verification-notice notice-rejected"><strong>This cannot be undone.</strong> Your profile and verification records will be permanently removed.</div>
-                <form method="POST" action="{{ route('profile.destroy') }}" onsubmit="return confirm('Permanently delete your account?')">@csrf @method('delete')
-                    <div class="form-group"><label class="form-label" for="delete-password">Confirm your password</label><input class="form-control" type="password" name="password" id="delete-password" required>@foreach($errors->userDeletion->get('password') as $message)<p class="field-error">{{ $message }}</p>@endforeach</div>
-                    <button class="danger-button" type="submit">Delete account</button>
-                </form>
-            @endif
         </div></section>
     </div>
 </div></main>

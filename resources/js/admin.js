@@ -1,7 +1,6 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Modal from 'bootstrap/js/dist/modal';
-
-const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+import './ui-motion';
 
 document.querySelectorAll('[data-admin-table]').forEach((panel) => {
     const rows = [...panel.querySelectorAll('tbody tr[data-search]')];
@@ -92,22 +91,5 @@ if (confirmationElement) {
     confirmationElement.addEventListener('hidden.bs.modal', () => {
         pendingForm = null;
         pendingSubmitter = null;
-    });
-}
-
-if (!reducedMotion.matches && 'IntersectionObserver' in window) {
-    const cards = document.querySelectorAll('.stats-grid .stat-card, .quick-card');
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-            if (!entry.isIntersecting) return;
-            entry.target.classList.add('is-visible');
-            observer.unobserve(entry.target);
-        });
-    }, { threshold: 0.12 });
-
-    cards.forEach((card, index) => {
-        card.classList.add('admin-reveal');
-        card.style.setProperty('--reveal-order', index % 4);
-        observer.observe(card);
     });
 }

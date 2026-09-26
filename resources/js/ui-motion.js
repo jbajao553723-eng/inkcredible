@@ -33,6 +33,12 @@ const revealPage = () => {
             '.metric-layout > *',
             '.section-stack > *',
             '.quick-card',
+            '.detail-layout > *',
+            '.application-grid > *',
+            '.settings-tabs',
+            '.page-shell > .panel',
+            '.loan-card',
+            '.result',
         ];
 
     const elements = [...new Set(selectors.flatMap((selector) => [...document.querySelectorAll(selector)]))];
@@ -40,6 +46,11 @@ const revealPage = () => {
     elements.forEach((element, index) => {
         element.classList.add('motion-reveal');
         element.style.setProperty('--motion-order', Math.min(index, 12));
+    });
+
+    document.querySelectorAll('tbody tr').forEach((row, index) => {
+        row.classList.add('motion-row');
+        row.style.setProperty('--motion-row-order', index % 10);
     });
 
     requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -96,7 +107,7 @@ const animateDashboardData = () => {
             bar.style.width = bar.style.getPropertyValue('--target-width');
         });
         document.querySelectorAll('.stat-value, .balance-value').forEach(animateNumber);
-    }, reducedMotion.matches ? 0 : 280);
+    }, reducedMotion.matches ? 0 : 320);
 };
 
 const addRipple = (event) => {
@@ -135,11 +146,14 @@ const enablePageTransitions = () => {
 
 const enableFormFeedback = () => {
     document.querySelectorAll('form').forEach((form) => {
-        form.addEventListener('submit', () => {
-            const submit = form.querySelector('[type="submit"]');
-            if (!submit) return;
-            submit.classList.add('is-loading');
-            submit.setAttribute('aria-busy', 'true');
+        form.addEventListener('submit', (event) => {
+            queueMicrotask(() => {
+                if (event.defaultPrevented) return;
+                const submit = event.submitter ?? form.querySelector('[type="submit"]');
+                if (!submit) return;
+                submit.classList.add('is-loading');
+                submit.setAttribute('aria-busy', 'true');
+            });
         });
     });
 };

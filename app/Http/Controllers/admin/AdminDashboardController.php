@@ -32,9 +32,9 @@ class AdminDashboardController extends Controller
 
             'total_released' => Loan::whereIn('status', ['approved', 'paid'])->sum('amount'),
 
-            'total_collected' => Payment::whereIn('status', ['paid', 'approved'])->sum('amount'),
+            'total_collected' => Payment::where('status', Payment::STATUS_APPROVED)->sum('amount'),
 
-            'pending_cash_payments' => Payment::where('status', 'pending')->where('method', 'cash')->count(),
+            'pending_cash_payments' => Payment::where('status', Payment::STATUS_PENDING)->where('method', 'cash')->count(),
 
             'total_clients' => User::where('role', 'client')->count(),
 
@@ -54,7 +54,7 @@ class AdminDashboardController extends Controller
             'paymentSchedules',
         ])
             ->latest()
-            ->take(10)
+            ->take(6)
             ->get();
 
         /*

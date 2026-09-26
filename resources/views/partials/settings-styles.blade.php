@@ -18,14 +18,12 @@
 textarea.form-control { min-height:96px; resize:vertical; }
 .field-error { margin:6px 0 0; color:#b42318; font-size:11px; }
 .form-help { margin:6px 0 0; color:var(--muted); font-size:10px; line-height:1.5; }
-.save-button,.danger-button { display:inline-flex; min-height:41px; padding:9px 15px; align-items:center; justify-content:center; color:#fff; border:0; border-radius:9px; font-size:12px; font-weight:600; cursor:pointer; }
+.save-button { display:inline-flex; min-height:41px; padding:9px 15px; align-items:center; justify-content:center; color:#fff; border:0; border-radius:9px; font-size:12px; font-weight:600; cursor:pointer; }
 .save-button { background:var(--primary); }
-.danger-button { background:#d92d20; }
 .verification-notice { margin-bottom:20px; padding:14px; border-radius:10px; font-size:11px; line-height:1.55; }
 .notice-pending { color:#854a0e; background:#fffaeb; border:1px solid #fedf89; }
 .notice-approved { color:#05603a; background:#ecfdf3; border:1px solid #abefc6; }
 .notice-rejected { color:#912018; background:#fef3f2; border:1px solid #fecdca; }
 .document-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-.security-grid { display:grid; grid-template-columns:1fr 1fr; gap:22px; align-items:start; }
-.danger-zone { border-color:#fecdca; }
+.security-grid { display:grid; grid-template-columns:1fr; gap:22px; align-items:start; }
 @media(max-width:760px){.settings-tabs,.security-grid{grid-template-columns:1fr}.settings-tabs{gap:8px}.form-grid,.document-grid{grid-template-columns:1fr}.form-group.full{grid-column:auto}}
