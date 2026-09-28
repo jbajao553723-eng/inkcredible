@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Loan;
-use App\Models\PaymentSchedule;
+use App\Services\LoanApprovalService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -18,7 +18,7 @@ class LoanAdminController extends Controller
     public function index()
     {
         // FIX: eager load EVERYTHING needed for dashboard consistency
-        $loans = Loan::with(['user', 'loanType', 'paymentSchedules', 'loanDocuments'])
+        $loans = Loan::with(['user', 'loanType', 'paymentSchedules'])
             ->latest()
             ->get();
 
@@ -30,10 +30,9 @@ class LoanAdminController extends Controller
     | VIEW SINGLE LOAN
     |--------------------------------------------------------------------------
     */
-    public function show($id)
+    public function show(Loan $loan)
     {
-        $loan = Loan::with(['user', 'loanType', 'paymentSchedules', 'loanDocuments', 'payments'])
-            ->findOrFail($id);
+        $loan->load(['user', 'loanType', 'paymentSchedules', 'loanDocuments', 'payments']);
 
         return view('admin.loans.show', compact('loan'));
     }
@@ -43,60 +42,13 @@ class LoanAdminController extends Controller
     | APPROVE LOAN
     |--------------------------------------------------------------------------
     */
-    public function approve($id): RedirectResponse
+    public function approve(Loan $loan, LoanApprovalService $approvals): RedirectResponse
     {
-        $loan = Loan::with('loanType')->findOrFail($id);
-
         if ($loan->status !== Loan::STATUS_PENDING) {
             return back()->with('error', 'Only pending loan requests can be approved.');
         }
 
-        [$installmentCount, $periodDays] = match ($loan->loanType?->name) {
-            'arawan' => [30, 30],
-            'weekly', 'emergency' => [4, 28],
-            default => [
-                max(1, (int) ($loan->installment_count ?? 1)),
-                max(1, (int) ($loan->repayment_period_days ?? $loan->loanType?->due_days ?? 7)),
-            ],
-        };
-        $approvedAt = now();
-
-        $loan->update([
-            'status' => Loan::STATUS_APPROVED,
-            'approved_at' => $approvedAt,
-            'disbursed_at' => $approvedAt,
-            'installment_count' => $installmentCount,
-            'repayment_period_days' => $periodDays,
-        ]);
-
-        /*
-        |--------------------------------------------------------------------------
-        | CREATE PAYMENT SCHEDULE IF NONE EXISTS
-        |--------------------------------------------------------------------------
-        */
-        if (! $loan->paymentSchedules()->exists()) {
-
-            $intervalDays = $installmentCount === 1
-                ? $periodDays
-                : (int) floor($periodDays / $installmentCount);
-            $scheduleStart = $approvedAt->copy()->startOfDay();
-            $totalCents = (int) round(((float) ($loan->total_payable ?? 0)) * 100);
-            $baseCents = intdiv($totalCents, $installmentCount);
-            $remainingCents = $totalCents - ($baseCents * $installmentCount);
-
-            for ($installment = 1; $installment <= $installmentCount; $installment++) {
-                $installmentCents = $baseCents + ($installment === $installmentCount ? $remainingCents : 0);
-
-                $loan->paymentSchedules()->create([
-                    'installment_number' => $installment,
-                    'scheduled_amount' => number_format($installmentCents / 100, 2, '.', ''),
-                    'due_date' => $scheduleStart->copy()->addDays($intervalDays * $installment),
-                    'paid_amount' => 0,
-                    'status' => PaymentSchedule::STATUS_PENDING,
-                    'penalty_amount' => 0,
-                ]);
-            }
-        }
+        $approvals->approve($loan);
 
         return back()->with('success', 'Loan approved successfully.');
     }
@@ -106,10 +58,8 @@ class LoanAdminController extends Controller
     | REJECT LOAN
     |--------------------------------------------------------------------------
     */
-    public function reject(Request $request, $id): RedirectResponse
+    public function reject(Request $request, Loan $loan): RedirectResponse
     {
-        $loan = Loan::findOrFail($id);
-
         if ($loan->status !== Loan::STATUS_PENDING) {
             return back()->with('error', 'Only pending loan requests can be rejected.');
         }

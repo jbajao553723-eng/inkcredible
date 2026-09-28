@@ -11,19 +11,17 @@
 <body>
 @php
     $loan = $payment->loan;
-    $statusClass = match ($payment->status) { 'approved' => 'badge-success', 'pending' => 'badge-warning', 'rejected' => 'badge-danger', default => 'badge-neutral' };
     $submitted = $payment->created_at?->copy()->timezone('Asia/Manila');
     $paidAt = $payment->paid_at?->copy()->timezone('Asia/Manila');
     $methodLabel = $payment->method_label;
 @endphp
 @include('partials.admin-sidebar', ['active' => 'payments'])
-<main class="main"><div class="page-shell">
+<main class="main" id="main-content" tabindex="-1"><div class="page-shell">
     <header class="topbar">
         <div><div class="eyebrow">Payment review</div><h1>Transaction #{{ $payment->id }}</h1><p class="subtitle">Review the transaction, client, provider, and proof information.</p></div>
-        <div class="top-actions"><a class="button button-secondary" href="{{ route('admin.payments.index') }}">Back to payments</a><span class="badge {{ $statusClass }}">{{ ucfirst($payment->status) }}</span></div>
+        <div class="top-actions"><a class="button button-secondary" href="{{ route('admin.payments.index') }}">Back to payments</a><x-status-badge :status="$payment->status" /></div>
     </header>
-    @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif
-    @if(session('error'))<div class="alert alert-error" role="alert">{{ session('error') }}</div>@endif
+    <x-flash-messages />
 
     <section class="stats-grid">
         <article class="stat-card"><div class="stat-label">Payment amount</div><div class="stat-value">₱{{ number_format($payment->amount, 2) }}</div><div class="stat-note">{{ $payment->currency ?? 'PHP' }} transaction</div></article>

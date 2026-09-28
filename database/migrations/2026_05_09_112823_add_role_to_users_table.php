@@ -9,15 +9,15 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-   public function up(): void
-{
-    Schema::table('users', function (Blueprint $table) {
-        $table->string('role')->default('client');
-        $table->string('contact_number')->nullable();
-        $table->integer('age')->nullable();
-        $table->text('address')->nullable();
-    });
-}
+    public function up(): void
+    {
+        Schema::table('users', function (Blueprint $table) {
+            $table->string('role')->default('client');
+            $table->string('contact_number')->nullable();
+            $table->integer('age')->nullable();
+            $table->text('address')->nullable();
+        });
+    }
 
     /**
      * Reverse the migrations.

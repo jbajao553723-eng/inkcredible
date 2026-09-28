@@ -52,13 +52,12 @@
 </head>
 <body>
 @include('partials.admin-sidebar', ['active' => 'payments'])
-<main class="main"><div class="page-shell">
+<main class="main" id="main-content" tabindex="-1"><div class="page-shell">
     <header class="topbar">
         <div><div class="eyebrow">Payment operations</div><h1>Payment management</h1><p class="subtitle">Find each client's transaction quickly and review payments without scanning the entire history.</p></div>
         <div class="top-actions"><a class="button button-secondary" href="{{ route('admin.dashboard') }}">Dashboard</a><form method="POST" action="{{ route('logout') }}">@csrf<button class="button button-secondary" type="submit">Log out</button></form></div>
     </header>
-    @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif
-    @if(session('error'))<div class="alert alert-error" role="alert">{{ session('error') }}</div>@endif
+    <x-flash-messages />
 
     <section class="stats-grid">
         <article class="stat-card"><div class="stat-label">Transactions</div><div class="stat-value">{{ number_format($stats['transactions']) }}</div><div class="stat-note">Complete payment history</div></article>

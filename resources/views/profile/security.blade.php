@@ -10,7 +10,7 @@
 </head>
 <body>
 @include('partials.client-sidebar', ['active' => 'settings'])
-<main class="main"><div class="page-shell settings-shell">
+<main class="main" id="main-content" tabindex="-1"><div class="page-shell settings-shell">
     <header class="topbar"><div><div class="eyebrow">Account settings</div><h1>Security</h1><p class="subtitle">Manage your password and account access.</p></div></header>
     @include('partials.settings-tabs', ['activeSettings' => 'security'])
     @if(session('status') === 'password-updated')<div class="alert alert-success" role="status">Password updated successfully.</div>@endif

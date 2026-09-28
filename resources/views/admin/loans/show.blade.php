@@ -26,20 +26,18 @@
 .loan-action-approve:hover { color:#fff; background:#05603a; border-color:#05603a; }
 </style>
 </head>
-<body>
+<body class="admin-loans-page admin-loan-detail-page">
 @php
-    $statusClass = match ($loan->status) { 'approved' => 'badge-success', 'pending' => 'badge-warning', 'paid' => 'badge-purple', 'rejected' => 'badge-danger', default => 'badge-neutral' };
     $submitted = $loan->created_at?->copy()->timezone('Asia/Manila');
     $successfulPayments = $loan->payments->where('status', 'approved');
 @endphp
 @include('partials.admin-sidebar', ['active' => 'loans'])
-<main class="main"><div class="page-shell">
+<main class="main" id="main-content" tabindex="-1"><div class="page-shell">
     <header class="topbar">
         <div><div class="eyebrow">Loan review</div><h1>{{ $loan->loan_code ?: 'Loan #'.$loan->id }}</h1><p class="subtitle">Complete application, repayment, and client information.</p></div>
-        <div class="top-actions"><a class="button button-secondary" href="{{ route('admin.loans') }}">Back to loans</a><span class="badge {{ $statusClass }}">{{ ucfirst($loan->status) }}</span></div>
+        <div class="top-actions"><a class="button button-secondary" href="{{ route('admin.loans') }}">Back to loans</a><x-status-badge :status="$loan->status" /></div>
     </header>
-    @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif
-    @if(session('error'))<div class="alert alert-error" role="alert">{{ session('error') }}</div>@endif
+    <x-flash-messages />
     @if($errors->any())<div class="alert alert-error" role="alert">{{ $errors->first() }}</div>@endif
 
     <section class="stats-grid">

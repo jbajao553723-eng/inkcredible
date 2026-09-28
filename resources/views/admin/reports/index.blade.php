@@ -26,7 +26,7 @@
 </head>
 <body>
 @include('partials.admin-sidebar', ['active' => 'reports'])
-<main class="main"><div class="page-shell">
+<main class="main" id="main-content" tabindex="-1"><div class="page-shell">
     <header class="topbar">
         <div><div class="eyebrow">Records and exports</div><h1>Reports</h1><p class="subtitle">Download company-level performance reporting or detailed client account records.</p></div>
         <div class="top-actions"><a class="button button-secondary" href="{{ route('admin.dashboard') }}">Dashboard</a><form method="POST" action="{{ route('logout') }}">@csrf<button class="button button-secondary" type="submit">Log out</button></form></div>

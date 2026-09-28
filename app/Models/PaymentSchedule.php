@@ -27,8 +27,11 @@ class PaymentSchedule extends Model
     ];
 
     const STATUS_PENDING = 'pending';
+
     const STATUS_PAID = 'paid';
+
     const STATUS_OVERDUE = 'overdue';
+
     const STATUS_PARTIAL = 'partial';
 
     public function loan()
@@ -64,7 +67,7 @@ class PaymentSchedule extends Model
     public function scopeDueSoon($query, $days = 7)
     {
         return $query->where('due_date', '<=', now()->addDays($days))
-                    ->where('status', '!=', self::STATUS_PAID);
+            ->where('status', '!=', self::STATUS_PAID);
     }
 
     public function isOverdue()

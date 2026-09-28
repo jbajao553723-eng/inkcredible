@@ -98,7 +98,7 @@
 }
 </style>
 </head>
-<body>
+<body class="admin-loans-page admin-loan-queue-page">
 @php
     $requestCount = $loans->count();
     $pendingCount = $loans->where('status', 'pending')->count();
@@ -107,13 +107,12 @@
     $rejectedCount = $loans->where('status', 'rejected')->count();
 @endphp
 @include('partials.admin-sidebar', ['active' => 'loans'])
-<main class="main"><div class="page-shell">
+<main class="main" id="main-content" tabindex="-1"><div class="page-shell">
     <header class="topbar">
         <div><div class="eyebrow">Loan operations</div><div class="queue-heading"><h1>Loan requests</h1>@if($pendingCount)<span class="queue-pulse">{{ $pendingCount }} waiting for review</span>@endif</div><p class="subtitle">Review and compare applications, then open the details page to record a decision.</p></div>
         <div class="top-actions"><a class="button button-secondary" href="{{ route('admin.dashboard') }}">Dashboard</a><form method="POST" action="{{ route('logout') }}">@csrf<button class="button button-secondary" type="submit">Log out</button></form></div>
     </header>
-    @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif
-    @if(session('error'))<div class="alert alert-error" role="alert">{{ session('error') }}</div>@endif
+    <x-flash-messages />
     @if($errors->any())<div class="alert alert-error" role="alert">{{ $errors->first() }}</div>@endif
 
     <section class="stats-grid loan-stats" aria-label="Loan request summary">
@@ -147,7 +146,6 @@
                 @foreach($loans as $loan)
                     @php
                         $overdueDays = $loan->getOverdueDays();
-                        $statusClass = match ($loan->status) { 'approved' => 'badge-success', 'pending' => 'badge-warning', 'paid' => 'badge-purple', 'rejected' => 'badge-danger', default => 'badge-neutral' };
                         $submitted = $loan->created_at?->copy()->timezone('Asia/Manila');
                         $loanName = $loan->loanType?->display_name ?? $loan->loanType?->name ?? 'Loan';
                     @endphp
@@ -157,7 +155,7 @@
                         <td class="request-cell" data-label="Request"><div class="cell-title">{{ $loanName }}</div><span class="request-code">{{ $loan->loan_code ?: 'LOAN-'.$loan->id }}</span>@if($loan->purpose)<div class="purpose-line"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 21s7-4.7 7-11a7 7 0 1 0-14 0c0 6.3 7 11 7 11Zm0-8.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/></svg><span>{{ $loan->purpose }}</span></div>@endif</td>
                         <td class="money-cell" data-label="Financials"><div class="money-primary">₱{{ number_format($loan->amount, 2) }}</div><div class="cell-secondary">Requested principal</div><div class="money-breakdown"><div class="money-line"><span>Total due</span><strong>₱{{ number_format($loan->getTotalWithPenalty(), 2) }}</strong></div>@if($overdueDays > 0)<div class="money-line penalty"><span>Penalty</span><strong>₱{{ number_format($loan->penalty_amount, 2) }}</strong></div>@endif</div></td>
                         <td class="submitted-cell" data-label="Submitted"><div class="date-primary">{{ $submitted?->format('M d, Y') ?? 'Unavailable' }}</div><div class="cell-secondary">{{ $submitted?->format('h:i A') }}{{ $submitted ? ' PHT' : '' }}</div>@if($overdueDays > 0)<div class="cell-secondary danger-text">{{ $overdueDays }} {{ Str::plural('day', $overdueDays) }} overdue</div>@endif</td>
-                        <td data-label="Status"><span class="badge status-badge {{ $statusClass }}">{{ ucfirst($loan->status) }}</span></td>
+                        <td data-label="Status"><x-status-badge :status="$loan->status" class="status-badge" /></td>
                         <td class="loan-action-cell" data-label="Details"><a class="button button-small action-view" href="{{ route('admin.loan.show', $loan->id) }}">View details</a></td>
                     </tr>
                 @endforeach

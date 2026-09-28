@@ -16,7 +16,11 @@ class ClientVerificationAdminController extends Controller
     public function index(Request $request): View
     {
         $clients = User::where('role', 'client')
-            ->with(['loans', 'clientVerification'])
+            ->with('clientVerification')
+            ->withCount([
+                'loans',
+                'loans as active_loans_count' => fn ($query) => $query->where('status', 'approved'),
+            ])
             ->latest()
             ->get();
 
@@ -26,8 +30,14 @@ class ClientVerificationAdminController extends Controller
             ->get();
 
         $section = $request->query('section') === 'verifications' ? 'verifications' : 'directory';
+        $stats = [
+            'clients_with_loans' => $clients->where('loans_count', '>', 0)->count(),
+            'active_borrowers' => $clients->where('active_loans_count', '>', 0)->count(),
+            'pending_verifications' => $verifications->where('status', ClientVerification::STATUS_PENDING)->count(),
+            'approved_verifications' => $verifications->where('status', ClientVerification::STATUS_APPROVED)->count(),
+        ];
 
-        return view('admin.clients.index', compact('clients', 'verifications', 'section'));
+        return view('admin.clients.index', compact('clients', 'verifications', 'section', 'stats'));
     }
 
     public function show(ClientVerification $verification): View

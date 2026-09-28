@@ -22,11 +22,15 @@ class Penalty extends Model
     ];
 
     const TYPE_LATE_PAYMENT = 'late_payment';
+
     const TYPE_ADDITIONAL_FEE = 'additional_fee';
+
     const TYPE_PROCESSING_FEE = 'processing_fee';
 
     const STATUS_ACTIVE = 'active';
+
     const STATUS_WAIVED = 'waived';
+
     const STATUS_PAID = 'paid';
 
     public function loan()
@@ -64,7 +68,7 @@ class Penalty extends Model
         $updateData = ['status' => self::STATUS_WAIVED];
 
         if ($reason) {
-            $updateData['reason'] = $this->reason . ' (Waived: ' . $reason . ')';
+            $updateData['reason'] = $this->reason.' (Waived: '.$reason.')';
         }
 
         $this->update($updateData);
@@ -76,7 +80,7 @@ class Penalty extends Model
                 ->sum('amount');
 
             $this->paymentSchedule->update([
-                'penalty_amount' => $remainingPenalties
+                'penalty_amount' => $remainingPenalties,
             ]);
         }
     }

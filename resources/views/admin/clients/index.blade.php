@@ -15,41 +15,41 @@
 .tab-count { display:inline-flex; align-items:center; justify-content:center; min-width:21px; height:21px; padding:0 6px; color:#475467; background:#e9edf3; border-radius:999px; font-size:10px; }
 .client-tab.active .tab-count { color:#4338ca; background:#eef2ff; }
 .client-photo { object-fit:cover; box-shadow:0 0 0 2px #fff,0 0 0 3px #e4e7ec; }
+.client-panel[hidden] { display:none; }
+.client-panel.is-entering { animation:client-panel-enter .42s cubic-bezier(.22,1,.36,1) both; }
+@keyframes client-panel-enter { from { opacity:0; transform:translateY(12px) scale(.995); } to { opacity:1; transform:translateY(0) scale(1); } }
 @media (max-width:560px) { .client-tabs { width:100%; } .client-tab { flex:1; justify-content:center; } }
 </style>
 </head>
 <body>
 @php
-    $clientsWithLoans = $clients->filter(fn ($client) => $client->loans->isNotEmpty())->count();
-    $activeBorrowers = $clients->filter(fn ($client) => $client->loans->contains('status', 'approved'))->count();
-    $pendingCount = $verifications->where('status', 'pending')->count();
-    $approvedCount = $verifications->where('status', 'approved')->count();
+    $pendingCount = $stats['pending_verifications'];
+    $approvedCount = $stats['approved_verifications'];
 @endphp
 @include('partials.admin-sidebar', ['active' => 'clients'])
-<main class="main"><div class="page-shell">
+<main class="main" id="main-content" tabindex="-1"><div class="page-shell">
     <header class="topbar">
         <div><div class="eyebrow">Client management</div><h1>Clients and verification</h1><p class="subtitle">Manage registered clients, lending activity, and verification reviews in one workspace.</p></div>
         <div class="top-actions"><a class="button button-secondary" href="{{ route('admin.dashboard') }}">Dashboard</a><form method="POST" action="{{ route('logout') }}">@csrf<button class="button button-secondary" type="submit">Log out</button></form></div>
     </header>
 
-    @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif
-    @if(session('error'))<div class="alert alert-error" role="alert">{{ session('error') }}</div>@endif
+    <x-flash-messages />
 
     <section class="stats-grid">
         <article class="stat-card"><div class="stat-label">Total clients</div><div class="stat-value">{{ $clients->count() }}</div><div class="stat-note">Registered client accounts</div></article>
         <article class="stat-card"><div class="stat-label">Awaiting review</div><div class="stat-value">{{ $pendingCount }}</div><div class="stat-note">Pending verification decisions</div></article>
         <article class="stat-card"><div class="stat-label">Verified clients</div><div class="stat-value">{{ $approvedCount }}</div><div class="stat-note">Eligible to request loans</div></article>
-        <article class="stat-card"><div class="stat-label">Active borrowers</div><div class="stat-value">{{ $activeBorrowers }}</div><div class="stat-note">Currently approved loans</div></article>
+        <article class="stat-card"><div class="stat-label">Active borrowers</div><div class="stat-value">{{ $stats['active_borrowers'] }}</div><div class="stat-note">Currently approved loans</div></article>
     </section>
 
-    <nav class="client-tabs" aria-label="Client management sections">
-        <a class="client-tab {{ $section === 'directory' ? 'active' : '' }}" href="{{ route('admin.clients') }}" @if($section === 'directory') aria-current="page" @endif>Client directory <span class="tab-count">{{ $clients->count() }}</span></a>
-        <a class="client-tab {{ $section === 'verifications' ? 'active' : '' }}" href="{{ route('admin.clients', ['section' => 'verifications']) }}" @if($section === 'verifications') aria-current="page" @endif>Verification queue <span class="tab-count">{{ $pendingCount }}</span></a>
+    <nav class="client-tabs" aria-label="Client management sections" role="tablist">
+        <a class="client-tab {{ $section === 'directory' ? 'active' : '' }}" id="client-directory-tab" href="{{ route('admin.clients') }}" role="tab" aria-controls="client-directory-panel" aria-selected="{{ $section === 'directory' ? 'true' : 'false' }}" tabindex="{{ $section === 'directory' ? '0' : '-1' }}" data-client-section="directory">Client directory <span class="tab-count">{{ $clients->count() }}</span></a>
+        <a class="client-tab {{ $section === 'verifications' ? 'active' : '' }}" id="verification-queue-tab" href="{{ route('admin.clients', ['section' => 'verifications']) }}" role="tab" aria-controls="verification-queue-panel" aria-selected="{{ $section === 'verifications' ? 'true' : 'false' }}" tabindex="{{ $section === 'verifications' ? '0' : '-1' }}" data-client-section="verifications">Verification queue <span class="tab-count">{{ $pendingCount }}</span></a>
     </nav>
 
-    @if($section === 'directory')
-        <section class="panel" data-admin-table>
-            <div class="panel-header"><div><h2 class="panel-title">Client directory</h2><p class="panel-description">View profiles, verification status, and loan activity. Newest accounts appear first.</p></div><span class="badge badge-neutral">{{ $clientsWithLoans }} with loans</span></div>
+    <div class="client-workspace" data-client-workspace>
+        <section class="panel client-panel" id="client-directory-panel" role="tabpanel" aria-labelledby="client-directory-tab" data-client-panel="directory" data-admin-table @if($section !== 'directory') hidden @endif>
+            <div class="panel-header"><div><h2 class="panel-title">Client directory</h2><p class="panel-description">View profiles, verification status, and loan activity. Newest accounts appear first.</p></div><span class="badge badge-neutral">{{ $stats['clients_with_loans'] }} with loans</span></div>
             <div class="toolbar"><input class="search-input" id="client-search" type="search" placeholder="Search name, email, or contact..." aria-label="Search clients"><select class="filter-select" id="client-status" aria-label="Filter verification status"><option value="">All verification statuses</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="not-submitted">Not submitted</option></select></div>
             @if($clients->isEmpty())
                 <div class="empty-state"><strong>No clients found</strong>Registered client accounts will appear here.</div>
@@ -66,7 +66,7 @@
                         <tr data-status="{{ $verificationStatus }}" data-search="{{ strtolower($client->name.' '.$client->email.' '.$client->contact_number) }}">
                             <td><div class="identity">@if($client->profile_photo_path)<img class="avatar client-photo" src="{{ route('admin.clients.photo', ['client' => $client, 'v' => $client->updated_at?->timestamp]) }}" alt="{{ $client->name }} profile photo">@else<span class="avatar">{{ strtoupper(substr($client->name, 0, 1)) }}</span>@endif<span><span class="cell-title">{{ $client->name }}</span><span class="cell-secondary">{{ $client->email }}</span></span></div></td>
                             <td><div>{{ $client->contact_number ?: 'Not provided' }}</div><div class="cell-secondary">{{ $client->address ?: 'Address not provided' }}</div></td>
-                            <td><div class="cell-title">{{ $client->loans->count() }} {{ Str::plural('loan', $client->loans->count()) }}</div><div class="cell-secondary">{{ $client->loans->where('status', 'approved')->count() }} active</div></td>
+                            <td><div class="cell-title">{{ $client->loans_count }} {{ Str::plural('loan', $client->loans_count) }}</div><div class="cell-secondary">{{ $client->active_loans_count }} active</div></td>
                             <td><div>{{ $registered?->format('M d, Y') }}</div><div class="cell-secondary">{{ $registered?->format('h:i A') }} PHT</div></td>
                             <td><span class="badge {{ $verificationClass }}">{{ $verificationLabel }}</span></td>
                             <td>@if($client->clientVerification)<a class="button button-secondary button-small" href="{{ route('admin.verifications.show', $client->clientVerification) }}">Review details</a>@else<span class="cell-secondary">Awaiting submission</span>@endif</td>
@@ -77,8 +77,8 @@
                 <div class="empty-state" id="client-empty" hidden><strong>No matching clients</strong>Try a different search term or verification status.</div>
             @endif
         </section>
-    @else
-        <section class="panel" data-admin-table>
+
+        <section class="panel client-panel" id="verification-queue-panel" role="tabpanel" aria-labelledby="verification-queue-tab" data-client-panel="verifications" data-admin-table @if($section !== 'verifications') hidden @endif>
             <div class="panel-header"><div><h2 class="panel-title">Verification queue</h2><p class="panel-description">Pending submissions appear first, followed by the latest reviewed records.</p></div><span class="badge badge-warning">{{ $pendingCount }} pending</span></div>
             <div class="toolbar">
                 <input class="search-input" id="verification-search" type="search" placeholder="Search client, company, or job..." aria-label="Search verifications">
@@ -109,6 +109,69 @@
                 <div class="empty-state" id="verification-empty" hidden><strong>No matching submissions</strong>Change the search text or status filter.</div>
             @endif
         </section>
-    @endif
+    </div>
 </div></main>
+<script>
+(() => {
+    const tabs = [...document.querySelectorAll('[data-client-section]')];
+    const panels = [...document.querySelectorAll('[data-client-panel]')];
+
+    if (!tabs.length || !panels.length) return;
+
+    const activateSection = (section, { updateHistory = true, focusTab = false } = {}) => {
+        const nextSection = section === 'verifications' ? 'verifications' : 'directory';
+        const activeTab = tabs.find((tab) => tab.dataset.clientSection === nextSection);
+        const activePanel = panels.find((panel) => panel.dataset.clientPanel === nextSection);
+
+        if (!activeTab || !activePanel) return;
+
+        tabs.forEach((tab) => {
+            const active = tab === activeTab;
+            tab.classList.toggle('active', active);
+            tab.setAttribute('aria-selected', String(active));
+            tab.tabIndex = active ? 0 : -1;
+        });
+
+        panels.forEach((panel) => {
+            panel.hidden = panel !== activePanel;
+            panel.classList.remove('is-entering');
+        });
+
+        requestAnimationFrame(() => activePanel.classList.add('is-entering'));
+        activePanel.addEventListener('animationend', () => activePanel.classList.remove('is-entering'), { once: true });
+
+        if (updateHistory) {
+            const destination = new URL(activeTab.href, window.location.href);
+            history.pushState({ clientSection: nextSection }, '', destination);
+        }
+
+        if (focusTab) activeTab.focus();
+    };
+
+    tabs.forEach((tab, index) => {
+        tab.addEventListener('click', (event) => {
+            event.preventDefault();
+            activateSection(tab.dataset.clientSection);
+        });
+
+        tab.addEventListener('keydown', (event) => {
+            if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+            event.preventDefault();
+
+            const nextIndex = event.key === 'Home'
+                ? 0
+                : event.key === 'End'
+                    ? tabs.length - 1
+                    : (index + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+
+            activateSection(tabs[nextIndex].dataset.clientSection, { focusTab: true });
+        });
+    });
+
+    window.addEventListener('popstate', () => {
+        const section = new URL(window.location.href).searchParams.get('section');
+        activateSection(section, { updateHistory: false });
+    });
+})();
+</script>
 </body></html>

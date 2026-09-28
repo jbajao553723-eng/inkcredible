@@ -33,4 +33,22 @@ class LoanType extends Model
     {
         return $query->where('is_active', true);
     }
+
+    public function installmentCount(): int
+    {
+        return match ($this->name) {
+            'arawan' => 30,
+            'weekly', 'emergency' => 4,
+            default => 1,
+        };
+    }
+
+    public function repaymentPeriodDays(): int
+    {
+        return match ($this->name) {
+            'arawan' => 30,
+            'weekly', 'emergency' => 28,
+            default => max(1, (int) $this->due_days),
+        };
+    }
 }

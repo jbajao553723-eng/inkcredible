@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\AdminPaymentIndexRequest;
+use App\Http\Requests\StorePaymentRequest;
 use App\Models\Loan;
 use App\Models\Payment;
-use App\Models\PaymentSchedule;
+use App\Services\PaymentLedgerService;
 use App\Services\PayMongoService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -18,6 +20,8 @@ use Illuminate\Validation\ValidationException;
 
 class PaymentController extends Controller
 {
+    public function __construct(private readonly PaymentLedgerService $ledger) {}
+
     /*
     |----------------------------------------------------------------------
     | USER PAYMENT PAGE
@@ -47,26 +51,9 @@ class PaymentController extends Controller
     | STORE PAYMENT (FIXED)
     |----------------------------------------------------------------------
     */
-    public function store(Request $request, PayMongoService $payMongo): RedirectResponse
+    public function store(StorePaymentRequest $request, PayMongoService $payMongo): RedirectResponse
     {
-        $validated = $request->validate([
-            'loan_id' => 'required|exists:loans,id',
-            'amount' => 'required|numeric|min:0.01|max:100000000',
-            'method' => 'required|in:gcash,paymaya,bank_transfer,cash',
-            'proof' => 'required_if:method,cash|nullable|image|mimes:jpeg,png,jpg|max:2048',
-        ]);
-
-        if ($validated['method'] !== 'cash' && (float) $validated['amount'] > 100000) {
-            throw ValidationException::withMessages([
-                'amount' => 'GCash and Maya payments cannot exceed PHP 100,000 per transaction.',
-            ]);
-        }
-
-        if ($validated['method'] !== 'cash' && (float) $validated['amount'] < 1) {
-            throw ValidationException::withMessages([
-                'amount' => 'Online payments must be at least PHP 1.00.',
-            ]);
-        }
+        $validated = $request->validated();
 
         $loan = Loan::findOrFail($validated['loan_id']);
 
@@ -238,14 +225,14 @@ class PaymentController extends Controller
             }
 
             if ($eventType === 'checkout_session.payment.paid' || $eventType === 'payment.paid') {
-                $this->markAsApproved($payment, $checkoutSessionId, $paymongoPaymentId, data_get($paymentAttributes, 'source.type'));
+                $this->ledger->approve($payment, $checkoutSessionId, $paymongoPaymentId, data_get($paymentAttributes, 'source.type'));
             } elseif (in_array($eventType, ['payment.failed', 'checkout_session.payment.failed'], true)
                 && $payment->status === Payment::STATUS_PENDING) {
                 $payment->update(['status' => Payment::STATUS_REJECTED, 'paymongo_payment_id' => $paymongoPaymentId]);
             } elseif (in_array($eventType, ['refund.succeeded', 'payment.refunded'], true)
                 && $payment->status === Payment::STATUS_APPROVED) {
                 $payment->update(['status' => Payment::STATUS_REJECTED]);
-                $this->recalculateLoan($payment->loan()->lockForUpdate()->first());
+                $this->ledger->recalculate($payment->loan()->lockForUpdate()->firstOrFail());
             }
         });
 
@@ -257,16 +244,9 @@ class PaymentController extends Controller
     | ADMIN PAYMENTS LIST
     |----------------------------------------------------------------------
     */
-    public function adminIndex(Request $request)
+    public function adminIndex(AdminPaymentIndexRequest $request)
     {
-        $validated = $request->validate([
-            'q' => ['nullable', 'string', 'max:100'],
-            'status' => ['nullable', 'in:pending,approved,rejected'],
-            'method' => ['nullable', 'in:gcash,paymaya,bank_transfer,cash'],
-            'date_from' => ['nullable', 'date_format:Y-m-d'],
-            'date_to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:date_from'],
-            'per_page' => ['nullable', 'integer', 'in:25,50,100'],
-        ]);
+        $validated = $request->validated();
 
         $search = trim($validated['q'] ?? '');
         $status = $validated['status'] ?? null;
@@ -381,7 +361,7 @@ class PaymentController extends Controller
             return back()->with('error', 'Only pending cash payments can be approved.');
         }
 
-        $this->markAsApproved($payment);
+        $this->ledger->approve($payment);
 
         return back()->with('success', 'Payment approved successfully!');
     }
@@ -402,66 +382,6 @@ class PaymentController extends Controller
         $payment->update(['status' => Payment::STATUS_REJECTED]);
 
         return back()->with('success', 'Payment rejected!');
-    }
-
-    private function markAsApproved(Payment $payment, ?string $sessionId = null, ?string $paymentId = null, ?string $method = null): void
-    {
-        DB::transaction(function () use ($payment, $sessionId, $paymentId, $method) {
-            $payment = Payment::whereKey($payment->id)->lockForUpdate()->firstOrFail();
-
-            if ($payment->status === Payment::STATUS_APPROVED) {
-                return;
-            }
-
-            $payment->update([
-                'status' => Payment::STATUS_APPROVED,
-                'paid_at' => now(),
-                'paymongo_session_id' => $sessionId ?: $payment->paymongo_session_id,
-                'paymongo_payment_id' => $paymentId ?: $payment->paymongo_payment_id,
-                'method' => $method ?: $payment->method,
-            ]);
-
-            $this->recalculateLoan($payment->loan()->lockForUpdate()->first());
-        });
-    }
-
-    private function recalculateLoan(Loan $loan): void
-    {
-        $successfulPayments = Payment::where('loan_id', $loan->id)
-            ->where('status', Payment::STATUS_APPROVED)
-            ->get(['amount']);
-        $totalPaid = round((float) $successfulPayments->sum('amount'), 2);
-        $totalDue = (float) $loan->getTotalWithPenalty();
-
-        $unallocatedPaidAmount = $totalPaid;
-        $schedules = $loan->paymentSchedules()
-            ->orderBy('installment_number')
-            ->lockForUpdate()
-            ->get();
-
-        foreach ($schedules as $schedule) {
-            $scheduledAmount = (float) $schedule->scheduled_amount;
-            $allocatedAmount = min($unallocatedPaidAmount, $scheduledAmount);
-            $unallocatedPaidAmount = round(max(0, $unallocatedPaidAmount - $allocatedAmount), 2);
-            $isPaid = $allocatedAmount >= $scheduledAmount;
-            $isOverdue = ! $isPaid && $schedule->due_date->isBefore(today());
-
-            $schedule->update([
-                'paid_amount' => round($allocatedAmount, 2),
-                'paid_date' => $isPaid ? ($schedule->paid_date ?? today()) : null,
-                'status' => $isPaid
-                    ? PaymentSchedule::STATUS_PAID
-                    : ($isOverdue ? PaymentSchedule::STATUS_OVERDUE : PaymentSchedule::STATUS_PENDING),
-            ]);
-        }
-
-        $loan->update([
-            'paid_amount' => $totalPaid,
-            'payment_count' => $successfulPayments->count(),
-            'status' => $totalPaid >= $totalDue
-                ? Loan::STATUS_PAID
-                : ($loan->status === Loan::STATUS_PAID ? Loan::STATUS_APPROVED : $loan->status),
-        ]);
     }
 
     private function reconcileCheckoutSession(Payment $payment, array $session): void
@@ -490,7 +410,7 @@ class PaymentController extends Controller
             return;
         }
 
-        $this->markAsApproved(
+        $this->ledger->approve(
             $payment,
             $sessionId,
             data_get($providerPayment, 'id'),

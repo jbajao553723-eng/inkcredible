@@ -1,16 +1,57 @@
-# Inkcredible Loan System
+# Inkcredible Loan Management System
 
-## Optional local accounts
+Inkcredible is a Laravel 12 lending-management application for client onboarding, loan applications, repayment schedules, payment collection, account verification, and administrative reporting.
 
-To create development accounts with `php artisan db:seed`, set `SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD` in your local `.env`. Set `SEED_CLIENT_EMAIL` and `SEED_CLIENT_PASSWORD` if you also want a demo client. Both seeders skip account creation when their email or password is missing. Do not use shared or predictable passwords on a deployed site.
+## Core features
 
-## PayMongo setup
+- Client registration, email verification, profile management, and identity verification
+- Configurable Arawan, weekly, and emergency loan products
+- Loan review with automatic installment schedule creation
+- Cash payment review and PayMongo-hosted GCash, Maya, and bank-transfer checkout
+- Signed, idempotent PayMongo webhook processing and payment reconciliation
+- Client and business PDF reports
+- Responsive client and administrator workspaces
 
-The payment page supports GCash and Maya through PayMongo Checkout. Cash payments remain manual and are reviewed by an administrator.
+## Requirements
 
-1. Point your domain DNS records to the server running this Laravel application.
-2. Enable HTTPS for the domain.
-3. Set these values in `.env`:
+- PHP 8.2 or newer
+- Composer
+- Node.js and npm
+- MySQL or another database supported by Laravel
+- The PHP extensions required by Laravel and DOMPDF
+
+## Local setup
+
+```bash
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate --seed
+npm run build
+php artisan serve
+```
+
+On Windows PowerShell systems that block `npm.ps1`, use `cmd /c npm run build`.
+
+The application is then available at `http://127.0.0.1:8000`.
+
+## Development accounts
+
+Seed accounts are optional. Add these values to `.env` before running `php artisan db:seed`:
+
+```env
+SEED_ADMIN_EMAIL=admin@example.test
+SEED_ADMIN_PASSWORD=use-a-local-password
+SEED_CLIENT_EMAIL=client@example.test
+SEED_CLIENT_PASSWORD=use-a-local-password
+```
+
+The seeders skip account creation when the corresponding email or password is missing. Never commit real or shared credentials.
+
+## PayMongo configuration
+
+Set the following values in `.env`:
 
 ```env
 APP_URL=https://your-domain.example
@@ -20,119 +61,46 @@ PAYMONGO_GCASH_METHOD=gcash
 PAYMONGO_BANK_TRANSFER_METHODS=dob,brankas
 ```
 
-If the PayMongo test account has QR Ph enabled but not the separate GCash capability, set `PAYMONGO_GCASH_METHOD=qrph`. The checkout will generate a bill-specific QR that can be scanned using GCash.
-
-Bank transfer uses PayMongo Direct Online Banking. Keep `dob` for BPI and UnionBank and `brankas` for BDO, Landbank, and Metrobank. These methods must be activated for the PayMongo account; remove an unavailable rail from `PAYMONGO_BANK_TRANSFER_METHODS` if necessary.
-
-4. Run `php artisan migrate` and clear cached configuration with `php artisan config:clear`.
-5. In the PayMongo dashboard, add this webhook endpoint:
+Register this webhook URL in the PayMongo dashboard and subscribe to `checkout_session.payment.paid`:
 
 ```text
 https://your-domain.example/api/paymongo/webhook
 ```
 
-Subscribe to `checkout_session.payment.paid`. The signed webhook is the main source of truth. The success-return page also performs an authenticated server-side status check with PayMongo so a completed payment can be reflected immediately if the webhook is delayed.
-
-Use PayMongo test keys while testing, then replace them with live keys after verification.
-
-### Local development with ngrok
-
-Start Laravel in one terminal:
+The signed webhook is the primary source of truth. The success-return page also performs an authenticated server-side reconciliation when possible. Use test credentials during development and clear cached configuration after changing environment values:
 
 ```bash
-php artisan serve --host=127.0.0.1 --port=8000
+php artisan config:clear
 ```
 
-Start ngrok in another terminal:
+For local webhook testing, expose the app through an HTTPS tunnel and update both `APP_URL` and the PayMongo webhook endpoint to the tunnel URL.
+
+## Quality checks
 
 ```bash
-ngrok http 8000
+php artisan test
+vendor/bin/pint --test
+npm run build
 ```
 
-Copy the generated HTTPS URL, for example `https://example.ngrok-free.app`, into `.env`:
+## Project structure
 
-```env
-APP_URL=https://example.ngrok-free.app
+```text
+app/Http/Controllers   HTTP orchestration only
+app/Http/Requests      Authorization and input validation
+app/Models             Eloquent models, relationships, and domain helpers
+app/Services           Loan, payment, provider, and reporting workflows
+resources/views        Blade pages, partials, and reusable components
+resources/js           Shared UI behavior and administrator tools
+tests/Feature          End-to-end application behavior
 ```
 
-Register `https://example.ngrok-free.app/api/paymongo/webhook` in the PayMongo **test-mode** dashboard under **Developers > Webhooks**. Copy the secret shown for that endpoint into `PAYMONGO_WEBHOOK_SECRET`. If the ngrok URL changes, update both `APP_URL` and the PayMongo endpoint.
+Uploaded verification documents use private storage. Public profile images, payment proofs, and loan documents are stored on the public disk; run `php artisan storage:link` in environments that need public file delivery.
 
-### Test procedure
+## Production notes
 
-1. Run `php artisan migrate` and `php artisan config:clear`.
-2. Use a `sk_test_...` key and a test-mode webhook endpoint. Never put the secret key in Blade, JavaScript, or committed files.
-3. Log in as a borrower with an approved loan, open `/payments`, verify the amount due, choose GCash or Maya, and select **Pay Now**.
-4. Complete the payment on PayMongo's hosted test checkout. The app verifies the Checkout Session on return and also processes the signed webhook; it never trusts a browser redirect by itself.
-5. Confirm the webhook delivery is successful in the PayMongo dashboard and inspect `storage/logs/laravel.log` for unmatched or amount-mismatch warnings.
-6. Verify the payment row has `status=paid`, `paymongo_session_id`, `paymongo_payment_id`, `paid_at`, and the provider method. Verify `loans.paid_amount` and the remaining balance changed.
-7. Retry the same webhook from the PayMongo dashboard. The unique event ID must prevent a second balance update.
-8. Use PayMongo's failed test case and confirm the payment becomes `failed` without changing the loan balance. Refund a successful test payment and confirm it becomes `refunded` and the loan balance is recalculated.
-
-The webhook accepts only a valid `Paymongo-Signature` header, rejects stale requests outside `PAYMONGO_WEBHOOK_TOLERANCE`, and records each event ID once. PayMongo webhook delivery must receive a 2xx response within 30 seconds.
-
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
-
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
-
-## About Laravel
-
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
-
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
-
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-## Laravel Sponsors
-
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
-
-### Premium Partners
-
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- Serve the application over HTTPS.
+- Configure a queue worker and scheduler for production workloads.
+- Keep `APP_DEBUG=false` and use unique production credentials.
+- Cache configuration, routes, and views during deployment with `php artisan optimize`.
+- Back up both the database and uploaded files.

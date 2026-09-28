@@ -1,3 +1,15 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    :focus-visible {
+        outline: 3px solid rgb(99 102 241 / 35%);
+        outline-offset: 2px;
+    }
+
+    ::selection {
+        color: #1e1b4b;
+        background: #e0e7ff;
+    }
+}

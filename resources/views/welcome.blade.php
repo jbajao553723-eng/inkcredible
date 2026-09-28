@@ -73,7 +73,9 @@
         @media (max-width:900px) { .hero-grid { grid-template-columns:1fr; gap:38px; padding-top:140px; } .hero { min-height:auto; } .account-card { max-width:560px; } .features,.steps { grid-template-columns:1fr; } .feature { min-height:auto; border-right:0; border-bottom:1px solid var(--line); } .feature h3 { margin-top:20px; } }
         @media (max-width:640px) { .shell { width:min(100% - 28px,1160px); } .nav-inner { height:72px; } .nav-links .nav-link { display:none; } .nav-links { gap:8px; } .nav-links .button { min-height:40px; padding:0 13px; } .hero-grid { padding-top:116px; } h1 { font-size:43px; } .hero-copy { font-size:16px; } .account-card { padding:22px; } .section { padding:70px 0; } .cta { align-items:flex-start; flex-direction:column; padding:30px; } .footer-inner { align-items:flex-start; flex-direction:column; } }
         @media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } .button { transition:none; } }
+        @include('partials.motion-styles')
     </style>
+    @vite('resources/js/app.js')
 </head>
 <body>
 <header class="nav">

@@ -90,7 +90,7 @@
 @endphp
 
 @include('partials.client-sidebar', ['active' => 'settings'])
-<main class="main"><div class="page-shell settings-shell">
+<main class="main" id="main-content" tabindex="-1"><div class="page-shell settings-shell">
     <header class="topbar">
         <div><div class="eyebrow">Account settings</div><h1>Personal profile</h1><p class="subtitle">Keep your identity and contact information accurate and up to date.</p></div>
         <div class="top-actions"><a class="button button-secondary" href="{{ route('dashboard') }}">Back to dashboard</a><form method="POST" action="{{ route('logout') }}">@csrf<button class="button button-secondary" type="submit">Log out</button></form></div>

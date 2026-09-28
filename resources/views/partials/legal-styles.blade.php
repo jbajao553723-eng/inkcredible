@@ -24,3 +24,5 @@ li + li { margin-top:7px; }
 .button { display:inline-flex; min-height:40px; padding:10px 15px; align-items:center; justify-content:center; color:#344054; background:#fff; border:1px solid var(--border); border-radius:9px; font-size:12px; font-weight:600; text-decoration:none; }
 .button-primary { color:#fff; background:var(--primary); border-color:var(--primary); }
 @media(max-width:600px) { h1{font-size:30px}.legal-card{padding:25px 20px}.header-inner{padding-bottom:48px}.legal-actions{align-items:stretch;flex-direction:column}.button{width:100%} }
+
+@include('partials.motion-styles')

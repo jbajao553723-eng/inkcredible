@@ -131,7 +131,7 @@ html.motion-enabled.motion-in .portfolio-fill { width:var(--target-width); }
 
 @include('partials.admin-sidebar', ['active' => 'dashboard'])
 
-<main class="main"><div class="page-shell">
+<main class="main" id="main-content" tabindex="-1"><div class="page-shell">
     <header class="topbar">
         <div>
             <div class="eyebrow">Administration</div>
@@ -144,8 +144,7 @@ html.motion-enabled.motion-in .portfolio-fill { width:var(--target-width); }
         </div>
     </header>
 
-    @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif
-    @if(session('error'))<div class="alert alert-error" role="alert">{{ session('error') }}</div>@endif
+    <x-flash-messages />
 
     <section class="stats-grid overview-stats" aria-label="Administrative summary">
         <article class="stat-card overview-card"><div class="overview-head"><span class="stat-label">Loan requests</span><span class="overview-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h4"/></svg></span></div><div class="stat-value">{{ $stats['total_loans'] }}</div><div class="stat-note">{{ $stats['pending_loans'] }} awaiting an admin decision</div></article>
@@ -174,7 +173,7 @@ html.motion-enabled.motion-in .portfolio-fill { width:var(--target-width); }
                     @endforeach
                 </div>
             </div>
-            <div class="portfolio-footer"><div class="portfolio-meta"><span>Active loans</span><strong>{{ $stats['approved_loans'] }}</strong></div><div class="portfolio-meta"><span>Completed</span><strong>{{ $stats['paid_loans'] }}</strong></div><div class="portfolio-meta"><span>Overdue</span><strong class="{{ $overdueLoans->isNotEmpty() ? 'danger-text' : '' }}">{{ $overdueLoans->count() }}</strong></div></div>
+            <div class="portfolio-footer"><div class="portfolio-meta"><span>Active loans</span><strong>{{ $stats['approved_loans'] }}</strong></div><div class="portfolio-meta"><span>Completed</span><strong>{{ $stats['paid_loans'] }}</strong></div><div class="portfolio-meta"><span>Overdue</span><strong class="{{ $overdueLoanCount > 0 ? 'danger-text' : '' }}">{{ $overdueLoanCount }}</strong></div></div>
         </aside>
     </section>
 
@@ -187,17 +186,14 @@ html.motion-enabled.motion-in .portfolio-fill { width:var(--target-width); }
                 <thead><tr><th>Client</th><th>Email</th><th>Loan</th><th>Requested</th><th>Submitted</th><th>Status</th><th></th></tr></thead>
                 <tbody>
                 @foreach($recentLoans as $loan)
-                    @php
-                        $statusClass = match ($loan->status) { 'approved' => 'badge-success', 'pending' => 'badge-warning', 'paid' => 'badge-purple', 'rejected' => 'badge-danger', default => 'badge-neutral' };
-                        $submitted = $loan->created_at?->copy()->timezone('Asia/Manila');
-                    @endphp
+                    @php $submitted = $loan->created_at?->copy()->timezone('Asia/Manila'); @endphp
                     <tr>
                         <td class="recent-client" data-label="Client"><div class="identity"><span class="avatar">{{ strtoupper(substr($loan->user?->name ?? 'U', 0, 1)) }}</span><span class="cell-title">{{ $loan->user?->name ?? 'Unknown client' }}</span></div></td>
                         <td class="email-cell" data-label="Email"><span class="email-value">{{ $loan->user?->email ?? 'No email address' }}</span></td>
                         <td class="recent-loan" data-label="Loan"><div class="cell-title">{{ $loan->loanType?->display_name ?? $loan->loanType?->name ?? 'Loan' }}</div><div class="cell-secondary">{{ $loan->loan_code ?: 'Loan #'.$loan->id }}</div></td>
                         <td class="amount" data-label="Requested">&#8369;{{ number_format($loan->amount, 2) }}</td>
                         <td data-label="Submitted"><div>{{ $submitted?->format('M d, Y') }}</div><div class="cell-secondary">{{ $submitted?->format('h:i A') }} PHT</div></td>
-                        <td data-label="Status"><span class="badge recent-status {{ $statusClass }}">{{ ucfirst($loan->status) }}</span></td>
+                        <td data-label="Status"><x-status-badge :status="$loan->status" class="recent-status" /></td>
                         <td data-label="Details"><a class="button button-small recent-action" href="{{ route('admin.loan.show', $loan->id) }}">View details</a></td>
                     </tr>
                 @endforeach

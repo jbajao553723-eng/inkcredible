@@ -37,7 +37,6 @@ textarea:focus { outline:none; border-color:#818cf8; box-shadow:0 0 0 3px rgba(9
 </head>
 <body>
 @php
-    $statusClass = match ($verification->status) { 'approved' => 'badge-success', 'rejected' => 'badge-danger', default => 'badge-warning' };
     $submitted = $verification->submitted_at?->copy()->timezone('Asia/Manila');
     $reviewed = $verification->reviewed_at?->copy()->timezone('Asia/Manila');
     $client = $verification->user;
@@ -49,14 +48,13 @@ textarea:focus { outline:none; border-color:#818cf8; box-shadow:0 0 0 3px rgba(9
         : '?';
 @endphp
 @include('partials.admin-sidebar', ['active' => 'clients'])
-<main class="main"><div class="page-shell">
+<main class="main" id="main-content" tabindex="-1"><div class="page-shell">
     <header class="topbar">
         <div><div class="eyebrow">Verification review</div><h1>Review details</h1><p class="subtitle">Confirm {{ $client?->full_name ?? 'the client' }}'s profile and private evidence before recording a decision.</p></div>
-        <div class="top-actions"><a class="button button-secondary" href="{{ route('admin.clients', ['section' => 'verifications']) }}">Back to queue</a><span class="badge {{ $statusClass }}">{{ $verification->status }}</span></div>
+        <div class="top-actions"><a class="button button-secondary" href="{{ route('admin.clients', ['section' => 'verifications']) }}">Back to queue</a><x-status-badge :status="$verification->status" /></div>
     </header>
 
-    @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif
-    @if(session('error'))<div class="alert alert-error" role="alert">{{ session('error') }}</div>@endif
+    <x-flash-messages />
     @if($errors->any())<div class="alert alert-error" role="alert">{{ $errors->first() }}</div>@endif
 
     @if($client)
@@ -69,7 +67,7 @@ textarea:focus { outline:none; border-color:#818cf8; box-shadow:0 0 0 3px rgba(9
                 <div class="review-address">{{ $client->address ?: 'Address not provided' }}</div>
             </div>
             <div class="review-account">
-                <div class="review-account-row"><span>Verification</span><strong><span class="badge {{ $statusClass }}">{{ ucfirst($verification->status) }}</span></strong></div>
+                <div class="review-account-row"><span>Verification</span><strong><x-status-badge :status="$verification->status" /></strong></div>
                 <div class="review-account-row"><span>Email</span><strong>{{ $client->email_verified_at ? 'Verified' : 'Not verified' }}</strong></div>
                 <div class="review-account-row"><span>Registered</span><strong>{{ $registered?->format('M d, Y') ?? 'Unavailable' }}</strong></div>
                 <div class="review-account-row"><span>Active loans</span><strong>{{ $activeLoanCount }}</strong></div>
@@ -113,7 +111,7 @@ textarea:focus { outline:none; border-color:#818cf8; box-shadow:0 0 0 3px rgba(9
                     <div class="detail-item"><div class="detail-label">Submitted at</div><div class="detail-value">{{ $submitted?->format('M d, Y - h:i A') }} PHT</div></div>
                     <div class="detail-item"><div class="detail-label">Reviewed at</div><div class="detail-value">{{ $reviewed ? $reviewed->format('M d, Y - h:i A').' PHT' : 'Awaiting review' }}</div></div>
                     <div class="detail-item"><div class="detail-label">Reviewed by</div><div class="detail-value">{{ $verification->reviewer?->full_name ?? 'Not reviewed' }}</div></div>
-                    <div class="detail-item"><div class="detail-label">Current result</div><div class="detail-value"><span class="badge {{ $statusClass }}">{{ $verification->status }}</span></div></div>
+                    <div class="detail-item"><div class="detail-label">Current result</div><div class="detail-value"><x-status-badge :status="$verification->status" /></div></div>
                 </div>
                 @if($verification->rejection_reason)<div class="panel-body" style="border-top:1px solid var(--border)"><div class="notice"><strong>Rejection reason</strong><br>{{ $verification->rejection_reason }}</div></div>@endif
             </section>

@@ -4,29 +4,30 @@ namespace App\Http\Controllers;
 
 use App\Models\Loan;
 use App\Models\Payment;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(): View|RedirectResponse
     {
-        if (auth()->user()->role === 'admin') {
+        $user = request()->user();
+
+        if ($user->role === 'admin') {
             return redirect()->route('admin.dashboard');
         }
 
-        $userId = auth()->id();
-
         $loans = Loan::with(['loanType', 'paymentSchedules', 'payments'])
-            ->where('user_id', $userId)
+            ->whereBelongsTo($user)
             ->latest()
             ->get();
 
-        $pendingPayments = Payment::whereHas('loan', function ($q) use ($userId) {
-            $q->where('user_id', $userId);
-        })->where('status', 'pending')->get();
+        $pendingPayments = $loans
+            ->flatMap->payments
+            ->where('status', Payment::STATUS_PENDING)
+            ->values();
 
-        $activeLoan = $loans->first(function ($loan) {
-            return strtolower($loan->status) === 'approved';
-        });
+        $activeLoan = $loans->firstWhere('status', Loan::STATUS_APPROVED);
 
         return view('dashboard', compact(
             'loans',

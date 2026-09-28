@@ -2,11 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
-use App\Models\Penalty;
 use App\Models\Loan;
 use App\Models\PaymentSchedule;
+use App\Models\Penalty;
+use Illuminate\Database\Seeder;
 
 class PenaltiesSeeder extends Seeder
 {
@@ -21,6 +20,7 @@ class PenaltiesSeeder extends Seeder
 
         if ($loansCount === 0 || $schedulesCount === 0) {
             $this->command->info('No loans or payment schedules found. Skipping penalties seeding.');
+
             return;
         }
 

@@ -15,14 +15,13 @@
     $rejectedCount = $verifications->where('status', 'rejected')->count();
 @endphp
 @include('partials.admin-sidebar', ['active' => 'verifications'])
-<main class="main"><div class="page-shell">
+<main class="main" id="main-content" tabindex="-1"><div class="page-shell">
     <header class="topbar">
         <div><div class="eyebrow">Identity and eligibility</div><h1>Client verifications</h1><p class="subtitle">Review submitted employment, income, identity, and supporting documents before enabling loan requests.</p></div>
         <div class="top-actions"><a class="button button-secondary" href="{{ route('admin.dashboard') }}">Dashboard</a></div>
     </header>
 
-    @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif
-    @if(session('error'))<div class="alert alert-error" role="alert">{{ session('error') }}</div>@endif
+    <x-flash-messages />
 
     <section class="stats-grid">
         <article class="stat-card"><div class="stat-label">Awaiting review</div><div class="stat-value">{{ $pendingCount }}</div><div class="stat-note">Pending admin decision</div></article>

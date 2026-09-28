@@ -23,9 +23,13 @@ class LoanDocument extends Model
     ];
 
     const TYPE_ID = 'government_id';
+
     const TYPE_PROOF_OF_INCOME = 'proof_of_income';
+
     const TYPE_BANK_STATEMENT = 'bank_statement';
+
     const TYPE_COLLATERAL = 'collateral';
+
     const TYPE_OTHER = 'other';
 
     public function loan()

@@ -1,0 +1,93 @@
+<?php
+
+use App\Models\ClientVerification;
+use App\Models\Loan;
+use App\Models\LoanApplication;
+use App\Models\LoanType;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+
+uses(RefreshDatabase::class);
+
+function verifiedLoanApplicant(): User
+{
+    $client = User::factory()->create(['role' => 'client']);
+
+    ClientVerification::create([
+        'user_id' => $client->id,
+        'status' => ClientVerification::STATUS_APPROVED,
+        'employment_status' => 'employed',
+        'monthly_income' => 30_000,
+        'employment_length_months' => 24,
+        'source_of_income' => 'Employment',
+        'valid_id_type' => 'Passport',
+        'valid_id_number' => 'TEST-123',
+        'valid_id_path' => 'client-verifications/test/id.jpg',
+        'selfie_with_id_path' => 'client-verifications/test/selfie.jpg',
+        'submitted_at' => now(),
+    ]);
+
+    return $client;
+}
+
+function activeDailyLoanType(): LoanType
+{
+    return LoanType::create([
+        'name' => 'arawan',
+        'display_name' => 'Arawan Loan',
+        'description' => 'Daily repayment product',
+        'min_amount' => 1_000,
+        'max_amount' => 10_000,
+        'interest_rate' => 10,
+        'due_days' => 30,
+        'is_active' => true,
+    ]);
+}
+
+it('submits the application, loan, and supporting document together', function () {
+    Storage::fake('public');
+    $client = verifiedLoanApplicant();
+    $loanType = activeDailyLoanType();
+
+    $response = $this->actingAs($client)->post(route('loan.store'), [
+        'loan_type' => $loanType->name,
+        'amount' => 5_000,
+        'purpose_choice' => 'allowance',
+        'government_id' => UploadedFile::fake()->create('government-id.pdf', 100, 'application/pdf'),
+        'loan_terms_accepted' => '1',
+    ]);
+
+    $response->assertRedirect(route('dashboard'));
+    $response->assertSessionHas('success');
+
+    $loan = Loan::firstOrFail();
+
+    expect(LoanApplication::count())->toBe(1)
+        ->and($loan->user_id)->toBe($client->id)
+        ->and((float) $loan->total_payable)->toBe(5_500.0)
+        ->and($loan->installment_count)->toBe(30)
+        ->and($loan->loanDocuments)->toHaveCount(1);
+
+    Storage::disk('public')->assertExists($loan->loanDocuments->first()->file_path);
+});
+
+it('rejects amounts outside the selected product limits', function () {
+    Storage::fake('public');
+    $client = verifiedLoanApplicant();
+    $loanType = activeDailyLoanType();
+
+    $response = $this->actingAs($client)->from(route('loan.create'))->post(route('loan.store'), [
+        'loan_type' => $loanType->name,
+        'amount' => 20_000,
+        'purpose_choice' => 'allowance',
+        'government_id' => UploadedFile::fake()->create('government-id.pdf', 100, 'application/pdf'),
+        'loan_terms_accepted' => '1',
+    ]);
+
+    $response->assertRedirect(route('loan.create'));
+    $response->assertSessionHas('error');
+    expect(Loan::count())->toBe(0)
+        ->and(LoanApplication::count())->toBe(0);
+});

@@ -98,7 +98,7 @@ Route::middleware(['auth', 'admin'])
         Route::get('/loans', [LoanAdminController::class, 'index'])
             ->name('loans');
 
-        Route::get('/loan/{id}', [LoanAdminController::class, 'show'])
+        Route::get('/loan/{loan}', [LoanAdminController::class, 'show'])
             ->name('loan.show');
 
         Route::get('/clients', [ClientVerificationAdminController::class, 'index'])
@@ -131,10 +131,10 @@ Route::middleware(['auth', 'admin'])
         Route::get('/verification/{verification}/document/{type}', [ClientVerificationAdminController::class, 'document'])
             ->name('verifications.document');
 
-        Route::post('/loan/{id}/approve', [LoanAdminController::class, 'approve'])
+        Route::post('/loan/{loan}/approve', [LoanAdminController::class, 'approve'])
             ->name('loan.approve');
 
-        Route::post('/loan/{id}/reject', [LoanAdminController::class, 'reject'])
+        Route::post('/loan/{loan}/reject', [LoanAdminController::class, 'reject'])
             ->name('loan.reject');
 
         Route::get('/payments', [PaymentController::class, 'adminIndex'])

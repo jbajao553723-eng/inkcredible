@@ -213,7 +213,7 @@ tbody tr:hover { background: #fcfcfd; }
 
 @include('partials.client-sidebar', ['active' => 'payments'])
 
-<main class="main">
+<main class="main" id="main-content" tabindex="-1">
     <div class="page-shell">
         <header class="topbar">
             <div>

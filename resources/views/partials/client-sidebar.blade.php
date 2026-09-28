@@ -1,3 +1,4 @@
+<a class="skip-link" href="#main-content">Skip to main content</a>
 <aside class="sidebar">
     <div class="brand"><span class="brand-mark">I</span><span>Inkcredible</span></div>
     <div class="nav-label">Menu</div>

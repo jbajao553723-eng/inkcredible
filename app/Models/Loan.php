@@ -98,7 +98,7 @@ class Loan extends Model
     | SAFE STATUS DISPLAY (NEW)
     |--------------------------------------------------------------------------
     */
-    public function getStatusLabelAttribute()
+    public function getStatusLabelAttribute(): string
     {
         return ucfirst($this->status ?? 'pending');
     }
@@ -108,12 +108,12 @@ class Loan extends Model
     | LOAN TYPE SAFE ACCESS
     |--------------------------------------------------------------------------
     */
-    public function getLoanTypeNameAttribute()
+    public function getLoanTypeNameAttribute(): string
     {
         return $this->loanType?->name ?? 'N/A';
     }
 
-    public function getLoanTypeDisplayAttribute()
+    public function getLoanTypeDisplayAttribute(): string
     {
         return $this->loanType?->display_name ?? 'N/A';
     }
@@ -123,8 +123,15 @@ class Loan extends Model
     | GOVERNMENT ID
     |--------------------------------------------------------------------------
     */
-    public function getGovernmentIdAttribute()
+    public function getGovernmentIdAttribute(): ?string
     {
+        if ($this->relationLoaded('loanDocuments')) {
+            return $this->loanDocuments
+                ->where('document_type', LoanDocument::TYPE_ID)
+                ->sortByDesc('id')
+                ->first()?->file_path;
+        }
+
         return $this->loanDocuments()
             ->where('document_type', LoanDocument::TYPE_ID)
             ->latest()
@@ -136,12 +143,16 @@ class Loan extends Model
     | PENALTY
     |--------------------------------------------------------------------------
     */
-    public function getPenaltyAmountAttribute()
+    public function getPenaltyAmountAttribute(): float
     {
-        return $this->paymentSchedules()->sum('penalty_amount');
+        $total = $this->relationLoaded('paymentSchedules')
+            ? $this->paymentSchedules->sum('penalty_amount')
+            : $this->paymentSchedules()->sum('penalty_amount');
+
+        return (float) $total;
     }
 
-    public function getPenaltyPercentageAttribute()
+    public function getPenaltyPercentageAttribute(): float
     {
         return self::DAILY_PENALTY_RATE;
     }
@@ -210,8 +221,15 @@ class Loan extends Model
     | NEXT PAYMENT
     |--------------------------------------------------------------------------
     */
-    public function getNextPaymentDateAttribute()
+    public function getNextPaymentDateAttribute(): ?Carbon
     {
+        if ($this->relationLoaded('paymentSchedules')) {
+            return $this->paymentSchedules
+                ->where('status', '!=', PaymentSchedule::STATUS_PAID)
+                ->sortBy('due_date')
+                ->first()?->due_date;
+        }
+
         $schedule = $this->paymentSchedules()
             ->where('status', '!=', PaymentSchedule::STATUS_PAID)
             ->orderBy('due_date')
@@ -225,12 +243,12 @@ class Loan extends Model
     | BALANCE
     |--------------------------------------------------------------------------
     */
-    public function getTotalWithPenalty()
+    public function getTotalWithPenalty(): float
     {
         return ($this->total_payable ?? 0) + $this->penalty_amount;
     }
 
-    public function getRemainingBalance()
+    public function getRemainingBalance(): float
     {
         return max(0, $this->getTotalWithPenalty() - ($this->paid_amount ?? 0));
     }
@@ -240,12 +258,17 @@ class Loan extends Model
     | OVERDUE DAYS
     |--------------------------------------------------------------------------
     */
-    public function getOverdueDays()
+    public function getOverdueDays(): int
     {
-        $schedule = $this->paymentSchedules()
-            ->where('status', PaymentSchedule::STATUS_OVERDUE)
-            ->orderBy('due_date')
-            ->first();
+        $schedule = $this->relationLoaded('paymentSchedules')
+            ? $this->paymentSchedules
+                ->where('status', PaymentSchedule::STATUS_OVERDUE)
+                ->sortBy('due_date')
+                ->first()
+            : $this->paymentSchedules()
+                ->where('status', PaymentSchedule::STATUS_OVERDUE)
+                ->orderBy('due_date')
+                ->first();
 
         if (! $schedule) {
             return 0;

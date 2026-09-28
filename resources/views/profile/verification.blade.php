@@ -16,11 +16,9 @@
     $canSubmitVerification = ! $verification || $verification->status === 'rejected';
 @endphp
 @include('partials.client-sidebar', ['active' => 'settings'])
-<main class="main"><div class="page-shell settings-shell">
+<main class="main" id="main-content" tabindex="-1"><div class="page-shell settings-shell">
     <header class="topbar"><div><div class="eyebrow">Account settings</div><h1>Client verification</h1><p class="subtitle">Submit financial and identity information for administrator review.</p></div><span class="badge {{ $verificationClass }}">{{ ucfirst($verificationStatus) }}</span></header>
     @include('partials.settings-tabs', ['activeSettings' => 'verification'])
-    @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif
-    @if(session('error'))<div class="alert alert-error" role="alert">{{ session('error') }}</div>@endif
     <section class="panel">
         <div class="panel-header"><div><h2 class="panel-title">Employment, income, and identity</h2><p class="panel-description">All information must be accurate and the documents must be clear and unedited.</p></div><span class="badge {{ $verificationClass }}">{{ ucfirst($verificationStatus) }}</span></div>
         <div class="panel-body">
@@ -33,7 +31,7 @@
             @else
                 <div class="verification-notice notice-pending"><strong>Verification required.</strong> Complete every required field before requesting a loan.</div>
             @endif
-            @if($errors->verification->any())<div class="alert alert-error"><ul>@foreach($errors->verification->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
+            <x-flash-messages bag="verification" :show-errors="true" />
             @if($canSubmitVerification)
                 <form method="POST" action="{{ route('profile.verification.store') }}" enctype="multipart/form-data" id="verification-form">@csrf
                     <div class="form-grid">

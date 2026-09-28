@@ -11,6 +11,9 @@
 * { box-sizing: border-box; }
 body { margin: 0; color: var(--navy); background: var(--canvas); font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
 button, input, select, textarea { font: inherit; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid rgba(99,102,241,.32); outline-offset: 2px; }
+.skip-link { position:fixed; top:10px; left:10px; z-index:100; padding:9px 12px; color:#fff; background:#4338ca; border-radius:8px; text-decoration:none; transform:translateY(-150%); transition:transform .15s ease; }
+.skip-link:focus { transform:translateY(0); }
 .sidebar { position: fixed; inset: 0 auto 0 0; width: 248px; padding: 28px 20px; color: #fff; background: #111827; z-index: 10; }
 .brand { display: flex; align-items: center; gap: 12px; margin: 0 8px 36px; font-size: 19px; font-weight: 700; }
 .brand-mark { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 11px; background: linear-gradient(135deg, #6366f1, #8b5cf6); box-shadow: 0 8px 20px rgba(99, 102, 241, .3); }

@@ -113,7 +113,7 @@ textarea.form-control { min-height: 105px; resize: vertical; }
 <body>
 @include('partials.client-sidebar', ['active' => 'loans'])
 
-<main class="main">
+<main class="main" id="main-content" tabindex="-1">
     <div class="page-shell">
         <header class="topbar">
             <div>

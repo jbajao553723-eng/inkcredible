@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\Loan;
+use Illuminate\Console\Command;
 
 class CalculateLoanPenalties extends Command
 {

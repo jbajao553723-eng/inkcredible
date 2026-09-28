@@ -53,7 +53,8 @@ document.querySelectorAll('[data-admin-table]').forEach((panel) => {
 document.addEventListener('keydown', (event) => {
     if (event.key !== '/' || event.ctrlKey || event.metaKey || event.altKey) return;
     if (event.target.closest('input, textarea, select, [contenteditable]')) return;
-    const search = document.querySelector('[data-admin-table] input[type="search"]');
+    const search = document.querySelector('[data-admin-table]:not([hidden]) input[type="search"]')
+        ?? document.querySelector('[data-admin-table] input[type="search"]');
     if (!search) return;
     event.preventDefault();
     search.focus();

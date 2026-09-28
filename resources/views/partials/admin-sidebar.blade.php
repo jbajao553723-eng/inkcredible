@@ -1,3 +1,4 @@
+<a class="skip-link" href="#main-content">Skip to main content</a>
 <aside class="sidebar">
     <div class="sidebar-inner">
         <div class="sidebar-brand">
