@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Loan;
+use App\Notifications\LoanApprovedNotification;
 use App\Services\LoanApprovalService;
+use App\Services\LoanRiskAssessmentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class LoanAdminController extends Controller
 {
@@ -30,11 +33,12 @@ class LoanAdminController extends Controller
     | VIEW SINGLE LOAN
     |--------------------------------------------------------------------------
     */
-    public function show(Loan $loan)
+    public function show(Loan $loan, LoanRiskAssessmentService $riskAssessments)
     {
-        $loan->load(['user', 'loanType', 'paymentSchedules', 'loanDocuments', 'payments']);
+        $loan->load(['user.clientVerification', 'loanType', 'paymentSchedules', 'loanDocuments', 'payments']);
+        $riskAssessment = $riskAssessments->assess($loan);
 
-        return view('admin.loans.show', compact('loan'));
+        return view('admin.loans.show', compact('loan', 'riskAssessment'));
     }
 
     /*
@@ -48,9 +52,21 @@ class LoanAdminController extends Controller
             return back()->with('error', 'Only pending loan requests can be approved.');
         }
 
-        $approvals->approve($loan);
+        if (! $loan->contract_sent_at) {
+            return back()->with('error', 'Send the final contract to the client before approval.');
+        }
 
-        return back()->with('success', 'Loan approved successfully.');
+        if (! $loan->contract_signed_at
+            || ! $loan->signed_contract_path
+            || ! Storage::disk('local')->exists($loan->signed_contract_path)) {
+            return back()->with('error', 'The client must upload and return the signed PDF before final approval.');
+        }
+
+        $approvals->approve($loan);
+        $loan->refresh();
+        $loan->user?->notify(new LoanApprovedNotification($loan));
+
+        return back()->with('success', 'Signed contract verified and loan final-approved successfully.');
     }
 
     /*

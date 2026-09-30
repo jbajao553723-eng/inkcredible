@@ -153,6 +153,20 @@ h1 { margin: 0; font-size: 30px; letter-spacing: -.03em; }
 .submit-button:disabled { opacity: .6; cursor: not-allowed; transform: none; }
 .submit-button svg { width: 18px; height: 18px; }
 
+.payment-progress { width:min(460px,calc(100% - 32px)); padding:0; overflow:hidden; color:var(--navy); background:#fff; border:0; border-radius:18px; box-shadow:0 30px 80px rgba(16,24,40,.24); }
+.payment-progress::backdrop { background:rgba(16,24,40,.55); backdrop-filter:blur(3px); }
+.payment-progress-card { padding:30px; text-align:center; }
+.payment-progress-spinner { width:48px; height:48px; margin:0 auto 18px; border:4px solid #e0e7ff; border-top-color:var(--primary); border-radius:50%; animation:payment-progress-spin .8s linear infinite; }
+.payment-progress h2 { margin:0; font-size:22px; letter-spacing:-.025em; }
+.payment-progress-copy { margin:10px auto 0; color:var(--muted); font-size:13px; line-height:1.6; }
+.payment-progress-state { margin:18px 0; padding:12px 14px; color:#344054; background:#f8fafc; border:1px solid #eaecf0; border-radius:10px; font-size:12px; line-height:1.5; }
+.payment-progress-actions { display:grid; gap:9px; }
+.payment-progress-open,.payment-progress-cancel { display:flex; align-items:center; justify-content:center; min-height:43px; border-radius:9px; font-size:12px; font-weight:700; text-decoration:none; cursor:pointer; }
+.payment-progress-open { color:#fff; background:var(--primary); border:1px solid var(--primary); }
+.payment-progress-open:hover { background:var(--primary-dark); }
+.payment-progress-cancel { color:#475467; background:#fff; border:1px solid #d0d5dd; }
+@keyframes payment-progress-spin { to { transform:rotate(360deg); } }
+
 .history-panel { margin-top: 22px; }
 .history-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 22px 24px; border-bottom: 1px solid var(--border); }
 .history-count { color: var(--muted); font-size: 12px; }
@@ -274,7 +288,7 @@ tbody tr:hover { background: #fcfcfd; }
                     @if($loans->isEmpty())
                         <div class="empty-state"><strong>No balance is currently due</strong>Approved loans with an outstanding balance will appear here.</div>
                     @else
-                        <form method="POST" action="{{ route('payments.store') }}" enctype="multipart/form-data" id="payment-form">
+                        <form method="POST" action="{{ route('payments.store') }}" enctype="multipart/form-data" id="payment-form" data-no-transition>
                             @csrf
                             <section class="payment-section">
                                 <div class="payment-step"><span class="payment-step-number">1</span><span class="payment-step-title">Loan and payment amount</span></div>
@@ -438,6 +452,19 @@ tbody tr:hover { background: #fcfcfd; }
     </div>
 </main>
 
+<dialog class="payment-progress" id="payment-progress" aria-labelledby="payment-progress-title">
+    <div class="payment-progress-card">
+        <div class="payment-progress-spinner" aria-hidden="true"></div>
+        <h2 id="payment-progress-title">Complete your payment</h2>
+        <p class="payment-progress-copy">Finish authorization in the secure PayMongo window. This page will detect the result and redirect automatically.</p>
+        <div class="payment-progress-state" id="payment-progress-state" role="status" aria-live="polite">Creating a secure checkout session&hellip;</div>
+        <div class="payment-progress-actions">
+            <button class="payment-progress-open" id="payment-progress-open" type="button" hidden>Open secure payment window</button>
+            <a class="payment-progress-cancel" id="payment-progress-cancel" href="{{ route('payments.index') }}">Cancel and return to payments</a>
+        </div>
+    </div>
+</dialog>
+
 @if($loans->isNotEmpty())
 <script>
 const paymentForm = document.getElementById('payment-form');
@@ -456,6 +483,14 @@ const accountPreviewCode = document.getElementById('account-preview-code');
 const accountPreviewDue = document.getElementById('account-preview-due');
 const accountPreviewInstallment = document.getElementById('account-preview-installment');
 const accountPreviewBalance = document.getElementById('account-preview-balance');
+const paymentProgress = document.getElementById('payment-progress');
+const paymentProgressState = document.getElementById('payment-progress-state');
+const paymentProgressOpen = document.getElementById('payment-progress-open');
+const paymentProgressCancel = document.getElementById('payment-progress-cancel');
+let checkoutWindow = null;
+let activeCheckoutUrl = null;
+let activeStatusUrl = null;
+let statusPollTimer = null;
 
 function peso(value) {
     return `₱${Number(value).toLocaleString('en-PH', {
@@ -549,9 +584,115 @@ fullBalanceButton.addEventListener('click', () => {
 proofInput.addEventListener('change', () => {
     proofFileName.textContent = proofInput.files[0]?.name || 'Choose a JPG or PNG image up to 2 MB';
 });
-paymentForm.addEventListener('submit', function () {
+function openCheckoutWindow() {
+    if (!activeCheckoutUrl) return null;
+
+    checkoutWindow = window.open(
+        activeCheckoutUrl,
+        'inkcredible-paymongo-checkout',
+        'popup=yes,width=520,height=760,resizable=yes,scrollbars=yes'
+    );
+
+    return checkoutWindow;
+}
+
+async function pollPaymentStatus() {
+    if (!activeStatusUrl) return;
+
+    try {
+        const response = await fetch(activeStatusUrl, {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            cache: 'no-store'
+        });
+
+        if (!response.ok) throw new Error('Unable to check the payment status.');
+
+        const result = await response.json();
+
+        if (result.redirect_url) {
+            paymentProgressState.textContent = result.status === 'approved'
+                ? 'Payment authorized. Opening your completed payment receipt…'
+                : 'Payment was not completed. Returning to the payment result…';
+
+            if (checkoutWindow && !checkoutWindow.closed) checkoutWindow.close();
+            window.clearTimeout(statusPollTimer);
+            window.location.replace(result.redirect_url);
+            return;
+        }
+
+        paymentProgressState.textContent = 'Waiting for PayMongo authorization. You may safely return to this window after completing payment.';
+    } catch (error) {
+        paymentProgressState.textContent = 'Still checking the payment securely. Please keep this window open.';
+    }
+
+    statusPollTimer = window.setTimeout(pollPaymentStatus, 2000);
+}
+
+paymentProgressOpen.addEventListener('click', () => openCheckoutWindow());
+paymentProgress.addEventListener('cancel', (event) => event.preventDefault());
+paymentProgressCancel.addEventListener('click', () => {
+    window.clearTimeout(statusPollTimer);
+    if (checkoutWindow && !checkoutWindow.closed) checkoutWindow.close();
+});
+
+paymentForm.addEventListener('submit', async function (event) {
+    const isCash = selectedMethod() === 'cash';
+
+    if (isCash) {
+        submitButton.disabled = true;
+        submitButton.querySelector('span').textContent = 'Submitting payment…';
+        return;
+    }
+
+    event.preventDefault();
+    if (!paymentForm.reportValidity()) return;
+
     submitButton.disabled = true;
-    submitButton.querySelector('span').textContent = selectedMethod() === 'cash' ? 'Submitting payment…' : 'Opening secure checkout…';
+    submitButton.querySelector('span').textContent = 'Opening secure checkout…';
+    paymentProgressState.textContent = 'Creating a secure checkout session…';
+    paymentProgress.showModal();
+
+    checkoutWindow = window.open(
+        '',
+        'inkcredible-paymongo-checkout',
+        'popup=yes,width=520,height=760,resizable=yes,scrollbars=yes'
+    );
+
+    if (checkoutWindow) {
+        checkoutWindow.document.title = 'Opening secure payment';
+        checkoutWindow.document.body.textContent = 'Opening PayMongo secure checkout…';
+    }
+
+    try {
+        const response = await fetch(paymentForm.action, {
+            method: 'POST',
+            body: new FormData(paymentForm),
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const result = await response.json();
+
+        if (!response.ok) {
+            const firstError = Object.values(result.errors ?? {}).flat()[0];
+            throw new Error(firstError || result.message || 'Unable to start the secure payment.');
+        }
+
+        activeCheckoutUrl = result.checkout_url;
+        activeStatusUrl = result.status_url;
+        paymentProgressCancel.href = result.cancel_url;
+        paymentProgressOpen.hidden = false;
+        paymentProgressState.textContent = checkoutWindow
+            ? 'Secure checkout opened. Complete authorization there while this page checks the result.'
+            : 'Your browser blocked the secure window. Select “Open secure payment window” below.';
+
+        if (checkoutWindow) checkoutWindow.location.replace(activeCheckoutUrl);
+        pollPaymentStatus();
+    } catch (error) {
+        if (checkoutWindow && !checkoutWindow.closed) checkoutWindow.close();
+        paymentProgress.close();
+        submitButton.disabled = false;
+        submitButton.querySelector('span').textContent = `Continue with ${selectedMethodLabel()}`;
+        window.alert(error.message || 'Unable to start the secure payment.');
+    }
 });
 
 if (loanSelect.options.length === 2 && !loanSelect.value) {

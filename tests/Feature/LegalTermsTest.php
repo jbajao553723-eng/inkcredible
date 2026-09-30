@@ -12,5 +12,7 @@ it('publishes account and loan terms before registration', function () {
         ->assertSee('Loan Terms and Conditions')
         ->assertSee('Penalties and charges')
         ->assertSee('Reports to authorities')
+        ->assertSee('PHP 15,000')
+        ->assertSee('PHP 50,000')
         ->assertSee(config('legal.loan_terms_version'));
 });

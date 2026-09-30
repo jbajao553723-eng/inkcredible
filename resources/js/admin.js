@@ -60,6 +60,138 @@ document.addEventListener('keydown', (event) => {
     search.focus();
 });
 
+const asyncFilterRequest = async (url, selector, pushHistory = true) => {
+    const currentRegion = document.querySelector(selector);
+    if (!currentRegion) return;
+
+    currentRegion.classList.add('is-loading');
+    currentRegion.setAttribute('aria-busy', 'true');
+
+    try {
+        const response = await fetch(url, {
+            headers: {
+                Accept: 'text/html',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
+
+        if (!response.ok) throw new Error(`Filter request failed with status ${response.status}`);
+
+        const page = new DOMParser().parseFromString(await response.text(), 'text/html');
+        const nextRegion = page.querySelector(selector);
+
+        if (!nextRegion) throw new Error(`Filter response did not include ${selector}`);
+
+        const currentForm = document.querySelector(`[data-async-filter][data-async-filter-target="${selector}"]`);
+        const nextForm = page.querySelector(`[data-async-filter][data-async-filter-target="${selector}"]`);
+
+        if (currentForm && nextForm && !currentRegion.contains(currentForm)) {
+            [...currentForm.elements].forEach((field) => {
+                if (!field.name) return;
+                const nextField = nextForm.elements.namedItem(field.name);
+                if (!nextField || nextField instanceof RadioNodeList) return;
+                if ('value' in nextField) field.value = nextField.value;
+            });
+        }
+
+        currentRegion.replaceWith(document.importNode(nextRegion, true));
+        document.title = page.title || document.title;
+
+        if (pushHistory) {
+            window.history.pushState({ asyncFilterTarget: selector }, '', url);
+        }
+
+        document.dispatchEvent(new CustomEvent('async-filter:updated', {
+            detail: { selector, url },
+        }));
+    } catch (error) {
+        currentRegion.classList.remove('is-loading');
+        currentRegion.removeAttribute('aria-busy');
+        window.location.assign(url);
+    }
+};
+
+document.addEventListener('submit', (event) => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement) || !form.matches('[data-async-filter]')) return;
+
+    event.preventDefault();
+
+    const dateFrom = form.querySelector('[name="date_from"]');
+    const dateTo = form.querySelector('[name="date_to"]');
+    if (dateTo instanceof HTMLInputElement) {
+        dateTo.setCustomValidity(
+            dateFrom instanceof HTMLInputElement && dateFrom.value && dateTo.value && dateTo.value < dateFrom.value
+                ? 'The end date must be on or after the start date.'
+                : '',
+        );
+    }
+
+    if (!form.reportValidity()) return;
+
+    // A control named "action" shadows HTMLFormElement.action (for example,
+    // the Audit Logs action selector). Read the attribute instead so the URL
+    // can never become "/[object HTMLSelectElement]".
+    const formAction = form.getAttribute('action') || window.location.href;
+    const url = new URL(formAction, window.location.href);
+    const parameters = new URLSearchParams();
+
+    new FormData(form).forEach((value, key) => {
+        if (typeof value === 'string' && value.trim() !== '') parameters.append(key, value);
+    });
+
+    url.search = parameters.toString();
+    asyncFilterRequest(url.toString(), form.dataset.asyncFilterTarget);
+});
+
+document.addEventListener('input', (event) => {
+    if (event.target instanceof HTMLInputElement
+        && event.target.matches('[data-async-filter] [name="date_from"], [data-async-filter] [name="date_to"]')) {
+        event.target.form?.querySelector('[name="date_to"]')?.setCustomValidity('');
+    }
+});
+
+document.addEventListener('click', (event) => {
+    if (!(event.target instanceof Element)
+        || event.button !== 0
+        || event.ctrlKey
+        || event.metaKey
+        || event.shiftKey
+        || event.altKey) return;
+
+    const link = event.target.closest('a[href]');
+    if (!link) return;
+
+    const region = link.closest('[data-async-filter-region]');
+    const isFilterLink = link.matches('[data-async-filter-link]');
+    const isPaginationLink = region && (link.closest('.pagination') || link.closest('.pagination-bar'));
+
+    if (!isFilterLink && !isPaginationLink) return;
+
+    const url = new URL(link.href, window.location.href);
+    if (url.origin !== window.location.origin || url.hash || link.classList.contains('disabled')) return;
+
+    const selector = link.dataset.asyncFilterTarget
+        || region?.dataset.asyncFilterTarget
+        || (region?.id ? `#${region.id}` : null);
+    if (!selector) return;
+
+    event.preventDefault();
+    asyncFilterRequest(url.toString(), selector);
+}, true);
+
+window.addEventListener('popstate', (event) => {
+    const selector = event.state?.asyncFilterTarget;
+    if (selector) asyncFilterRequest(window.location.href, selector, false);
+});
+
+document.querySelectorAll('[data-async-filter-region]').forEach((region) => {
+    const selector = region.dataset.asyncFilterTarget || (region.id ? `#${region.id}` : null);
+    if (selector && !window.history.state?.asyncFilterTarget) {
+        window.history.replaceState({ asyncFilterTarget: selector }, '', window.location.href);
+    }
+});
+
 const confirmationElement = document.getElementById('admin-confirmation');
 if (confirmationElement) {
     const confirmation = new Modal(confirmationElement);

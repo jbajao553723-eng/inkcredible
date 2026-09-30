@@ -64,8 +64,13 @@ textarea.form-control { min-height: 105px; resize: vertical; }
 .file-input { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; }
 .upload-zone { display: flex; align-items: center; gap: 14px; min-height: 94px; padding: 17px; background: #fafbff; border: 1px dashed #aeb7c5; border-radius: 13px; cursor: pointer; transition: .16s ease; }
 .upload-zone:hover, .upload-zone:focus-within { background: #f5f3ff; border-color: #818cf8; box-shadow: 0 0 0 4px rgba(99, 102, 241, .08); }
+.upload-zone.is-selected { background:#ecfdf3; border-color:#12b76a; }
+.upload-zone.is-selected .upload-icon { color:#067647; background:#d1fadf; }
 .upload-icon { display: grid; place-items: center; width: 42px; height: 42px; flex: 0 0 42px; color: var(--primary); background: #eef2ff; border-radius: 11px; }
 .upload-icon svg { width: 21px; height: 21px; }
+.upload-check { display:none; margin-left:auto; color:#067647; }
+.upload-check svg { width:24px; height:24px; }
+.upload-zone.is-selected .upload-check { display:block; }
 .upload-title { display: block; color: #344054; font-size: 13px; font-weight: 700; }
 .upload-file-name { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; }
 .submit-button { display: flex; align-items: center; justify-content: center; gap: 9px; width: 100%; min-height: 52px; color: #fff; background: linear-gradient(135deg, #4f46e5, #6338c5); border: 0; border-radius: 12px; font-weight: 700; cursor: pointer; box-shadow: 0 10px 24px rgba(79, 70, 229, .22); transition: .16s ease; }
@@ -230,9 +235,10 @@ textarea.form-control { min-height: 105px; resize: vertical; }
                                 </div>
 
                                 <div class="form-group">
-                                    <label class="upload-zone" for="government-id">
+                                    <label class="upload-zone" for="government-id" id="government-id-zone">
                                         <span class="upload-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg></span>
                                         <span><span class="upload-title">Choose your government-issued ID <span class="required">*</span></span><span class="upload-file-name" id="government-id-name">Click to select a JPG, PNG, or PDF file</span></span>
+                                        <span class="upload-check" aria-hidden="true"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="1.8"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m8 12 2.6 2.6L16.5 9"/></svg></span>
                                     </label>
                                     <input type="file" name="government_id" id="government-id" class="file-input" accept="image/jpeg,image/png,application/pdf" required>
                                     <p class="form-help">Accepted: National ID, driver's license, or passport in JPG, PNG, or PDF format up to 2 MB.</p>
@@ -311,6 +317,7 @@ const quickAmounts = document.getElementById('quick-amounts');
 const quickAmountButtons = document.querySelectorAll('[data-amount-choice]');
 const governmentIdInput = document.getElementById('government-id');
 const governmentIdName = document.getElementById('government-id-name');
+const governmentIdZone = document.getElementById('government-id-zone');
 const termsCheckbox = document.querySelector('input[name="loan_terms_accepted"]');
 const termsDialog = document.getElementById('loan-terms-dialog');
 const openTermsButton = document.getElementById('open-loan-terms');
@@ -420,7 +427,9 @@ quickAmountButtons.forEach((button) => button.addEventListener('click', () => {
 }));
 
 governmentIdInput.addEventListener('change', () => {
-    governmentIdName.textContent = governmentIdInput.files[0]?.name || 'Click to select a JPG, PNG, or PDF file';
+    const file = governmentIdInput.files[0];
+    governmentIdName.textContent = file ? `Selected: ${file.name}` : 'Click to select a JPG, PNG, or PDF file';
+    governmentIdZone.classList.toggle('is-selected', Boolean(file));
 });
 
 function closeTermsDialog() {

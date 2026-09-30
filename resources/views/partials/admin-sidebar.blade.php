@@ -38,6 +38,14 @@
                     <span>Reports</span>
                 </a>
             </div>
+
+            <div class="nav-section">
+                <div class="nav-label">System</div>
+                <a class="nav-link {{ $active === 'audit-logs' ? 'active' : '' }}" href="{{ route('admin.audit-logs.index') }}" @if($active === 'audit-logs') aria-current="page" @endif>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3.5 19 6v5c0 4.5-2.8 7.8-7 9.5C7.8 18.8 5 15.5 5 11V6zM9 11.5l2 2 4-4"/></svg>
+                    <span>Audit logs</span>
+                </a>
+            </div>
         </nav>
 
         <div class="sidebar-account">

@@ -24,6 +24,11 @@
 .loan-action-reject:hover { color:#912018; background:#fee4e2; border-color:#f97066; }
 .loan-action-approve { color:#fff; background:#067647; border-color:#067647; box-shadow:0 4px 10px rgba(6,118,71,.16); }
 .loan-action-approve:hover { color:#fff; background:#05603a; border-color:#05603a; }
+.risk-score { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; padding:13px; background:#f8fafc; border:1px solid #eaecf0; border-radius:10px; }
+.risk-level { padding:5px 8px; border-radius:999px; font-size:10px; font-weight:700; }
+.risk-level.success { color:#05603a; background:#dcfae6; }.risk-level.warning { color:#b54708; background:#fef0c7; }.risk-level.danger { color:#b42318; background:#fee4e2; }.risk-level.neutral { color:#475467; background:#f2f4f7; }
+.risk-detail { display:grid; gap:8px; color:#475467; font-size:11px; line-height:1.5; }
+.contract-step { padding:12px; background:#f8fafc; border:1px solid #eaecf0; border-radius:9px; color:#475467; font-size:11px; line-height:1.55; }
 </style>
 </head>
 <body class="admin-loans-page admin-loan-detail-page">
@@ -78,6 +83,14 @@
 
         <aside>
             <section class="panel">
+                <div class="panel-header"><div><h2 class="panel-title">Affordability risk</h2><p class="panel-description">Income-based decision support; administrators retain final judgment.</p></div></div>
+                <div class="panel-body">
+                    <div class="risk-score"><div><div class="detail-label">Payment-to-income ratio</div><div class="detail-value">{{ $riskAssessment['ratio'] === null ? 'Unavailable' : number_format($riskAssessment['ratio'], 1).'%' }}</div></div><span class="risk-level {{ $riskAssessment['tone'] }}">{{ $riskAssessment['level'] }} risk</span></div>
+                    <div class="risk-detail"><div><strong>Monthly income:</strong> PHP {{ number_format($riskAssessment['income'], 2) }}</div><div><strong>Existing commitments:</strong> PHP {{ number_format($riskAssessment['existingCommitments'], 2) }}</div><div><strong>Assessment:</strong> {{ $riskAssessment['suggestion'] }}</div></div>
+                </div>
+            </section>
+
+            <section class="panel">
                 <div class="panel-header"><div><h2 class="panel-title">Government ID</h2><p class="panel-description">Identity document submitted by the client.</p></div></div>
                 <div class="panel-body">
                     @if($loan->government_id)
@@ -99,9 +112,20 @@
 
             @if($loan->status === 'pending')
                 <section class="panel loan-decision">
-                    <div class="panel-header"><div><h2 class="panel-title">Review decision</h2><p class="panel-description">Approve the request or explain what the client needs to correct.</p></div></div>
+                    <div class="panel-header"><div><h2 class="panel-title">Contract and decision</h2><p class="panel-description">The client must sign the contract before final approval.</p></div></div>
                     <div class="panel-body loan-decision-body">
-                        <form id="approve-loan" method="POST" action="{{ route('admin.loan.approve', $loan->id) }}" data-confirm="Approve this loan request?">@csrf</form>
+                        @if(! $loan->contract_sent_at)
+                            <div class="contract-step"><strong>Step 1 of 3 - Send contract</strong><br>Generate the final agreement and notify the client to download and sign it.</div>
+                            <form method="POST" action="{{ route('admin.loan.contract.send', $loan) }}" data-confirm="Generate and send this contract to the client?">@csrf<button class="button button-primary" style="width:100%" type="submit">Send contract to client</button></form>
+                        @elseif(! $loan->signed_contract_path)
+                            <div class="contract-step"><strong>Step 2 of 3 - Awaiting signed PDF</strong><br>The unsigned contract was sent {{ $loan->contract_sent_at->timezone('Asia/Manila')->format('M d, Y - h:i A') }} PHT. The client must download, sign, and upload it before final approval.</div>
+                            <a class="button button-secondary" style="width:100%" href="{{ route('loan.contract.download', $loan) }}">Download issued unsigned contract</a>
+                            <form method="POST" action="{{ route('admin.loan.contract.send', $loan) }}" data-confirm="Resend the contract? Any prior contract submission will be cleared.">@csrf<button class="button button-secondary" style="width:100%" type="submit">Resend contract notification</button></form>
+                        @else
+                            <div class="contract-step"><strong>Step 3 of 3 - Signed PDF ready for review</strong><br>Submitted by {{ $loan->contract_signature_name }} on {{ $loan->contract_signed_at->timezone('Asia/Manila')->format('M d, Y - h:i A') }} PHT. Check the signature before final approval.</div>
+                            <a class="button button-secondary" style="width:100%" href="{{ route('loan.contract.signed.download', $loan) }}">Download client-signed PDF</a>
+                            <form id="approve-loan" method="POST" action="{{ route('admin.loan.approve', $loan->id) }}" data-confirm="Final-approve this signed loan contract?">@csrf</form>
+                        @endif
                         <form id="reject-loan" class="loan-rejection-form" method="POST" action="{{ route('admin.loan.reject', $loan->id) }}" data-confirm="Reject this loan request and send the reason to the client?">
                             @csrf
                             <label class="loan-decision-label" for="rejection_reason"><span>Reason for rejection</span><span class="loan-required">Required to reject</span></label>
@@ -110,7 +134,7 @@
                         </form>
                         <div class="loan-decision-actions">
                             <button class="button loan-action-reject" type="submit" form="reject-loan">Request changes</button>
-                            <button class="button loan-action-approve" type="submit" form="approve-loan">Approve loan</button>
+                            @if($loan->signed_contract_path)<button class="button loan-action-approve" type="submit" form="approve-loan">Final approve loan</button>@endif
                         </div>
                     </div>
                 </section>

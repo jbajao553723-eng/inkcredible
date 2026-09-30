@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Payment cancelled</title>
+    <title>Payment not completed</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     @vite('resources/js/app.js')
     <style>
@@ -16,9 +16,15 @@
 <body>
     <main class="result">
         <div class="icon" aria-hidden="true">&#8212;</div>
-        <h1 class="h3 mt-3">Payment cancelled</h1>
-        <p class="text-secondary">No payment was confirmed. Your pending payment record is unchanged, and you can return to the payment page to try again.</p>
-        <a class="btn btn-dark" href="{{ route('payments.index') }}">Back to payments</a>
+        <h1 class="h3 mt-3">Payment not completed</h1>
+        <p class="text-secondary">The authorization was cancelled or rejected, so no payment was applied to your loan. Start a new payment to receive a fresh secure checkout session.</p>
+        <a class="btn btn-dark" href="{{ route('payments.index') }}">Try another payment</a>
     </main>
+    <script>
+        if (window.opener && !window.opener.closed) {
+            window.opener.location.replace(window.location.href);
+            window.close();
+        }
+    </script>
 </body>
 </html>

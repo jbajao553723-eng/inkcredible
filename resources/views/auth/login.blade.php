@@ -63,7 +63,7 @@
                     <div class="input-wrap">
                         <input type="password" name="password" id="password" class="form-control password-input @error('password') is-invalid @enderror"
                                placeholder="Enter your password" autocomplete="current-password" @error('password') aria-invalid="true" aria-describedby="password-error" @enderror required>
-                        <button class="password-toggle" type="button" data-toggle-password="password" aria-controls="password" aria-pressed="false" aria-label="Show password">Show</button>
+                        <button class="password-toggle" type="button" data-toggle-password="password" aria-controls="password" aria-pressed="false" aria-label="Show password"><svg class="eye-open" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5" stroke-width="1.8"/></svg><svg class="eye-closed" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="m3 3 18 18M10.7 6.1A10.7 10.7 0 0 1 12 6c6 0 9.5 6 9.5 6a17 17 0 0 1-2.1 2.8M6.6 6.6C4 8.3 2.5 12 2.5 12s3.5 6 9.5 6c1.4 0 2.7-.3 3.8-.8M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg></button>
                     </div>
                     @error('password')<p class="field-error" id="password-error">{{ $message }}</p>@enderror
                     <p class="field-feedback" id="caps-lock-message" aria-live="polite"></p>
@@ -91,7 +91,7 @@ document.querySelectorAll('[data-toggle-password]').forEach((button) => {
         const input = document.getElementById(this.dataset.togglePassword);
         const showing = input.type === 'text';
         input.type = showing ? 'password' : 'text';
-        this.textContent = showing ? 'Show' : 'Hide';
+        this.classList.toggle('is-showing', !showing);
         this.setAttribute('aria-pressed', String(!showing));
         this.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
     });

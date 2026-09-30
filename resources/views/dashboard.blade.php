@@ -55,9 +55,25 @@
 .loan-code { display: inline-block; margin-top: 5px; padding: 3px 6px; color: #475467; background: #f2f4f7; border-radius: 5px; font-size: 9px; font-weight: 600; }
 .dashboard-table tbody tr { transition: background-color .15s ease; }
 .dashboard-table .progress-track { width: min(150px, 100%); }
+.topbar { position:relative; z-index:100; overflow:visible; }
+.top-actions { position:relative; z-index:101; overflow:visible; }
+.stats-grid,.overview-grid,.section-stack { position:relative; z-index:1; }
 .stat-card { position: relative; overflow: hidden; }
 .stat-card::after { position: absolute; top: -25px; right: -25px; width: 74px; height: 74px; background: #f5f3ff; border-radius: 50%; content: ''; opacity: .7; }
 .stat-card .stat-head, .stat-card .stat-value, .stat-card .stat-note { position: relative; z-index: 1; }
+.notification-menu { position:relative; z-index:102; flex:0 0 auto; }
+.notification-menu[open] { z-index:103; }
+.notification-trigger { position:relative; display:grid; place-items:center; width:42px; height:42px; padding:0; color:#344054; background:#fff; border:1px solid var(--border); border-radius:11px; box-shadow:0 1px 2px rgba(16,24,40,.04); cursor:pointer; list-style:none; transition:.15s ease; }
+.notification-trigger::-webkit-details-marker { display:none; }.notification-trigger:hover,.notification-menu[open] .notification-trigger { color:var(--primary); background:#f5f3ff; border-color:#c7d2fe; }
+.notification-trigger svg { width:19px; height:19px; }.notification-badge { position:absolute; top:-5px; right:-5px; display:grid; place-items:center; min-width:19px; height:19px; padding:0 5px; color:#fff; background:#d92d20; border:2px solid #fff; border-radius:999px; font-size:9px; font-weight:700; }
+.notification-panel { position:absolute; top:calc(100% + 10px); right:0; z-index:104; width:min(380px,calc(100vw - 32px)); overflow:hidden; background:#fff; border:1px solid var(--border); border-radius:14px; box-shadow:0 18px 45px rgba(16,24,40,.18); }
+.notification-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:15px 16px; border-bottom:1px solid #eaecf0; }.notification-head strong { font-size:13px; }.notification-head span { color:#667085; font-size:10px; }
+.notification-items { max-height:370px; overflow-y:auto; }.notification-item-form + .notification-item-form { border-top:1px solid #f2f4f7; }
+.notification-item-button { display:flex; align-items:flex-start; gap:11px; width:100%; padding:14px 16px; color:inherit; background:#fff; border:0; text-align:left; cursor:pointer; transition:background-color .15s; }.notification-item-button:hover { background:#f9fafb; }
+.notification-dot { width:8px; height:8px; margin-top:5px; flex:0 0 8px; background:#6366f1; border-radius:50%; }.notification-dot.warning { background:#f79009; }.notification-dot.success { background:#12b76a; }
+.notification-copy { min-width:0; flex:1; color:#475467; font-size:11px; line-height:1.5; overflow-wrap:anywhere; }.notification-copy strong { display:block; margin-bottom:2px; color:#101828; font-size:12px; }.notification-time { display:block; margin-top:5px; color:#98a2b3; font-size:9px; }
+.notification-arrow { flex:0 0 auto; color:#98a2b3; font-size:15px; }.notification-empty { padding:30px 18px; color:#667085; font-size:11px; line-height:1.5; text-align:center; }.notification-empty svg { display:block; width:28px; height:28px; margin:0 auto 9px; color:#98a2b3; }
+.contract-link { display:inline-block; margin-top:7px; color:var(--primary); font-size:10px; font-weight:700; text-decoration:none; }
 
 @media (max-width: 980px) { .overview-grid { grid-template-columns: 1fr; } }
 @media (max-width: 560px) {
@@ -68,6 +84,7 @@
     .next-card { min-height: 270px; }
 }
 @media (max-width: 760px) {
+    .notification-panel { right:auto; left:0; }
     .dashboard-panel { overflow: visible; background: transparent; border: 0; box-shadow: none; }
     .dashboard-panel .panel-header { margin-bottom: 10px; background: #fff; border: 1px solid var(--border); border-radius: 14px; }
     .dashboard-panel .table-wrap { overflow: visible; }
@@ -124,6 +141,8 @@
         ->sortByDesc(fn ($payment) => $payment->paid_at ?? $payment->created_at)
         ->take(5);
     $firstName = explode(' ', trim(auth()->user()->name))[0] ?: 'there';
+    $notifications = auth()->user()->unreadNotifications()->latest()->take(5)->get();
+    $unreadNotificationCount = auth()->user()->unreadNotifications()->count();
 @endphp
 
 @include('partials.client-sidebar', ['active' => 'dashboard'])
@@ -137,6 +156,24 @@
                 <p class="subtitle">Here is a clear view of your loans, balances, and recent activity.</p>
             </div>
             <div class="top-actions">
+                <details class="notification-menu">
+                    <summary class="notification-trigger" aria-label="Open notifications">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M9.8 20h4.4"/></svg>
+                        @if($unreadNotificationCount > 0)<span class="notification-badge">{{ $unreadNotificationCount > 99 ? '99+' : $unreadNotificationCount }}</span>@endif
+                    </summary>
+                    <div class="notification-panel">
+                        <div class="notification-head"><strong>Notifications</strong><span>{{ $unreadNotificationCount }} unread</span></div>
+                        @if($notifications->isEmpty())
+                            <div class="notification-empty"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M9.8 20h4.4"/></svg>You have no unread notifications.</div>
+                        @else
+                            <div class="notification-items">
+                                @foreach($notifications as $notification)
+                                    <form class="notification-item-form" method="POST" action="{{ route('notifications.read', $notification->id) }}">@csrf<button class="notification-item-button" type="submit"><span class="notification-dot {{ data_get($notification->data, 'severity', 'info') }}" aria-hidden="true"></span><span class="notification-copy"><strong>{{ data_get($notification->data, 'title', 'Account update') }}</strong>{{ data_get($notification->data, 'message') }}<span class="notification-time">{{ $notification->created_at->timezone('Asia/Manila')->diffForHumans() }}</span></span><span class="notification-arrow" aria-hidden="true">&rsaquo;</span></button></form>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                </details>
                 <a class="button button-primary" href="{{ route('loan.create') }}">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 6v12m6-6H6"/></svg>
                     Request loan
@@ -244,7 +281,7 @@
                                         <td data-label="Total payable">&#8369;{{ number_format($total, 2) }}</td>
                                         <td data-label="Remaining">@if($remaining <= 0)Fully paid @else &#8369;{{ number_format($remaining, 2) }} @endif</td>
                                         <td data-label="Repayment progress"><div class="progress-track"><div class="progress-bar" style="width: {{ $progress }}%"></div></div><div class="progress-value">{{ number_format($progress) }}% paid</div></td>
-                                        <td data-label="Status"><span class="badge {{ $loanStatusClass }}">{{ ucfirst($loan->status) }}</span>@if($loan->status === 'rejected' && $loan->rejection_reason)<div class="rejection-reason"><strong>Reason:</strong> {{ $loan->rejection_reason }}</div>@endif</td>
+                                        <td data-label="Status"><span class="badge {{ $loanStatusClass }}">{{ ucfirst($loan->status) }}</span>@if($loan->status === 'pending' && $loan->contract_sent_at)<a class="contract-link" href="{{ route('loan.contract.show', $loan) }}">{{ $loan->signed_contract_path ? 'View submitted contract' : 'Download, sign, and return contract' }} &rarr;</a>@endif @if($loan->status === 'rejected' && $loan->rejection_reason)<div class="rejection-reason"><strong>Reason:</strong> {{ $loan->rejection_reason }}</div>@endif</td>
                                     </tr>
                                 @endforeach
                             </tbody>

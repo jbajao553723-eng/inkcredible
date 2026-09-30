@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\AuditUserActions;
 use App\Http\Middleware\EnsureClientIsVerified;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -13,6 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function ($middleware) {
+        $middleware->appendToGroup('web', AuditUserActions::class);
+
         $middleware->alias([
             'admin' => AdminMiddleware::class,
             'client.verified' => EnsureClientIsVerified::class,

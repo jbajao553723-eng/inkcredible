@@ -81,6 +81,11 @@ h1 { margin: 0; font-size: 30px; font-weight: 700; letter-spacing: -.035em; }
 .decision-input { width: min(220px, 100%); min-height: 36px; padding: 7px 10px; color: #344054; background: #fff; border: 1px solid #d0d5dd; border-radius: 8px; outline: none; font-size: 11px; }
 .decision-input:focus { border-color: #f04438; box-shadow: 0 0 0 3px rgba(217, 45, 32, .1); }
 .filter-count { margin-left: auto; color: var(--muted); font-size: 12px; white-space: nowrap; }
+.async-filter-region { position: relative; transition: opacity .15s ease; }
+.async-filter-region.is-loading { min-height: 180px; pointer-events: none; }
+.async-filter-region.is-loading::before { position:absolute; inset:0; z-index:50; background:rgba(255,255,255,.78); content:''; backdrop-filter:blur(1px); }
+.async-filter-region.is-loading::after { position:absolute; top:50%; left:50%; z-index:51; width:28px; height:28px; margin:-14px 0 0 -14px; border:3px solid #e0e7ff; border-top-color:var(--primary); border-radius:50%; content:''; animation:async-filter-spin .7s linear infinite; }
+@keyframes async-filter-spin { to { transform:rotate(360deg); } }
 .toolbar .btn[hidden] { display: none; }
 .table-wrap tr[hidden], .empty-state[hidden] { display: none; }
 .badge { display: inline-flex; align-items: center; padding: 5px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; text-transform: capitalize; white-space: nowrap; }

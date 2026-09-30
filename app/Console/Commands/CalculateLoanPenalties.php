@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Loan;
+use App\Notifications\PenaltyAppliedNotification;
 use Illuminate\Console\Command;
 
 class CalculateLoanPenalties extends Command
@@ -31,7 +32,16 @@ class CalculateLoanPenalties extends Command
         Loan::where('status', Loan::STATUS_APPROVED)
             ->chunkById(100, function ($loans) use (&$updatedCount) {
                 foreach ($loans as $loan) {
-                    $loan->calculatePenalty();
+                    $previousPenalty = (float) $loan->penalty_amount;
+                    $currentPenalty = $loan->calculatePenalty();
+
+                    if ($currentPenalty > $previousPenalty) {
+                        $loan->user?->notify(new PenaltyAppliedNotification(
+                            $loan,
+                            round($currentPenalty - $previousPenalty, 2)
+                        ));
+                    }
+
                     $updatedCount++;
                 }
             });

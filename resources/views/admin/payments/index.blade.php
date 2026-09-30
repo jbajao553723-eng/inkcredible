@@ -66,13 +66,13 @@
         <article class="stat-card"><div class="stat-label">Clients represented</div><div class="stat-value">{{ number_format($stats['clients']) }}</div><div class="stat-note">Clients with payment records</div></article>
     </section>
 
-    <section class="panel payments-panel">
+    <section class="panel payments-panel async-filter-region" id="payment-directory" data-async-filter-region data-async-filter-target="#payment-directory" aria-live="polite">
         <div class="panel-header"><div><h2 class="panel-title">Payment directory</h2><p class="panel-description">Search, filter, and review client transactions.</p></div><span class="badge badge-neutral">{{ number_format($payments->total()) }} matching</span></div>
         @php
             $hasFilters = (bool) ($filters['q'] || $filters['status'] || $filters['method'] || $filters['date_from'] || $filters['date_to']);
             $advancedFilterCount = (int) filled($filters['status']) + (int) filled($filters['method']) + (int) filled($filters['date_from']) + (int) filled($filters['date_to']);
         @endphp
-        <form class="payment-filters" method="GET" action="{{ route('admin.payments.index') }}">
+        <form class="payment-filters" method="GET" action="{{ route('admin.payments.index') }}" data-async-filter data-async-filter-target="#payment-directory" data-no-transition>
             <div class="filter-field filter-search"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" stroke-width="1.8"/><path stroke-linecap="round" stroke-width="1.8" d="m16 16 4 4"/></svg><input class="search-input" id="payment-search" name="q" type="search" value="{{ $filters['q'] }}" placeholder="Search client, contact, reference, or loan" aria-label="Search payments"></div>
             <button class="button search-submit" type="submit" aria-label="Search payments" title="Search"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" stroke-width="1.8"/><path stroke-linecap="round" stroke-width="1.8" d="m16 16 4 4"/></svg></button>
             <details class="filter-popover">
@@ -85,16 +85,16 @@
                         <div class="filter-field filter-option"><label for="payment-date-from">From date</label><input class="search-input" id="payment-date-from" name="date_from" type="date" value="{{ $filters['date_from'] }}"></div>
                         <div class="filter-field filter-option"><label for="payment-date-to">To date</label><input class="search-input" id="payment-date-to" name="date_to" type="date" value="{{ $filters['date_to'] }}"></div>
                     </div>
-                    <div class="filter-actions">@if($hasFilters)<a class="button clear-filter" href="{{ route('admin.payments.index') }}">Clear all</a>@endif<button class="button button-primary" type="submit">Apply filters</button></div>
+                    <div class="filter-actions">@if($hasFilters)<a class="button clear-filter" href="{{ route('admin.payments.index') }}" data-async-filter-link data-async-filter-target="#payment-directory" data-no-transition>Clear all</a>@endif<button class="button button-primary" type="submit">Apply filters</button></div>
                 </div>
             </details>
             <input type="hidden" name="per_page" value="{{ $filters['per_page'] }}">
         </form>
         <div class="quick-filters" aria-label="Quick payment filters">
-            <a class="quick-filter {{ ! $filters['status'] && ! $filters['method'] ? 'active' : '' }}" href="{{ route('admin.payments.index') }}">All payments</a>
-            <a class="quick-filter {{ $filters['status'] === 'pending' && $filters['method'] === 'cash' ? 'active' : '' }}" href="{{ route('admin.payments.index', ['status' => 'pending', 'method' => 'cash']) }}">Pending cash review ({{ $stats['pending_cash'] }})</a>
-            <a class="quick-filter {{ $filters['status'] === 'approved' ? 'active' : '' }}" href="{{ route('admin.payments.index', ['status' => 'approved']) }}">Approved</a>
-            <a class="quick-filter {{ $filters['status'] === 'rejected' ? 'active' : '' }}" href="{{ route('admin.payments.index', ['status' => 'rejected']) }}">Rejected</a>
+            <a class="quick-filter {{ ! $filters['status'] && ! $filters['method'] ? 'active' : '' }}" href="{{ route('admin.payments.index') }}" data-async-filter-link data-async-filter-target="#payment-directory" data-no-transition>All payments</a>
+            <a class="quick-filter {{ $filters['status'] === 'pending' && $filters['method'] === 'cash' ? 'active' : '' }}" href="{{ route('admin.payments.index', ['status' => 'pending', 'method' => 'cash']) }}" data-async-filter-link data-async-filter-target="#payment-directory" data-no-transition>Pending cash review ({{ $stats['pending_cash'] }})</a>
+            <a class="quick-filter {{ $filters['status'] === 'approved' ? 'active' : '' }}" href="{{ route('admin.payments.index', ['status' => 'approved']) }}" data-async-filter-link data-async-filter-target="#payment-directory" data-no-transition>Approved</a>
+            <a class="quick-filter {{ $filters['status'] === 'rejected' ? 'active' : '' }}" href="{{ route('admin.payments.index', ['status' => 'rejected']) }}" data-async-filter-link data-async-filter-target="#payment-directory" data-no-transition>Rejected</a>
         </div>
         @if($payments->isEmpty())
             <div class="empty-state"><strong>No matching payments</strong>Try another client name, reference, status, method, or date range.</div>
@@ -141,14 +141,14 @@
 </div></main>
 @include('partials.admin-confirmation')
 <script>
-const paymentFilterPopover = document.querySelector('.filter-popover');
 document.addEventListener('click', (event) => {
-    if (paymentFilterPopover?.open && !paymentFilterPopover.contains(event.target)) {
+    const paymentFilterPopover = document.querySelector('.filter-popover[open]');
+    if (paymentFilterPopover && !paymentFilterPopover.contains(event.target)) {
         paymentFilterPopover.removeAttribute('open');
     }
 });
 document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') paymentFilterPopover?.removeAttribute('open');
+    if (event.key === 'Escape') document.querySelector('.filter-popover[open]')?.removeAttribute('open');
 });
 </script>
 </body></html>

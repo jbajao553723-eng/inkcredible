@@ -85,11 +85,20 @@
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label" for="address">Complete address <span class="required-mark" aria-hidden="true">*</span></label>
-                    <textarea name="address" id="address" class="form-control @error('address') is-invalid @enderror"
-                              placeholder="Street, barangay, city, and province" autocomplete="street-address" maxlength="500" @error('address') aria-invalid="true" aria-describedby="address-error" @enderror required>{{ old('address') }}</textarea>
-                    @error('address')<p class="field-error" id="address-error">{{ $message }}</p>@enderror
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="street-address">Street / building no. <span class="required-mark" aria-hidden="true">*</span></label>
+                        <input type="text" name="street_address" id="street-address" class="form-control @error('street_address') is-invalid @enderror" value="{{ old('street_address') }}" placeholder="Building, street, barangay, city" autocomplete="street-address" maxlength="255" required>
+                        @error('street_address')<p class="field-error">{{ $message }}</p>@enderror
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="address-location">Province / location <span class="required-mark" aria-hidden="true">*</span></label>
+                        <select name="address_location" id="address-location" class="form-control @error('address_location') is-invalid @enderror" required>
+                            <option value="">Select location</option>
+                            @foreach(config('philippine_locations') as $location)<option value="{{ $location }}" @selected(old('address_location') === $location)>{{ $location }}</option>@endforeach
+                        </select>
+                        @error('address_location')<p class="field-error">{{ $message }}</p>@enderror
+                    </div>
                 </div>
 
                 <div class="form-row">
@@ -98,10 +107,10 @@
                         <div class="input-wrap">
                             <input type="password" name="password" id="password" class="form-control password-input @error('password') is-invalid @enderror"
                                    placeholder="Create a password" autocomplete="new-password" aria-describedby="password-help @error('password') password-error @enderror" @error('password') aria-invalid="true" @enderror required>
-                            <button class="password-toggle" type="button" data-toggle-password="password" aria-controls="password" aria-pressed="false" aria-label="Show password">Show</button>
+                            <button class="password-toggle" type="button" data-toggle-password="password" aria-controls="password" aria-pressed="false" aria-label="Show password"><svg class="eye-open" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5" stroke-width="1.8"/></svg><svg class="eye-closed" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="m3 3 18 18M10.7 6.1A10.7 10.7 0 0 1 12 6c6 0 9.5 6 9.5 6a17 17 0 0 1-2.1 2.8M6.6 6.6C4 8.3 2.5 12 2.5 12s3.5 6 9.5 6c1.4 0 2.7-.3 3.8-.8M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg></button>
                         </div>
                         <div class="password-meter" data-password-meter data-strength="0" aria-hidden="true"><span></span><span></span><span></span></div>
-                        <p class="field-help" id="password-help" data-password-help>Use at least 8 characters.</p>
+                        <p class="field-help" id="password-help" data-password-help>Use at least 8 characters with a number or special character.</p>
                         @error('password')<p class="field-error" id="password-error">{{ $message }}</p>@enderror
                     </div>
 
@@ -110,7 +119,7 @@
                         <div class="input-wrap">
                             <input type="password" name="password_confirmation" id="password-confirmation" class="form-control password-input"
                                    placeholder="Repeat your password" autocomplete="new-password" aria-describedby="password-match" required>
-                            <button class="password-toggle" type="button" data-toggle-password="password-confirmation" aria-controls="password-confirmation" aria-pressed="false" aria-label="Show password confirmation">Show</button>
+                            <button class="password-toggle" type="button" data-toggle-password="password-confirmation" aria-controls="password-confirmation" aria-pressed="false" aria-label="Show password confirmation"><svg class="eye-open" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5" stroke-width="1.8"/></svg><svg class="eye-closed" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="m3 3 18 18M10.7 6.1A10.7 10.7 0 0 1 12 6c6 0 9.5 6 9.5 6a17 17 0 0 1-2.1 2.8M6.6 6.6C4 8.3 2.5 12 2.5 12s3.5 6 9.5 6c1.4 0 2.7-.3 3.8-.8M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg></button>
                         </div>
                         <p class="field-feedback" id="password-match" data-password-match aria-live="polite"></p>
                     </div>
@@ -138,7 +147,7 @@ document.querySelectorAll('[data-toggle-password]').forEach((button) => {
         const input = document.getElementById(this.dataset.togglePassword);
         const showing = input.type === 'text';
         input.type = showing ? 'password' : 'text';
-        this.textContent = showing ? 'Show' : 'Hide';
+        this.classList.toggle('is-showing', !showing);
         this.setAttribute('aria-pressed', String(!showing));
         this.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
     });
@@ -155,13 +164,13 @@ const updatePasswordFeedback = () => {
     let strength = 0;
 
     if (value.length >= 8) strength++;
-    if (/[A-Za-z]/.test(value) && /\d/.test(value)) strength++;
+    if (/[A-Za-z]/.test(value) && /[\d\W_]/.test(value)) strength++;
     if (value.length >= 12 || /[^A-Za-z0-9]/.test(value)) strength++;
 
     passwordMeter.dataset.strength = value ? String(strength) : '0';
     passwordHelp.textContent = value
-        ? ['Use at least 8 characters.', 'Good start — add letters and numbers.', 'Good password.', 'Strong password.'][strength]
-        : 'Use at least 8 characters.';
+        ? ['Use at least 8 characters with a number or special character.', 'Good start - add a number or special character.', 'Password meets the required policy.', 'Strong password.'][strength]
+        : 'Use at least 8 characters with a number or special character.';
 
     if (!confirmationInput.value) {
         passwordMatch.textContent = '';

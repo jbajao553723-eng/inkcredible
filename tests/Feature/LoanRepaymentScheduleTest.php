@@ -6,9 +6,11 @@ use App\Models\Payment;
 use App\Models\PaymentSchedule;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
     Carbon::setTestNow(Carbon::parse('2026-09-26 09:00:00', 'Asia/Manila'));
+    Storage::fake('local');
 });
 
 afterEach(function () {
@@ -46,7 +48,12 @@ it('creates the correct repayment schedule when an admin approves a loan', funct
         'paid_amount' => 0,
         'status' => Loan::STATUS_PENDING,
         'loan_code' => 'TEST-'.strtoupper($type),
+        'contract_sent_at' => now()->subMinutes(10),
+        'contract_signed_at' => now()->subMinutes(5),
+        'contract_signature_name' => $client->full_name,
+        'signed_contract_path' => 'loan-contracts/test/signed-'.$type.'.pdf',
     ]);
+    Storage::disk('local')->put($loan->signed_contract_path, '%PDF-1.4 signed test contract');
 
     $this->actingAs($admin)
         ->post(route('admin.loan.approve', $loan))
@@ -87,7 +94,12 @@ it('allocates an approved payment to scheduled installments in due order', funct
         'paid_amount' => 0,
         'status' => Loan::STATUS_PENDING,
         'loan_code' => 'TEST-ARAWAN-ALLOCATION',
+        'contract_sent_at' => now()->subMinutes(10),
+        'contract_signed_at' => now()->subMinutes(5),
+        'contract_signature_name' => $client->full_name,
+        'signed_contract_path' => 'loan-contracts/test/signed-allocation.pdf',
     ]);
+    Storage::disk('local')->put($loan->signed_contract_path, '%PDF-1.4 signed test contract');
 
     $this->actingAs($admin)->post(route('admin.loan.approve', $loan));
 

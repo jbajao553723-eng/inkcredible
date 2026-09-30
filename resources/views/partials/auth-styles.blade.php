@@ -54,8 +54,12 @@ h1 { margin: 0; font-size: 32px; line-height: 1.2; letter-spacing: -.04em; }
 .form-control.is-invalid { border-color: #f04438; }
 .form-control.is-invalid:focus { box-shadow: 0 0 0 4px rgba(240, 68, 56, .1); }
 textarea.form-control { min-height: 82px; resize: vertical; }
-.password-input { padding-right: 72px; }
-.password-toggle { position: absolute; top: 50%; right: 8px; min-width: 50px; padding: 6px 8px; color: var(--primary); background: #f5f3ff; border: 0; border-radius: 7px; transform: translateY(-50%); font-size: 11px; font-weight: 700; cursor: pointer; transition: color .15s, background-color .15s; }
+.password-input { padding-right: 50px; }
+.password-toggle { position: absolute; top: 50%; right: 8px; display:grid; place-items:center; width:34px; height:34px; padding:0; color: var(--primary); background: #f5f3ff; border: 0; border-radius: 7px; transform: translateY(-50%); cursor: pointer; transition: color .15s, background-color .15s; }
+.password-toggle svg { width:18px; height:18px; }
+.password-toggle .eye-closed { display:none; }
+.password-toggle.is-showing .eye-open { display:none; }
+.password-toggle.is-showing .eye-closed { display:block; }
 .password-toggle:hover { color: var(--primary-dark); background: #ede9fe; }
 .field-error { margin: 6px 0 0; color: var(--danger); font-size: 11px; }
 .field-help { margin: 6px 0 0; color: #98a2b3; font-size: 11px; }

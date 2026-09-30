@@ -22,8 +22,8 @@ test('new users can register', function () {
         'contact_number' => '09171234567',
         'age' => 25,
         'address' => '123 Test Street, Manila',
-        'password' => 'password',
-        'password_confirmation' => 'password',
+        'password' => 'Password1',
+        'password_confirmation' => 'Password1',
         'terms_accepted' => '1',
     ]);
 
@@ -41,8 +41,8 @@ test('new users can register', function () {
 test('all registration fields are required', function () {
     $this->post('/register', [
         'email' => 'incomplete@example.com',
-        'password' => 'password',
-        'password_confirmation' => 'password',
+        'password' => 'Password1',
+        'password_confirmation' => 'Password1',
         'terms_accepted' => '1',
     ])->assertSessionHasErrors(['first_name', 'last_name', 'contact_number', 'age', 'address']);
 
@@ -58,10 +58,45 @@ test('users must accept the terms before registering', function () {
         'contact_number' => '09171234567',
         'age' => 25,
         'address' => '123 Test Street, Manila',
-        'password' => 'password',
-        'password_confirmation' => 'password',
+        'password' => 'Password1',
+        'password_confirmation' => 'Password1',
     ])->assertSessionHasErrors('terms_accepted');
 
     $this->assertGuest();
     $this->assertDatabaseMissing('users', ['email' => 'terms@example.com']);
+});
+
+test('registration requires a number or special character in an eight character password', function () {
+    $this->post('/register', [
+        'first_name' => 'Policy',
+        'last_name' => 'Test',
+        'email' => 'policy@example.com',
+        'contact_number' => '09171234567',
+        'age' => 25,
+        'street_address' => '12 Rizal Street, Barangay Uno',
+        'address_location' => 'Batangas',
+        'password' => 'abcdefgh',
+        'password_confirmation' => 'abcdefgh',
+        'terms_accepted' => '1',
+    ])->assertSessionHasErrors('password');
+
+    $this->assertGuest();
+});
+
+test('registration combines the street input and selected location', function () {
+    $this->post('/register', [
+        'first_name' => 'Address',
+        'last_name' => 'Test',
+        'email' => 'address@example.com',
+        'contact_number' => '09171234567',
+        'age' => 25,
+        'street_address' => '12 Rizal Street, Barangay Uno',
+        'address_location' => 'Batangas',
+        'password' => 'Password1',
+        'password_confirmation' => 'Password1',
+        'terms_accepted' => '1',
+    ])->assertRedirect(route('dashboard', absolute: false));
+
+    expect(User::where('email', 'address@example.com')->value('address'))
+        ->toBe('12 Rizal Street, Barangay Uno, Batangas');
 });

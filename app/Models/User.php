@@ -77,6 +77,11 @@ class User extends Authenticatable
         return $this->hasOne(ClientVerification::class);
     }
 
+    public function auditLogs()
+    {
+        return $this->hasMany(AuditLog::class);
+    }
+
     public function isClientVerified(): bool
     {
         return $this->clientVerification?->status === ClientVerification::STATUS_APPROVED;

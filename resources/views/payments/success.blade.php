@@ -328,5 +328,11 @@
             </article>
         </main>
     </div>
+    <script>
+        if (window.opener && !window.opener.closed) {
+            window.opener.location.replace(window.location.href);
+            window.close();
+        }
+    </script>
 </body>
 </html>

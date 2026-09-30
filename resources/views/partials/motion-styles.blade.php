@@ -398,8 +398,8 @@ dialog[open]::backdrop { animation: motion-backdrop-in .24s ease-out both; }
 dialog[open] > * { animation: motion-dialog-in .34s cubic-bezier(.22, 1, .36, 1) both; }
 
 .modal.show .modal-dialog { animation: motion-dialog-in .34s cubic-bezier(.22, 1, .36, 1) both; }
-.modal.show .modal-backdrop,
-.modal-backdrop.show { animation: motion-backdrop-in .24s ease-out both; }
+.modal-backdrop { --bs-backdrop-bg: #101828; --bs-backdrop-opacity: .46; }
+.modal-backdrop.show { animation: bootstrap-backdrop-in .24s ease-out both; }
 .dropdown-menu.show { animation: dropdown-in .2s cubic-bezier(.22, 1, .36, 1) both; transform-origin: top; }
 
 html.motion-enabled.motion-in .status-icon.motion-reveal,
@@ -462,6 +462,7 @@ tbody tr:not([hidden]):hover { box-shadow: inset 3px 0 0 rgba(99, 102, 241, .45)
 @keyframes selected-pulse { 0% { transform: scale(1); } 45% { transform: scale(.985); } 100% { transform: scale(1); } }
 @keyframes page-transition-progress { 0% { transform: scaleX(0); } 65% { transform: scaleX(.76); } 100% { transform: scaleX(.94); } }
 @keyframes motion-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes bootstrap-backdrop-in { from { opacity: 0; } to { opacity: var(--bs-backdrop-opacity, .46); } }
 @keyframes motion-dialog-backdrop { from { opacity: 0; } to { opacity: 1; } }
 @keyframes motion-dialog-in { from { opacity: 0; transform: translateY(18px) scale(.975); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @keyframes dropdown-in { from { opacity: 0; transform: translateY(-5px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }

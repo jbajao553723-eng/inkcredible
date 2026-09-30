@@ -51,7 +51,7 @@ class PaymentController extends Controller
     | STORE PAYMENT (FIXED)
     |----------------------------------------------------------------------
     */
-    public function store(StorePaymentRequest $request, PayMongoService $payMongo): RedirectResponse
+    public function store(StorePaymentRequest $request, PayMongoService $payMongo): RedirectResponse|JsonResponse
     {
         $validated = $request->validated();
 
@@ -90,7 +90,18 @@ class PaymentController extends Controller
 
         if ($validated['method'] !== 'cash') {
             try {
-                return redirect()->away($payMongo->createCheckoutSession($payment));
+                $checkoutUrl = $payMongo->createCheckoutSession($payment);
+
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'payment_id' => $payment->id,
+                        'checkout_url' => $checkoutUrl,
+                        'status_url' => route('payments.status', $payment),
+                        'cancel_url' => route('payments.cancel', $payment),
+                    ]);
+                }
+
+                return redirect()->away($checkoutUrl);
             } catch (\Throwable $exception) {
                 $payment->delete();
                 Log::error('Unable to create PayMongo checkout session.', [
@@ -133,9 +144,43 @@ class PaymentController extends Controller
 
     public function cancel(int $payment): Response
     {
-        $this->findUserPayment($payment);
+        $paymentModel = $this->findUserPayment($payment);
 
-        return response()->view('payments.cancel');
+        if ($paymentModel->method !== 'cash' && $paymentModel->status === Payment::STATUS_PENDING) {
+            $paymentModel->update(['status' => Payment::STATUS_REJECTED]);
+        }
+
+        return response()->view('payments.cancel', ['payment' => $paymentModel]);
+    }
+
+    public function status(int $payment, PayMongoService $payMongo): JsonResponse
+    {
+        $paymentModel = $this->findUserPayment($payment);
+
+        if ($paymentModel->status === Payment::STATUS_PENDING
+            && $paymentModel->paymongo_session_id) {
+            try {
+                $session = $payMongo->retrieveCheckoutSession($paymentModel->paymongo_session_id);
+                $this->reconcileCheckoutSession($paymentModel, $session);
+                $paymentModel->refresh();
+            } catch (\Throwable $exception) {
+                Log::notice('PayMongo completion polling is pending.', [
+                    'payment_id' => $paymentModel->id,
+                    'error' => $exception->getMessage(),
+                ]);
+            }
+        }
+
+        $redirectUrl = match ($paymentModel->status) {
+            Payment::STATUS_APPROVED => route('payments.success', $paymentModel),
+            Payment::STATUS_REJECTED => route('payments.cancel', $paymentModel),
+            default => null,
+        };
+
+        return response()->json([
+            'status' => $paymentModel->status,
+            'redirect_url' => $redirectUrl,
+        ]);
     }
 
     public function webhook(Request $request, PayMongoService $payMongo): JsonResponse
@@ -397,6 +442,15 @@ class PaymentController extends Controller
             ->first(fn (array $item) => data_get($item, 'attributes.status') === 'paid');
 
         if (! $providerPayment) {
+            $intentStatus = data_get($session, 'attributes.payment_intent.attributes.status');
+            $lastPaymentError = data_get($session, 'attributes.payment_intent.attributes.last_payment_error');
+
+            if ($intentStatus === 'awaiting_payment_method'
+                && $lastPaymentError
+                && $payment->status === Payment::STATUS_PENDING) {
+                $payment->update(['status' => Payment::STATUS_REJECTED]);
+            }
+
             return;
         }
 

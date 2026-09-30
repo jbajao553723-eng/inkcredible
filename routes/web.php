@@ -1,12 +1,15 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\ClientReportController;
 use App\Http\Controllers\Admin\ClientVerificationAdminController;
 use App\Http\Controllers\Admin\LoanAdminController;
 use App\Http\Controllers\ClientVerificationController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LoanContractController;
 use App\Http\Controllers\LoanController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -61,6 +64,9 @@ Route::middleware(['auth'])
         Route::get('/payments/cancel/{payment}', [PaymentController::class, 'cancel'])
             ->name('payments.cancel');
 
+        Route::get('/payments/status/{payment}', [PaymentController::class, 'status'])
+            ->name('payments.status');
+
         Route::get('/profile', [ProfileController::class, 'edit'])
             ->name('profile.edit');
 
@@ -79,6 +85,21 @@ Route::middleware(['auth'])
         Route::post('/profile/verification', [ClientVerificationController::class, 'store'])
             ->name('profile.verification.store');
 
+        Route::get('/loan/{loan}/contract', [LoanContractController::class, 'show'])
+            ->name('loan.contract.show');
+
+        Route::get('/loan/{loan}/contract/download', [LoanContractController::class, 'download'])
+            ->name('loan.contract.download');
+
+        Route::get('/loan/{loan}/contract/signed/download', [LoanContractController::class, 'downloadSigned'])
+            ->name('loan.contract.signed.download');
+
+        Route::post('/loan/{loan}/contract/sign', [LoanContractController::class, 'sign'])
+            ->name('loan.contract.sign');
+
+        Route::post('/notifications/{notification}/read', [NotificationController::class, 'read'])
+            ->name('notifications.read');
+
     });
 
 /*
@@ -94,6 +115,9 @@ Route::middleware(['auth', 'admin'])
 
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])
             ->name('dashboard');
+
+        Route::get('/audit-logs', [AuditLogController::class, 'index'])
+            ->name('audit-logs.index');
 
         Route::get('/loans', [LoanAdminController::class, 'index'])
             ->name('loans');
@@ -133,6 +157,9 @@ Route::middleware(['auth', 'admin'])
 
         Route::post('/loan/{loan}/approve', [LoanAdminController::class, 'approve'])
             ->name('loan.approve');
+
+        Route::post('/loan/{loan}/contract/send', [LoanContractController::class, 'send'])
+            ->name('loan.contract.send');
 
         Route::post('/loan/{loan}/reject', [LoanAdminController::class, 'reject'])
             ->name('loan.reject');
