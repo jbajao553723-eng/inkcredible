@@ -132,6 +132,26 @@ tbody tr:hover { background: #fcfcfd; }
 .quick-title { margin-top: 14px; font-size: 13px; font-weight: 700; }
 .quick-note { margin-top: 5px; color: var(--muted); font-size: 11px; }
 
+.confirmation-modal { z-index: 1060; padding-right: 0 !important; }
+.confirmation-modal .modal-dialog { width: min(430px, calc(100% - 32px)); max-width: 430px; margin-right: auto; margin-left: auto; }
+.confirmation-card { position:relative; padding:28px; overflow:hidden; background:#fff; border:1px solid rgba(208,213,221,.9); border-radius:20px; box-shadow:0 24px 64px rgba(16,24,40,.2); }
+.confirmation-close { position:absolute; top:18px; right:18px; z-index:2; width:30px; height:30px; padding:8px; background-color:#f2f4f7; border-radius:50%; opacity:.72; }
+.confirmation-close:hover { opacity:1; }
+.confirmation-icon { display:grid; place-items:center; width:46px; height:46px; margin-bottom:18px; color:#4f46e5; background:#eef2ff; border:8px solid #f5f3ff; border-radius:50%; box-sizing:content-box; }
+.confirmation-icon svg { width:22px; height:22px; }
+.confirmation-copy { padding-right:22px; }
+.confirmation-eyebrow { margin-bottom:6px; color:#4f46e5; font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; }
+.confirmation-card .modal-title { margin:0; color:#101828; font-size:20px; font-weight:700; letter-spacing:-.025em; }
+.confirmation-card [data-confirm-message] { margin:10px 0 0; color:#667085; font-size:13px; line-height:1.6; }
+.confirmation-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:24px; }
+.confirmation-actions .btn { min-height:42px; border-radius:10px; font-size:12px; font-weight:700; }
+.confirmation-cancel { color:#344054; background:#fff; border:1px solid #d0d5dd; }
+.confirmation-cancel:hover { color:#101828; background:#f9fafb; border-color:#98a2b3; }
+.confirmation-modal.is-danger .confirmation-icon { color:#d92d20; background:#fef3f2; border-color:#fff5f4; }
+.confirmation-modal.is-danger .confirmation-eyebrow { color:#b42318; }
+.confirmation-modal.is-danger .confirmation-proceed { background:#d92d20; border-color:#d92d20; }
+.confirmation-modal.is-danger .confirmation-proceed:hover { background:#b42318; border-color:#b42318; }
+
 @media (max-width: 1100px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } .metric-layout, .detail-layout { grid-template-columns: 1fr; } }
 @media (max-width: 800px) { .quick-grid { grid-template-columns: 1fr; } }
 @media (max-width: 760px) {
@@ -151,6 +171,6 @@ tbody tr:hover { background: #fcfcfd; }
     h1 { font-size: 25px; }
     .detail-grid { grid-template-columns: 1fr; }
 }
-@media (max-width: 470px) { .stats-grid { grid-template-columns: 1fr; } .top-actions > a, .top-actions > form { flex-basis: 100%; } .panel-header { align-items: flex-start; flex-direction: column; } }
+@media (max-width: 470px) { .stats-grid { grid-template-columns: 1fr; } .top-actions > a, .top-actions > form { flex-basis: 100%; } .panel-header { align-items: flex-start; flex-direction: column; } .confirmation-card { padding:24px 20px 20px; } .confirmation-actions { grid-template-columns:1fr; } }
 
 @include('partials.motion-styles')

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Loan;
 use App\Notifications\ContractReadyNotification;
+use App\Services\LoanRiskAssessmentService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -38,13 +39,14 @@ class LoanContractController extends Controller
         return back()->with('success', 'Contract sent to the client for review and signature.');
     }
 
-    public function show(Request $request, Loan $loan): View
+    public function show(Request $request, Loan $loan, LoanRiskAssessmentService $riskAssessments): View
     {
         abort_unless($loan->user_id === $request->user()?->id, 403);
         abort_unless($loan->contract_sent_at, 404);
         $loan->load(['user', 'loanType']);
+        $riskAssessment = $riskAssessments->assess($loan);
 
-        return view('client.loans.contract', compact('loan'));
+        return view('client.loans.contract', compact('loan', 'riskAssessment'));
     }
 
     public function download(Request $request, Loan $loan): Response

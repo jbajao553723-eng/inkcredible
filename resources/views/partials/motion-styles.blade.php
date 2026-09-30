@@ -12,7 +12,8 @@ html.motion-enabled body {
 
 html.motion-enabled.motion-in body {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    filter: none;
+    transform: none;
 }
 
 html.motion-enabled.motion-out body {
@@ -398,8 +399,17 @@ dialog[open]::backdrop { animation: motion-backdrop-in .24s ease-out both; }
 dialog[open] > * { animation: motion-dialog-in .34s cubic-bezier(.22, 1, .36, 1) both; }
 
 .modal.show .modal-dialog { animation: motion-dialog-in .34s cubic-bezier(.22, 1, .36, 1) both; }
-.modal-backdrop { --bs-backdrop-bg: #101828; --bs-backdrop-opacity: .46; }
+.modal-backdrop { --bs-backdrop-bg: #344054; --bs-backdrop-opacity: .32; backdrop-filter: blur(2px); }
 .modal-backdrop.show { animation: bootstrap-backdrop-in .24s ease-out both; }
+
+/* A transformed body becomes the containing block for fixed overlays. Keep
+   confirmation dialogs attached to the viewport, including during page motion. */
+body.modal-open,
+body:has(dialog[open]) {
+    animation: none;
+    filter: none !important;
+    transform: none !important;
+}
 .dropdown-menu.show { animation: dropdown-in .2s cubic-bezier(.22, 1, .36, 1) both; transform-origin: top; }
 
 html.motion-enabled.motion-in .status-icon.motion-reveal,

@@ -9,6 +9,13 @@
 <style>
 @include('partials.admin-styles')
 .payments-panel { overflow:visible; }
+.payment-stat-alert { border-color:#fedf89; background:linear-gradient(145deg,#fff,#fffcf5); }
+.payment-stat-alert .stat-value { color:#b54708; }
+.review-banner { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px; padding:14px 16px; color:#854a0e; background:#fffaeb; border:1px solid #fedf89; border-radius:12px; }
+.review-banner-copy { display:flex; align-items:center; gap:11px; min-width:0; }
+.review-banner-icon { display:grid; place-items:center; width:34px; height:34px; flex:0 0 34px; color:#b54708; background:#fef0c7; border-radius:9px; }
+.review-banner-icon svg { width:17px; height:17px; }
+.review-banner strong { display:block; font-size:12px; }.review-banner p { margin:3px 0 0; font-size:10px; line-height:1.4; }
 .payment-filters { position:relative; display:flex; align-items:center; gap:8px; padding:12px 18px; border-bottom:1px solid var(--border); }
 .filter-field { position:relative; min-width:0; }
 .filter-field .search-input, .filter-field .filter-select { width:100%; min-height:36px; border-color:#e4e7ec; border-radius:7px; background-color:#fff; }
@@ -35,18 +42,25 @@
 .quick-filters { display:flex; gap:22px; padding:0 18px; border-bottom:1px solid var(--border); overflow-x:auto; }
 .quick-filter { flex:0 0 auto; padding:11px 0 9px; color:#667085; border-bottom:2px solid transparent; font-size:10px; font-weight:600; text-decoration:none; white-space:nowrap; }
 .quick-filter:hover, .quick-filter.active { color:#4338ca; border-bottom-color:#6366f1; }
-.client-profile { min-width:230px; }
+.client-profile { min-width:250px; }
 .client-meta { min-width:0; }
 .client-meta .cell-title, .client-meta .email-value { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .client-tags { display:flex; gap:10px; margin-top:6px; color:#98a2b3; font-size:9px; flex-wrap:wrap; }
 .client-tag { white-space:nowrap; }
 .payment-reference { min-width:190px; }
+.loan-inline { display:flex; align-items:center; gap:6px; margin-top:7px; color:#667085; font-size:10px; }
+.loan-inline strong { color:#475467; font-weight:600; }
+.payment-meta { min-width:145px; }
+.payment-meta .method { margin-top:5px; color:#475467; font-size:10px; font-weight:600; }
+.amount-actions { min-width:205px; }
+.amount-actions .amount { display:block; margin-bottom:7px; color:#101828; font-size:13px; }
+.amount-actions .action-group { gap:5px; }
 .review-row { background:#fffcf5; }
 .review-row:hover { background:#fffaeb; }
 .pagination-bar { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 18px; color:#667085; border-top:1px solid var(--border); font-size:11px; }
 .pagination-actions { display:flex; gap:7px; align-items:center; }
 .pagination-actions .button.disabled { color:#98a2b3; background:#f9fafb; pointer-events:none; }
-@media(max-width:700px){.filter-popover-panel{width:calc(100vw - 28px)}.filter-options{grid-template-columns:1fr}.filter-actions .button-primary{flex:1}.pagination-bar{align-items:stretch;flex-direction:column}.pagination-actions .button{flex:1}}
+@media(max-width:700px){.filter-popover-panel{width:calc(100vw - 28px)}.filter-options{grid-template-columns:1fr}.filter-actions .button-primary{flex:1}.pagination-bar{align-items:stretch;flex-direction:column}.pagination-actions .button{flex:1}.review-banner{align-items:flex-start;flex-direction:column}.review-banner>a{width:100%}}
 @media(max-width:440px){.payment-filters{padding:10px 12px}.filter-search{min-width:0}.search-submit{display:none}.filter-trigger{padding-inline:10px}.quick-filters{gap:18px}}
 </style>
 </head>
@@ -54,7 +68,7 @@
 @include('partials.admin-sidebar', ['active' => 'payments'])
 <main class="main" id="main-content" tabindex="-1"><div class="page-shell">
     <header class="topbar">
-        <div><div class="eyebrow">Payment operations</div><h1>Payment management</h1><p class="subtitle">Find each client's transaction quickly and review payments without scanning the entire history.</p></div>
+        <div><div class="eyebrow">Payment operations</div><h1>Payments</h1><p class="subtitle">Review cash submissions and track every client transaction.</p></div>
         <div class="top-actions"><a class="button button-secondary" href="{{ route('admin.dashboard') }}">Dashboard</a><form method="POST" action="{{ route('logout') }}">@csrf<button class="button button-secondary" type="submit">Log out</button></form></div>
     </header>
     <x-flash-messages />
@@ -62,12 +76,16 @@
     <section class="stats-grid">
         <article class="stat-card"><div class="stat-label">Transactions</div><div class="stat-value">{{ number_format($stats['transactions']) }}</div><div class="stat-note">Complete payment history</div></article>
         <article class="stat-card"><div class="stat-label">Total collected</div><div class="stat-value">&#8369;{{ number_format($stats['collected'], 2) }}</div><div class="stat-note">Approved payment total</div></article>
-        <article class="stat-card"><div class="stat-label">Pending cash</div><div class="stat-value">{{ number_format($stats['pending_cash']) }}</div><div class="stat-note">Requires manual verification</div></article>
+        <article class="stat-card payment-stat-alert"><div class="stat-label">Needs review</div><div class="stat-value">{{ number_format($stats['pending_cash']) }}</div><div class="stat-note">Pending cash submissions</div></article>
         <article class="stat-card"><div class="stat-label">Clients represented</div><div class="stat-value">{{ number_format($stats['clients']) }}</div><div class="stat-note">Clients with payment records</div></article>
     </section>
 
+    @if($stats['pending_cash'] > 0)
+        <div class="review-banner"><div class="review-banner-copy"><span class="review-banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4m0 4h.01M4.5 12a7.5 7.5 0 1 0 15 0 7.5 7.5 0 0 0-15 0Z"/></svg></span><div><strong>{{ $stats['pending_cash'] }} cash {{ $stats['pending_cash'] === 1 ? 'payment' : 'payments' }} waiting</strong><p>Review the uploaded proof before approving or rejecting each submission.</p></div></div><a class="button button-secondary button-small" href="{{ route('admin.payments.index', ['status' => 'pending', 'method' => 'cash']) }}">Open review queue</a></div>
+    @endif
+
     <section class="panel payments-panel async-filter-region" id="payment-directory" data-async-filter-region data-async-filter-target="#payment-directory" aria-live="polite">
-        <div class="panel-header"><div><h2 class="panel-title">Payment directory</h2><p class="panel-description">Search, filter, and review client transactions.</p></div><span class="badge badge-neutral">{{ number_format($payments->total()) }} matching</span></div>
+        <div class="panel-header"><div><h2 class="panel-title">All transactions</h2><p class="panel-description">Newest and review-ready payments appear first.</p></div><span class="badge badge-neutral">{{ number_format($payments->total()) }} results</span></div>
         @php
             $hasFilters = (bool) ($filters['q'] || $filters['status'] || $filters['method'] || $filters['date_from'] || $filters['date_to']);
             $advancedFilterCount = (int) filled($filters['status']) + (int) filled($filters['method']) + (int) filled($filters['date_from']) + (int) filled($filters['date_to']);
@@ -99,7 +117,7 @@
         @if($payments->isEmpty())
             <div class="empty-state"><strong>No matching payments</strong>Try another client name, reference, status, method, or date range.</div>
         @else
-            <div class="table-wrap"><table><thead><tr><th>Client</th><th>Payment</th><th>Loan</th><th>Date &amp; time</th><th>Method</th><th>Status</th><th>Amount</th><th>Actions</th></tr></thead>
+            <div class="table-wrap"><table><thead><tr><th>Client &amp; loan</th><th>Transaction</th><th>Payment</th><th>Status</th><th>Amount &amp; actions</th></tr></thead>
                 <tbody id="payment-table">
                 @foreach($payments as $payment)
                     @php
@@ -110,14 +128,11 @@
                         $needsReview = $payment->status === 'pending' && $payment->method === 'cash';
                     @endphp
                     <tr class="{{ $needsReview ? 'review-row' : '' }}">
-                        <td class="client-profile"><div class="identity"><span class="avatar">{{ strtoupper(substr($client?->name ?? 'U', 0, 1)) }}</span><span class="client-meta"><span class="cell-title">{{ $client?->name ?? 'Unknown client' }}</span><span class="email-value">{{ $client?->email ?? 'No email address' }}</span><span class="cell-secondary">{{ $client?->contact_number ?: 'No contact number' }} @if($client) &middot; Client #{{ $client->id }} @endif</span></span></div><div class="client-tags"><span class="client-tag">{{ number_format($clientSummary?->payment_count ?? 0) }} total payments</span><span class="client-tag">&#8369;{{ number_format((float) ($clientSummary?->collected ?? 0), 2) }} collected</span></div></td>
+                        <td class="client-profile"><div class="identity"><span class="avatar">{{ strtoupper(substr($client?->name ?? 'U', 0, 1)) }}</span><span class="client-meta"><span class="cell-title">{{ $client?->name ?? 'Unknown client' }}</span><span class="email-value">{{ $client?->email ?? 'No email address' }}</span></span></div><div class="loan-inline"><strong>{{ $payment->loan?->loan_code ?: 'Loan #'.$payment->loan_id }}</strong><span>&middot;</span><span>{{ $payment->loan?->loanType?->display_name ?? $payment->loan?->loanType?->name ?? 'Loan' }}</span></div><div class="client-tags"><span class="client-tag">{{ number_format($clientSummary?->payment_count ?? 0) }} payments</span><span class="client-tag">&#8369;{{ number_format((float) ($clientSummary?->collected ?? 0), 2) }} collected</span></div></td>
                         <td class="payment-reference"><div class="cell-title">{{ $payment->reference ?: 'Pending reference' }}</div><div class="cell-secondary">Transaction #{{ $payment->id }}@if($payment->provider_reference) &middot; Provider {{ $payment->provider_reference }}@endif</div></td>
-                        <td><div>{{ $payment->loan?->loanType?->display_name ?? $payment->loan?->loanType?->name ?? 'Loan' }}</div><div class="cell-secondary">{{ $payment->loan?->loan_code ?: 'Loan #'.$payment->loan_id }}</div></td>
-                        <td><div>{{ $paymentTime?->format('M d, Y') }}</div><div class="cell-secondary">{{ $paymentTime?->format('h:i A') }} PHT</div></td>
-                        <td>{{ $payment->method_label }}</td>
+                        <td class="payment-meta"><div>{{ $paymentTime?->format('M d, Y') }}</div><div class="cell-secondary">{{ $paymentTime?->format('h:i A') }} PHT</div><div class="method">{{ $payment->method_label }}</div></td>
                         <td><span class="badge {{ $statusClass }}">{{ ucfirst($payment->status) }}</span>@if($needsReview)<div class="cell-secondary">Needs review</div>@endif</td>
-                        <td class="amount">&#8369;{{ number_format($payment->amount, 2) }}</td>
-                        <td><div class="action-group">
+                        <td class="amount-actions"><span class="amount">&#8369;{{ number_format($payment->amount, 2) }}</span><div class="action-group">
                             <a class="button button-secondary button-small" href="{{ route('admin.payment.show', $payment->id) }}">Details</a>
                             @if($needsReview)
                                 <form method="POST" action="{{ route('admin.payment.approve', $payment->id) }}" data-confirm="Approve this cash payment?">@csrf<button class="button button-success button-small" type="submit">Approve</button></form>

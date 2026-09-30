@@ -4,32 +4,33 @@
     <meta charset="UTF-8">
     <title>Inkcredible business performance report</title>
     <style>
-        @page { margin: 28px 30px 46px; }
+        @page { margin: 25px 28px 44px; }
         * { box-sizing: border-box; }
         body { margin: 0; color: #1d2939; font-family: DejaVu Sans, sans-serif; font-size: 8px; line-height: 1.38; }
         table { width: 100%; border-collapse: collapse; }
         td, th { vertical-align: top; }
-        .masthead { margin-bottom: 13px; color: #fff; background: #101828; border-left: 6px solid #6366f1; border-radius: 7px; }
-        .masthead td { padding: 14px 16px; border: 0; }
+        .masthead { margin-bottom: 11px; color: #fff; background: #101828; border-left: 7px solid #7c3aed; border-radius: 8px; }
+        .masthead td { padding: 15px 17px; border: 0; }
         .brand { color: #a5b4fc; font-size: 7px; font-weight: bold; letter-spacing: 1.2px; text-transform: uppercase; }
-        h1 { margin: 4px 0 3px; font-size: 20px; line-height: 1.15; }
+        h1 { margin: 4px 0 4px; font-size: 21px; line-height: 1.15; }
         .subtitle { color: #d0d5dd; font-size: 8px; }
         .report-meta { width: 34%; color: #d0d5dd; line-height: 1.65; text-align: right; }
         .confidential { display: inline-block; margin-bottom: 4px; padding: 3px 7px; color: #fff; background: #4f46e5; border-radius: 8px; font-size: 6px; font-weight: bold; letter-spacing: .5px; }
-        .scope { padding: 7px 9px; color: #475467; background: #f8fafc; border: 1px solid #e4e7ec; }
+        .scope { padding: 8px 10px; color: #475467; background: #f8fafc; border: 1px solid #e4e7ec; border-radius: 4px; }
         .section { margin-top: 12px; }
         .section.break { page-break-before: always; margin-top: 0; }
-        .section-heading { margin: 0 0 6px; padding-bottom: 4px; color: #344054; border-bottom: 1px solid #d0d5dd; font-size: 10px; }
+        .section-heading { margin: 0 0 6px; padding-bottom: 5px; color: #101828; border-bottom: 1px solid #d0d5dd; font-size: 10px; }
         .section-note { margin: -2px 0 7px; color: #667085; font-size: 7px; }
         .metrics { table-layout: fixed; border-spacing: 5px; border-collapse: separate; margin: -5px; width: calc(100% + 10px); }
-        .metrics td { width: 25%; padding: 8px; background: #f8fafc; border: 1px solid #e4e7ec; border-radius: 4px; }
+        .metrics td { width: 25%; padding: 9px; background: #f8fafc; border: 1px solid #e4e7ec; border-radius: 5px; }
         .label { color: #667085; font-size: 6.5px; font-weight: bold; letter-spacing: .35px; text-transform: uppercase; }
-        .metric-value { margin-top: 3px; color: #312e81; font-size: 12px; font-weight: bold; }
+        .metric-value { margin-top: 3px; color: #312e81; font-size: 12.5px; font-weight: bold; }
         .metric-note { margin-top: 2px; color: #667085; font-size: 6.5px; }
         .data { table-layout: fixed; }
         .data thead { display: table-header-group; }
         .data th { padding: 5px; color: #475467; background: #f2f4f7; border: 1px solid #d0d5dd; font-size: 6.2px; letter-spacing: .2px; text-align: left; text-transform: uppercase; }
         .data td { padding: 5px; border: 1px solid #e4e7ec; overflow-wrap: break-word; }
+        .data tbody tr:nth-child(even) td { background: #fcfcfd; }
         .data .amount, .data .rate { text-align: right; white-space: nowrap; }
         .data .count { text-align: center; }
         .status { display: inline-block; padding: 2px 5px; border-radius: 7px; font-size: 6px; font-weight: bold; }
@@ -48,6 +49,23 @@
         .methodology { margin-top: 10px; padding: 8px 10px; color: #475467; background: #f5f3ff; border-left: 3px solid #6366f1; font-size: 7px; }
         .methodology ul { margin: 4px 0 0; padding-left: 14px; }
         .methodology li { margin: 2px 0; }
+        .profit-band { width: 100%; margin-top: 11px; color: #fff; background: #312e81; border-radius: 6px; page-break-inside: avoid; }
+        .profit-band td { padding: 12px 13px; border: 0; vertical-align: middle; }
+        .profit-main { width: 40%; border-right: 1px solid #4f46e5 !important; }
+        .profit-main .label { color: #c7d2fe; }
+        .profit-value { margin-top: 3px; font-size: 20px; font-weight: bold; line-height: 1.1; }
+        .profit-note { margin-top: 4px; color: #c7d2fe; font-size: 6.5px; }
+        .profit-stat { width: 20%; }
+        .profit-stat span { display: block; color: #c7d2fe; font-size: 6px; font-weight: bold; letter-spacing: .3px; text-transform: uppercase; }
+        .profit-stat strong { display: block; margin-top: 4px; font-size: 11px; }
+        .briefing { table-layout: fixed; border-spacing: 6px; border-collapse: separate; width: calc(100% + 12px); margin: 5px -6px -6px; }
+        .briefing td { width: 33.33%; padding: 8px 9px; background: #fff; border: 1px solid #e4e7ec; border-top: 3px solid #6366f1; border-radius: 4px; }
+        .briefing td.good-card { border-top-color: #12b76a; }
+        .briefing td.warn-card { border-top-color: #f79009; }
+        .briefing td.risk-card { border-top-color: #f04438; }
+        .briefing-title { color: #344054; font-size: 7px; font-weight: bold; text-transform: uppercase; }
+        .briefing-value { margin-top: 4px; color: #101828; font-size: 10px; font-weight: bold; }
+        .briefing-copy { margin-top: 3px; color: #667085; font-size: 6.4px; line-height: 1.45; }
         .chart-card { padding: 9px 10px 8px; background: #fbfcff; border: 1px solid #d9def0; border-radius: 5px; page-break-inside: avoid; }
         .chart-title { color: #344054; font-size: 8px; font-weight: bold; }
         .chart-subtitle { margin: 2px 0 7px; color: #667085; font-size: 6.5px; }
@@ -65,7 +83,8 @@
         .legend-key { display: inline-block; width: 7px; height: 7px; margin: 0 3px 0 9px; border-radius: 2px; vertical-align: -1px; }
         .insight { margin-top: 7px; padding: 6px 8px; color: #344054; background: #eef2ff; border-left: 3px solid #6366f1; font-size: 6.8px; }
         .empty { padding: 10px; color: #667085; background: #f8fafc; border: 1px solid #e4e7ec; text-align: center; }
-        .page-footer { position: fixed; right: 0; bottom: -29px; left: 0; padding-top: 6px; color: #667085; border-top: 1px solid #d0d5dd; font-size: 6.5px; }
+        .keep-together { page-break-inside: avoid; }
+        .page-footer { position: fixed; right: 0; bottom: -28px; left: 0; padding-top: 6px; color: #667085; border-top: 1px solid #d0d5dd; font-size: 6.5px; }
         .page-footer td { width: 33.33%; }
         .page-footer .center { text-align: center; }
         .page-footer .right { text-align: right; }
@@ -79,6 +98,11 @@
         fn ($month) => max($month['principal_released'], $month['collections'])
     ));
     $strongestCollectionMonth = collect($monthlyTrend)->sortByDesc('collections')->first();
+    $projectedGrossProfit = (float) $summary['contract_interest'] + (float) $summary['penalties'];
+    $projectedRevenue = (float) $summary['scheduled_payable'] + (float) $summary['penalties'];
+    $projectedMargin = $projectedRevenue > 0 ? ($projectedGrossProfit / $projectedRevenue) * 100 : 0;
+    $collectionGap = max(0, $projectedRevenue - (float) $summary['collections']);
+    $riskLabel = $summary['overdue_share'] >= 25 ? 'High attention' : ($summary['overdue_share'] > 0 ? 'Watch closely' : 'No overdue exposure');
 @endphp
 <table class="masthead"><tr>
     <td>
@@ -115,9 +139,25 @@
     </table>
 </div>
 
+<table class="profit-band"><tr>
+    <td class="profit-main"><div class="label">Projected gross profit</div><div class="profit-value">PHP {{ number_format($projectedGrossProfit, 2) }}</div><div class="profit-note">Contract interest plus recorded penalties, before operating costs and defaults</div></td>
+    <td class="profit-stat"><span>Projected margin</span><strong>{{ number_format($projectedMargin, 1) }}%</strong></td>
+    <td class="profit-stat"><span>Contract interest</span><strong>PHP {{ number_format($summary['contract_interest'], 2) }}</strong></td>
+    <td class="profit-stat"><span>Collection gap</span><strong>PHP {{ number_format($collectionGap, 2) }}</strong></td>
+</tr></table>
+
+<div class="section">
+    <h2 class="section-heading">2. Management briefing</h2>
+    <table class="briefing"><tr>
+        <td class="{{ $summary['collection_rate'] >= 75 ? 'good-card' : 'warn-card' }}"><div class="briefing-title">Collection performance</div><div class="briefing-value">{{ number_format($summary['collection_rate'], 1) }}% collected</div><div class="briefing-copy">PHP {{ number_format($summary['collections'], 2) }} in approved collections against PHP {{ number_format($projectedRevenue, 2) }} in scheduled receivables and penalties.</div></td>
+        <td class="{{ $summary['overdue_share'] > 0 ? 'risk-card' : 'good-card' }}"><div class="briefing-title">Credit risk</div><div class="briefing-value">{{ $riskLabel }}</div><div class="briefing-copy">{{ number_format($summary['overdue_loans']) }} overdue loan(s) represent {{ number_format($summary['overdue_share'], 1) }}% of the outstanding portfolio.</div></td>
+        <td class="{{ $controlIssues > 0 ? 'warn-card' : 'good-card' }}"><div class="briefing-title">Operational readiness</div><div class="briefing-value">{{ $controlIssues > 0 ? number_format($controlIssues).' exception(s)' : 'Controls clear' }}</div><div class="briefing-copy">{{ $controlIssues > 0 ? 'Resolve listed data exceptions before using this report for external decision-making.' : 'No listed data-quality exceptions were detected in this reporting snapshot.' }}</div></td>
+    </tr></table>
+</div>
+
 <table class="two-column"><tr><td>
     <div class="section">
-        <h2 class="section-heading">2. Portfolio status</h2>
+        <h2 class="section-heading">3. Portfolio status</h2>
         <table class="data"><thead><tr><th>Status</th><th class="count">Loans</th><th class="amount">Principal</th></tr></thead><tbody>
         @foreach($statuses as $row)
             <tr><td>{{ $row['label'] }}</td><td class="count">{{ number_format($row['count']) }}</td><td class="amount">PHP {{ number_format($row['principal'], 2) }}</td></tr>
@@ -126,7 +166,7 @@
     </div>
 </td><td>
     <div class="section">
-        <h2 class="section-heading">3. Operational controls</h2>
+        <h2 class="section-heading">4. Operational controls</h2>
         <div class="control-box">
             @foreach($controls as $control)
                 <div class="control-row"><span class="control-count {{ $control['count'] ? 'risk' : 'good' }} status">{{ number_format($control['count']) }}</span>{{ $control['label'] }}</div>
@@ -137,7 +177,7 @@
 </td></tr></table>
 
 <div class="section">
-    <h2 class="section-heading">4. Product performance</h2>
+    <h2 class="section-heading">5. Product performance</h2>
     <div class="section-note">Collection rate equals approved collections divided by scheduled receivables for originated loans.</div>
     @if(empty($products))
         <div class="empty">No loan product activity is available.</div>
@@ -153,8 +193,8 @@
     @endif
 </div>
 
-<div class="section break">
-    <h2 class="section-heading">5. Monthly financial activity</h2>
+<div class="section">
+    <h2 class="section-heading">6. Monthly financial activity</h2>
     <div class="section-note">Six-month comparison of principal released and approved cash collections. Bar lengths share one PHP scale.</div>
     <div class="chart-card">
         <div class="chart-title">Principal released versus approved collections</div>
@@ -183,8 +223,9 @@
     </div>
 </div>
 
+<div class="keep-together">
 <div class="section">
-    <h2 class="section-heading">6. Collection channels and payment pipeline</h2>
+    <h2 class="section-heading">7. Collection channels and payment pipeline</h2>
     <div class="section-note">Only approved payments are recognized as collections. Pending payments remain in the pipeline until provider confirmation or cash review.</div>
     @if(empty($paymentMethods))
         <div class="empty">No payment activity is available.</div>
@@ -207,6 +248,7 @@
         <li><strong>Overdue exposure:</strong> unpaid scheduled amount plus recorded penalty for installments marked overdue or past due as of the report timestamp.</li>
         <li>This is an operational management report, not an audited financial statement. Control exceptions should be resolved before external use.</li>
     </ul>
+</div>
 </div>
 
 <table class="page-footer"><tr><td>Inkcredible Lending | Business performance report</td><td class="center">Page <span class="page-number"></span></td><td class="right">Generated {{ $preparedAt->format('Y-m-d') }}</td></tr></table>

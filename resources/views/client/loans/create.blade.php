@@ -86,6 +86,24 @@ textarea.form-control { min-height: 105px; resize: vertical; }
 .estimate-lines { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border); }
 .estimate-line { display: flex; justify-content: space-between; gap: 15px; padding: 7px 0; color: var(--muted); font-size: 12px; }
 .estimate-line strong { color: #344054; font-weight: 600; }
+.assessment-card { position:relative; margin-top:16px; padding:22px; overflow:hidden; border-color:#dfe3ea; transition:.18s ease; }
+.assessment-card::before { position:absolute; inset:0 0 auto; height:3px; background:#98a2b3; content:''; }
+.assessment-card.is-low::before { background:#12b76a; }.assessment-card.is-moderate::before { background:#f79009; }.assessment-card.is-high::before { background:#f04438; }
+.assessment-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+.assessment-title { margin:0; font-size:14px; }
+.assessment-subtitle { margin:5px 0 0; color:var(--muted); font-size:10px; line-height:1.45; }
+.assessment-badge { padding:5px 8px; color:#475467; background:#f2f4f7; border-radius:999px; font-size:9px; font-weight:700; white-space:nowrap; }
+.assessment-card.is-low .assessment-badge { color:#067647; background:#ecfdf3; }.assessment-card.is-moderate .assessment-badge { color:#b54708; background:#fffaeb; }.assessment-card.is-high .assessment-badge { color:#b42318; background:#fef3f2; }
+.assessment-score { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-top:18px; }
+.assessment-ratio { font-size:27px; font-weight:700; letter-spacing:-.035em; }
+.assessment-ratio-label { padding-bottom:4px; color:#667085; font-size:10px; text-align:right; }
+.assessment-track { height:7px; margin-top:10px; overflow:hidden; background:#eaecf0; border-radius:999px; }
+.assessment-track span { display:block; width:0; height:100%; background:#98a2b3; border-radius:inherit; transition:width .25s ease,background-color .2s ease; }
+.assessment-card.is-low .assessment-track span { background:#12b76a; }.assessment-card.is-moderate .assessment-track span { background:#f79009; }.assessment-card.is-high .assessment-track span { background:#f04438; }
+.assessment-formula { display:grid; gap:7px; margin-top:16px; padding:12px; color:#667085; background:#f8fafc; border-radius:10px; font-size:10px; }
+.assessment-formula div { display:flex; justify-content:space-between; gap:10px; }.assessment-formula strong { color:#344054; text-align:right; }
+.assessment-message { margin:12px 0 0; color:#475467; font-size:10px; line-height:1.55; }
+.assessment-disclaimer { margin:10px 0 0; color:#98a2b3; font-size:9px; line-height:1.45; }
 .info-card { margin-top: 16px; padding: 22px; }
 .info-title { margin: 0 0 16px; font-size: 14px; }
 .step { display: flex; gap: 12px; }
@@ -273,6 +291,19 @@ textarea.form-control { min-height: 105px; resize: vertical; }
                     <p class="form-help">This estimate excludes late charges. An unpaid installment incurs a simple penalty equal to 5% of its unpaid amount for each day overdue.</p>
                 </section>
 
+                <section class="panel assessment-card" id="affordability-assessment" aria-live="polite">
+                    <div class="assessment-head"><div><h2 class="assessment-title">Affordability assessment</h2><p class="assessment-subtitle">See the same 30% guide used during administrator review.</p></div><span class="assessment-badge" id="assessment-level">Waiting</span></div>
+                    <div class="assessment-score"><div class="assessment-ratio" id="assessment-ratio">Select amount</div><div class="assessment-ratio-label">Commitments to<br>verified monthly income</div></div>
+                    <div class="assessment-track" aria-hidden="true"><span id="assessment-progress"></span></div>
+                    <div class="assessment-formula">
+                        <div><span>Verified monthly income</span><strong>{{ $affordability['income'] > 0 ? 'PHP '.number_format($affordability['income'], 2) : 'Unavailable' }}</strong></div>
+                        <div><span>Existing approved commitments</span><strong>PHP {{ number_format($affordability['existingCommitments'], 2) }}</strong></div>
+                        <div><span>This application</span><strong id="assessment-proposed">&mdash;</strong></div>
+                    </div>
+                    <p class="assessment-message" id="assessment-message">Select a loan type and enter an amount to calculate your assessment.</p>
+                    <p class="assessment-disclaimer">This guide supports responsible borrowing. It does not guarantee approval or replace the administrator's final review.</p>
+                </section>
+
                 <section class="panel info-card">
                     <h2 class="info-title">What happens next?</h2>
                     <div class="step"><span class="step-number">1</span><div><div class="step-title">Application review</div><div class="step-note">An administrator checks your request and submitted ID.</div></div></div>
@@ -323,6 +354,13 @@ const termsDialog = document.getElementById('loan-terms-dialog');
 const openTermsButton = document.getElementById('open-loan-terms');
 const closeTermsButton = document.getElementById('close-loan-terms');
 const acceptTermsButton = document.getElementById('accept-loan-terms');
+const affordabilityBaseline = @json($affordability);
+const assessmentCard = document.getElementById('affordability-assessment');
+const assessmentLevel = document.getElementById('assessment-level');
+const assessmentRatio = document.getElementById('assessment-ratio');
+const assessmentProgress = document.getElementById('assessment-progress');
+const assessmentProposed = document.getElementById('assessment-proposed');
+const assessmentMessage = document.getElementById('assessment-message');
 
 function peso(value) {
     return `₱${Number(value).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -330,6 +368,46 @@ function peso(value) {
 
 function selectedLoanType() {
     return document.querySelector('input[name="loan_type"]:checked');
+}
+
+function updateAffordability(selected, proposedCommitment = 0) {
+    assessmentCard.classList.remove('is-low', 'is-moderate', 'is-high');
+    assessmentProposed.textContent = proposedCommitment > 0 ? peso(proposedCommitment) : '—';
+
+    if (!selected || proposedCommitment <= 0) {
+        assessmentLevel.textContent = 'Waiting';
+        assessmentRatio.textContent = 'Select amount';
+        assessmentProgress.style.width = '0';
+        assessmentMessage.textContent = 'Select a loan type and enter an amount to calculate your assessment.';
+        return;
+    }
+
+    const income = Number(affordabilityBaseline.income || 0);
+    const existing = Number(affordabilityBaseline.existingCommitments || 0);
+    if (income <= 0) {
+        assessmentLevel.textContent = 'Unavailable';
+        assessmentRatio.textContent = '—';
+        assessmentProgress.style.width = '0';
+        assessmentMessage.textContent = 'Verified monthly income is unavailable. Update your verification information so this guide can be calculated.';
+        return;
+    }
+
+    const ratio = ((existing + proposedCommitment) / income) * 100;
+    const rate = Number(selected.dataset.rate || 0);
+    const availablePayment = Math.max(0, (income * 0.30) - existing);
+    const suggestedPrincipal = Math.floor((availablePayment / (1 + (rate / 100))) / 100) * 100;
+    const level = ratio <= 30 ? 'Low' : ratio <= 50 ? 'Moderate' : ratio <= 70 ? 'High' : 'Very high';
+    const tone = ratio <= 30 ? 'is-low' : ratio <= 50 ? 'is-moderate' : 'is-high';
+
+    assessmentCard.classList.add(tone);
+    assessmentLevel.textContent = `${level} ratio`;
+    assessmentRatio.textContent = `${ratio.toFixed(1)}%`;
+    assessmentProgress.style.width = `${Math.min(ratio, 100)}%`;
+    assessmentMessage.textContent = ratio <= 30
+        ? 'This estimate is within the recommended 30% monthly commitment guide.'
+        : suggestedPrincipal > 0
+            ? `This estimate is above the 30% guide. A principal near ${peso(suggestedPrincipal)} would be closer to the recommended range.`
+            : 'Existing approved commitments already meet or exceed the recommended 30% guide.';
 }
 
 function syncOtherPurpose() {
@@ -367,6 +445,7 @@ function updateEstimate() {
 
     if (!selected) {
         quickAmounts.hidden = true;
+        updateAffordability(null);
         return;
     }
 
@@ -387,17 +466,20 @@ function updateEstimate() {
 
     if (amount > 0) {
         const interest = amount * (rate / 100);
-        totalOutput.textContent = peso(amount + interest);
+        const total = amount + interest;
+        totalOutput.textContent = peso(total);
         totalOutput.classList.remove('estimate-placeholder');
         principalOutput.textContent = peso(amount);
         interestOutput.textContent = peso(interest);
         installmentOutput.textContent = `${peso((amount + interest) / installments)} x ${installments}`;
+        updateAffordability(selected, total);
     } else {
         totalOutput.textContent = 'Enter an amount';
         totalOutput.classList.add('estimate-placeholder');
         principalOutput.textContent = '—';
         interestOutput.textContent = `${rate}%`;
         installmentOutput.textContent = '—';
+        updateAffordability(selected);
     }
 
     if (type === 'arawan') {

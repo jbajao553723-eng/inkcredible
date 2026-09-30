@@ -57,7 +57,11 @@ it('requires a signed contract before final loan approval', function () {
 
     $this->actingAs($client)->get(route('loan.contract.show', $loan))
         ->assertOk()
-        ->assertSee('Send signed PDF to administrator');
+        ->assertSee('Send signed PDF to administrator')
+        ->assertSee('Download contract PDF')
+        ->assertSee('Your affordability assessment')
+        ->assertSee('data-no-transition', false)
+        ->assertSee('download="CONTRACT-001-contract.pdf"', false);
 
     $this->actingAs($client)->post(route('loan.contract.sign', $loan), [
         'signed_contract' => UploadedFile::fake()->create('maria-santos-signed-contract.pdf', 120, 'application/pdf'),

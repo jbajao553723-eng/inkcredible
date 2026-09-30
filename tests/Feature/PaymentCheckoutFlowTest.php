@@ -123,9 +123,37 @@ it('closes a cancelled online attempt instead of leaving it pending', function (
         'status' => Payment::STATUS_PENDING,
     ]);
 
-    $this->actingAs($client)->get(route('payments.cancel', $payment))->assertOk();
+    $this->actingAs($client)->get(route('payments.cancel', $payment))
+        ->assertOk()
+        ->assertSee('Your payment was not completed.')
+        ->assertSee('No payment was applied')
+        ->assertSee('Payment summary')
+        ->assertSee('Try payment again');
 
     expect($payment->fresh()->status)->toBe(Payment::STATUS_REJECTED);
+});
+
+it('gives administrators a simplified cash payment review workspace', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+    $client = User::factory()->create(['role' => 'client']);
+    $loan = checkoutFlowLoan($client);
+    $payment = Payment::create([
+        'loan_id' => $loan->id,
+        'user_id' => $client->id,
+        'amount' => 500,
+        'reference' => 'LOANPAY-CASH-REVIEW',
+        'currency' => 'PHP',
+        'method' => 'cash',
+        'status' => Payment::STATUS_PENDING,
+    ]);
+
+    $this->actingAs($admin)->get(route('admin.payment.show', $payment))
+        ->assertOk()
+        ->assertSee('Payment overview')
+        ->assertSee('Technical provider details')
+        ->assertSee('Make a decision')
+        ->assertSee('Approve')
+        ->assertSee('Reject');
 });
 
 it('redirects a rejected PayMongo authorization to the local payment result', function () {

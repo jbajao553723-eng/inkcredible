@@ -59,6 +59,28 @@ it('uses the current Arawan and Weekly product limits and rates', function () {
         ->and((float) $weekly->interest_rate)->toBe(20.0);
 });
 
+it('shows the client the same affordability calculation used during review', function () {
+    $client = verifiedLoanApplicant();
+    $loanType = activeDailyLoanType();
+
+    Loan::create([
+        'user_id' => $client->id,
+        'loan_type_id' => $loanType->id,
+        'amount' => 2_500,
+        'status' => Loan::STATUS_APPROVED,
+        'total_payable' => 3_000,
+        'installment_count' => 30,
+        'repayment_period_days' => 30,
+    ]);
+
+    $this->actingAs($client)->get(route('loan.create'))
+        ->assertOk()
+        ->assertSee('Affordability assessment')
+        ->assertSee('Verified monthly income')
+        ->assertSee('Existing approved commitments')
+        ->assertSee('same 30% guide used during administrator review');
+});
+
 it('submits the application, loan, and supporting document together', function () {
     Storage::fake('public');
     $client = verifiedLoanApplicant();

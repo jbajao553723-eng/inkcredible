@@ -209,8 +209,11 @@ if (confirmationElement) {
         pendingForm = form;
         pendingSubmitter = event.submitter;
         message.textContent = form.dataset.confirm;
-        proceed.classList.toggle('btn-danger', (pendingSubmitter?.textContent ?? '').toLowerCase().includes('reject'));
-        proceed.classList.toggle('btn-primary', !proceed.classList.contains('btn-danger'));
+        const isDanger = ['reject', 'delete', 'remove', 'clear'].some((word) =>
+            `${pendingSubmitter?.textContent ?? ''} ${form.dataset.confirm ?? ''}`.toLowerCase().includes(word),
+        );
+        confirmationElement.classList.toggle('is-danger', isDanger);
+        proceed.textContent = isDanger ? 'Yes, proceed' : 'Yes, continue';
         confirmation.show();
     });
 
@@ -224,5 +227,59 @@ if (confirmationElement) {
     confirmationElement.addEventListener('hidden.bs.modal', () => {
         pendingForm = null;
         pendingSubmitter = null;
+        confirmationElement.classList.remove('is-danger');
+    });
+}
+
+const reportGuideElement = document.getElementById('report-guide-modal');
+if (reportGuideElement) {
+    const reportGuide = Modal.getOrCreateInstance(reportGuideElement);
+    document.querySelectorAll('[data-report-guide]').forEach((trigger) => {
+        trigger.addEventListener('click', () => reportGuide.show());
+    });
+}
+
+const analyticsTabs = [...document.querySelectorAll('[data-analytics-tab]')];
+const analyticsPanels = [...document.querySelectorAll('[data-analytics-panel]')];
+if (analyticsTabs.length && analyticsPanels.length) {
+    const activateAnalyticsTab = (tab, moveFocus = false) => {
+        analyticsTabs.forEach((candidate) => {
+            const isActive = candidate === tab;
+            candidate.setAttribute('aria-selected', String(isActive));
+            candidate.tabIndex = isActive ? 0 : -1;
+        });
+        analyticsPanels.forEach((panel) => {
+            panel.hidden = panel.dataset.analyticsPanel !== tab.dataset.analyticsTab;
+        });
+        if (moveFocus) tab.focus();
+    };
+
+    analyticsTabs.forEach((tab, index) => {
+        tab.addEventListener('click', () => activateAnalyticsTab(tab));
+        tab.addEventListener('keydown', (event) => {
+            const lastIndex = analyticsTabs.length - 1;
+            const nextIndex = event.key === 'ArrowRight'
+                ? (index + 1) % analyticsTabs.length
+                : event.key === 'ArrowLeft'
+                    ? (index - 1 + analyticsTabs.length) % analyticsTabs.length
+                    : event.key === 'Home'
+                        ? 0
+                        : event.key === 'End'
+                            ? lastIndex
+                            : null;
+            if (nextIndex === null) return;
+            event.preventDefault();
+            activateAnalyticsTab(analyticsTabs[nextIndex], true);
+        });
+    });
+}
+
+const reportActionMenu = document.querySelector('.report-action-menu');
+if (reportActionMenu) {
+    document.addEventListener('click', (event) => {
+        if (!reportActionMenu.contains(event.target)) reportActionMenu.removeAttribute('open');
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') reportActionMenu.removeAttribute('open');
     });
 }

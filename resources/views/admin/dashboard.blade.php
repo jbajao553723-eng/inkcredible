@@ -17,6 +17,18 @@
     initial-value: 0%;
 }
 
+@property --profit-interest {
+    syntax: '<percentage>';
+    inherits: false;
+    initial-value: 0%;
+}
+
+@property --profit-total {
+    syntax: '<percentage>';
+    inherits: false;
+    initial-value: 0%;
+}
+
 .main { background:radial-gradient(circle at 92% 0, rgba(79,70,229,.06), transparent 25%), var(--canvas); }
 .dashboard-heading { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
 .attention-pill { display:inline-flex; align-items:center; gap:7px; padding:6px 10px; color:#92400e; background:#fffbeb; border:1px solid #fde68a; border-radius:999px; font-size:10px; font-weight:700; }
@@ -50,24 +62,30 @@
 .focus-note { display:block; margin-top:4px; color:#667085; font-size:10px; line-height:1.4; }
 .focus-value { min-width:32px; color:#101828; font-size:20px; font-weight:700; text-align:right; }
 .focus-arrow { width:16px; height:16px; color:#98a2b3; }
-.portfolio-body { display:grid; grid-template-columns:118px minmax(0,1fr); gap:22px; align-items:center; padding:22px; }
-.portfolio-ring { --ring:#4f46e5; --completion:var(--target-completion); position:relative; display:grid; place-items:center; width:112px; height:112px; background:conic-gradient(var(--ring) var(--completion),#eaecf0 0); border-radius:50%; transition:--completion 1.1s cubic-bezier(.22,1,.36,1); }
-.portfolio-ring::before { content:''; position:absolute; width:82px; height:82px; background:#fff; border-radius:50%; }
-.ring-copy { position:relative; text-align:center; }
-.ring-copy strong { display:block; font-size:23px; letter-spacing:-.04em; }
-.ring-copy span { display:block; margin-top:2px; color:#667085; font-size:9px; }
-.portfolio-list { display:grid; gap:13px; }
-.portfolio-row { display:grid; grid-template-columns:70px minmax(80px,1fr) 24px; gap:9px; align-items:center; color:#475467; font-size:10px; }
-.portfolio-row strong { color:#101828; text-align:right; }
-.portfolio-track { height:6px; overflow:hidden; background:#eaecf0; border-radius:999px; }
-.portfolio-fill { width:var(--target-width); height:100%; border-radius:inherit; transition:width .9s cubic-bezier(.22,1,.36,1); transition-delay:var(--progress-delay,260ms); }
-html.motion-enabled .portfolio-ring { --completion:0%; }
-html.motion-enabled.motion-in .portfolio-ring { --completion:var(--target-completion); }
-html.motion-enabled .portfolio-fill { width:0; }
-html.motion-enabled.motion-in .portfolio-fill { width:var(--target-width); }
-.portfolio-footer { display:flex; justify-content:space-between; gap:12px; margin:0 22px; padding:15px 0 20px; border-top:1px solid #f2f4f7; }
-.portfolio-meta span { display:block; color:#98a2b3; font-size:9px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; }
-.portfolio-meta strong { display:block; margin-top:5px; color:#344054; font-size:12px; }
+.profit-panel { border-color:#d9d6fe; box-shadow:0 10px 28px rgba(79,70,229,.07); }
+.profit-panel .panel-header { background:linear-gradient(145deg,#fff,#fafaff); }
+.profit-margin-badge { display:inline-flex; align-items:center; gap:6px; padding:6px 9px; color:#067647; background:#ecfdf3; border:1px solid #abefc6; border-radius:999px; font-size:9px; font-weight:700; white-space:nowrap; }
+.profit-margin-badge::before { width:6px; height:6px; background:#12b76a; border-radius:50%; content:''; }
+.profit-body { display:grid; grid-template-columns:146px minmax(0,1fr); gap:22px; align-items:center; padding:22px; }
+.profit-chart-wrap { display:grid; place-items:center; }
+.profit-ring { --profit-interest:var(--target-interest); --profit-total:var(--target-total); position:relative; display:grid; place-items:center; width:138px; height:138px; background:conic-gradient(#12b76a 0 var(--profit-interest),#f79009 var(--profit-interest) var(--profit-total),#eaecf0 var(--profit-total) 100%); border:1px solid rgba(255,255,255,.8); border-radius:50%; box-shadow:0 14px 30px rgba(16,24,40,.09),inset 0 0 0 1px rgba(255,255,255,.55); transition:--profit-interest 1.05s cubic-bezier(.22,1,.36,1),--profit-total 1.05s cubic-bezier(.22,1,.36,1); }
+.profit-ring::before { position:absolute; width:94px; height:94px; background:linear-gradient(145deg,#fff,#f8fafc); border-radius:50%; box-shadow:0 0 0 1px rgba(228,231,236,.8),0 8px 18px rgba(16,24,40,.06); content:''; }
+.profit-ring-copy { position:relative; max-width:80px; text-align:center; }
+.profit-ring-copy strong { display:block; color:#101828; font-size:16px; letter-spacing:-.04em; overflow-wrap:anywhere; }
+.profit-ring-copy span { display:block; margin-top:3px; color:#667085; font-size:8px; line-height:1.3; }
+.profit-legend { display:grid; gap:12px; }
+.profit-row { display:grid; grid-template-columns:10px minmax(0,1fr) auto; gap:9px; align-items:center; padding-bottom:11px; border-bottom:1px solid #f2f4f7; }
+.profit-row:last-child { padding-bottom:0; border-bottom:0; }
+.profit-dot { width:9px; height:9px; background:var(--profit-color); border-radius:3px; box-shadow:0 0 0 4px color-mix(in srgb,var(--profit-color) 12%,transparent); }
+.profit-row-copy span { display:block; color:#475467; font-size:10px; font-weight:600; }.profit-row-copy small { display:block; margin-top:3px; color:#98a2b3; font-size:8px; }
+.profit-row strong { color:#101828; font-size:11px; text-align:right; white-space:nowrap; }
+.profit-footer { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); margin:0 22px; padding:16px 0 20px; border-top:1px solid #f2f4f7; }
+.profit-meta { min-width:0; padding:0 12px; border-right:1px solid #f2f4f7; }.profit-meta:first-child { padding-left:0; }.profit-meta:last-child { padding-right:0; border-right:0; }
+.profit-meta span { display:block; color:#98a2b3; font-size:8px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; }
+.profit-meta strong { display:block; margin-top:5px; color:#344054; font-size:10px; overflow-wrap:anywhere; }
+.profit-note { margin:0 22px 18px; padding:9px 11px; color:#475467; background:#f8fafc; border-radius:9px; font-size:8px; line-height:1.45; }
+html.motion-enabled .profit-ring { --profit-interest:0%; --profit-total:0%; }
+html.motion-enabled.motion-in .profit-ring { --profit-interest:var(--target-interest); --profit-total:var(--target-total); }
 .recent-panel { border-color:#dfe3ea; box-shadow:0 8px 24px rgba(16,24,40,.045); }
 .recent-table { min-width:980px; }
 .recent-table th { padding-top:13px; padding-bottom:13px; background:#f8fafc; }
@@ -87,9 +105,7 @@ html.motion-enabled.motion-in .portfolio-fill { width:var(--target-width); }
 @media (max-width:760px) {
     .dashboard-heading { align-items:flex-start; flex-direction:column; }
     .overview-card { min-height:132px; }
-    .portfolio-body { grid-template-columns:100px minmax(0,1fr); gap:16px; padding:18px; }
-    .portfolio-ring { width:96px; height:96px; }
-    .portfolio-ring::before { width:70px; height:70px; }
+    .profit-body { padding:18px; }
     .recent-panel { overflow:visible; background:transparent; border:0; box-shadow:none; }
     .recent-panel .panel-header { margin-bottom:10px; padding:18px; background:#fff; border:1px solid var(--border); border-radius:14px; }
     .recent-panel .table-wrap { overflow:visible; }
@@ -110,23 +126,20 @@ html.motion-enabled.motion-in .portfolio-fill { width:var(--target-width); }
     .overview-icon { width:34px; height:34px; }
     .focus-item { grid-template-columns:38px minmax(0,1fr) auto 14px; gap:9px; }
     .focus-icon { width:36px; height:36px; }
-    .portfolio-body { grid-template-columns:1fr; justify-items:center; }
-    .portfolio-list { width:100%; }
+    .profit-body { grid-template-columns:1fr; justify-items:center; }
+    .profit-legend { width:100%; }
+    .profit-footer { grid-template-columns:1fr; gap:10px; }
+    .profit-meta { padding:0 0 10px; border-right:0; border-bottom:1px solid #f2f4f7; }
+    .profit-meta:last-child { padding-bottom:0; border-bottom:0; }
 }
 </style>
 </head>
 <body>
 @php
-    $totalForDistribution = max(1, $stats['total_loans']);
-    $statusRows = [
-        ['label' => 'Pending', 'count' => $stats['pending_loans'], 'color' => '#f59e0b'],
-        ['label' => 'Approved', 'count' => $stats['approved_loans'], 'color' => '#079455'],
-        ['label' => 'Paid', 'count' => $stats['paid_loans'], 'color' => '#7c3aed'],
-        ['label' => 'Rejected', 'count' => $stats['rejected_loans'], 'color' => '#d92d20'],
-    ];
     $queueTotal = $stats['pending_loans'] + $stats['pending_cash_payments'] + $stats['pending_verifications'];
-    $resolvedLoans = $stats['approved_loans'] + $stats['paid_loans'] + $stats['rejected_loans'];
-    $resolvedPercent = $stats['total_loans'] > 0 ? round(($resolvedLoans / $stats['total_loans']) * 100) : 0;
+    $profitTotal = max(0, $stats['projected_profit']);
+    $interestShare = $profitTotal > 0 ? ($stats['contract_interest'] / $profitTotal) * 100 : 0;
+    $penaltyShare = $profitTotal > 0 ? ($stats['penalty_charges'] / $profitTotal) * 100 : 0;
 @endphp
 
 @include('partials.admin-sidebar', ['active' => 'dashboard'])
@@ -163,17 +176,17 @@ html.motion-enabled.motion-in .portfolio-fill { width:var(--target-width); }
             </div>
         </article>
 
-        <aside class="panel">
-            <div class="panel-header"><div><h2 class="panel-title">Portfolio overview</h2><p class="panel-description">Current application distribution.</p></div><span class="badge badge-neutral">{{ $resolvedPercent }}% resolved</span></div>
-            <div class="portfolio-body">
-                <div class="portfolio-ring" style="--target-completion: {{ $resolvedPercent }}%"><div class="ring-copy"><strong>{{ $stats['total_loans'] }}</strong><span>Total requests</span></div></div>
-                <div class="portfolio-list">
-                    @foreach($statusRows as $row)
-                        <div class="portfolio-row"><span>{{ $row['label'] }}</span><div class="portfolio-track"><div class="portfolio-fill" style="--target-width: {{ ($row['count'] / $totalForDistribution) * 100 }}%; --progress-delay: {{ 260 + ($loop->index * 85) }}ms; background: {{ $row['color'] }}"></div></div><strong>{{ $row['count'] }}</strong></div>
-                    @endforeach
+        <aside class="panel profit-panel">
+            <div class="panel-header"><div><h2 class="panel-title">Loan profit analytics</h2><p class="panel-description">Projected gross earnings from originated loans.</p></div><span class="profit-margin-badge">{{ number_format($stats['profit_margin'], 1) }}% margin</span></div>
+            <div class="profit-body">
+                <div class="profit-chart-wrap"><div class="profit-ring" role="img" aria-label="Projected profit PHP {{ number_format($profitTotal, 2) }}: {{ number_format($interestShare, 1) }} percent contract interest and {{ number_format($penaltyShare, 1) }} percent penalty charges" style="--target-interest:{{ number_format($interestShare, 2, '.', '') }}%;--target-total:{{ $profitTotal > 0 ? '100%' : '0%' }}"><div class="profit-ring-copy"><strong>&#8369;{{ number_format($profitTotal, 0) }}</strong><span>Projected gross profit</span></div></div></div>
+                <div class="profit-legend">
+                    <div class="profit-row" style="--profit-color:#12b76a"><span class="profit-dot"></span><div class="profit-row-copy"><span>Contract interest</span><small>{{ number_format($interestShare, 1) }}% of projected profit</small></div><strong>&#8369;{{ number_format($stats['contract_interest'], 2) }}</strong></div>
+                    <div class="profit-row" style="--profit-color:#f79009"><span class="profit-dot"></span><div class="profit-row-copy"><span>Penalty charges</span><small>{{ number_format($penaltyShare, 1) }}% of projected profit</small></div><strong>&#8369;{{ number_format($stats['penalty_charges'], 2) }}</strong></div>
                 </div>
             </div>
-            <div class="portfolio-footer"><div class="portfolio-meta"><span>Active loans</span><strong>{{ $stats['approved_loans'] }}</strong></div><div class="portfolio-meta"><span>Completed</span><strong>{{ $stats['paid_loans'] }}</strong></div><div class="portfolio-meta"><span>Overdue</span><strong class="{{ $overdueLoanCount > 0 ? 'danger-text' : '' }}">{{ $overdueLoanCount }}</strong></div></div>
+            <div class="profit-footer"><div class="profit-meta"><span>Principal released</span><strong>&#8369;{{ number_format($stats['total_released'], 2) }}</strong></div><div class="profit-meta"><span>Scheduled receivables</span><strong>&#8369;{{ number_format($stats['scheduled_receivables'], 2) }}</strong></div><div class="profit-meta"><span>Collected</span><strong>&#8369;{{ number_format($stats['total_collected'], 2) }}</strong></div></div>
+            <p class="profit-note">Projected gross profit equals contractual interest plus recorded penalty charges. It is shown before defaults, operating costs, and other expenses.</p>
         </aside>
     </section>
 

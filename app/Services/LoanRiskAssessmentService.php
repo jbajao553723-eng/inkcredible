@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Loan;
 use App\Models\LoanType;
+use App\Models\User;
 
 class LoanRiskAssessmentService
 {
@@ -11,12 +12,9 @@ class LoanRiskAssessmentService
     public function assess(Loan $loan): array
     {
         $loan->loadMissing(['user.clientVerification', 'loanType']);
-        $income = (float) ($loan->user?->clientVerification?->monthly_income ?? 0);
-        $existingCommitments = (float) Loan::query()
-            ->where('user_id', $loan->user_id)
-            ->where('status', Loan::STATUS_APPROVED)
-            ->where('id', '!=', $loan->id)
-            ->sum('total_payable');
+        $baseline = $this->clientBaseline($loan->user, $loan->id);
+        $income = $baseline['income'];
+        $existingCommitments = $baseline['existingCommitments'];
         $proposedCommitment = (float) $loan->total_payable;
         $ratio = $income > 0 ? round((($existingCommitments + $proposedCommitment) / $income) * 100, 1) : null;
 
@@ -29,7 +27,7 @@ class LoanRiskAssessmentService
         };
 
         $rate = (float) ($loan->loanType?->interest_rate ?? 0);
-        $availablePayment = max(0, ($income * 0.30) - $existingCommitments);
+        $availablePayment = $baseline['availablePayment'];
         $suggestedPrincipal = $rate >= 0 ? $availablePayment / (1 + ($rate / 100)) : $availablePayment;
         $suggestedPrincipal = floor($suggestedPrincipal / 100) * 100;
 
@@ -49,5 +47,20 @@ class LoanRiskAssessmentService
         };
 
         return compact('income', 'existingCommitments', 'proposedCommitment', 'ratio', 'level', 'tone', 'suggestedPrincipal', 'alternative', 'suggestion');
+    }
+
+    /** @return array{income: float, existingCommitments: float, availablePayment: float} */
+    public function clientBaseline(User $user, ?int $excludedLoanId = null): array
+    {
+        $user->loadMissing('clientVerification');
+        $income = (float) ($user->clientVerification?->monthly_income ?? 0);
+        $existingCommitments = (float) Loan::query()
+            ->where('user_id', $user->id)
+            ->where('status', Loan::STATUS_APPROVED)
+            ->when($excludedLoanId, fn ($query) => $query->where('id', '!=', $excludedLoanId))
+            ->sum('total_payable');
+        $availablePayment = max(0, ($income * 0.30) - $existingCommitments);
+
+        return compact('income', 'existingCommitments', 'availablePayment');
     }
 }

@@ -75,6 +75,18 @@ tbody tr:hover { background: #fcfcfd; }
 .verification-banner strong { display: block; margin-bottom: 4px; color: #7a2e0e; font-size: 13px; }
 .verification-banner a { flex: 0 0 auto; padding: 9px 13px; color: #fff; background: #dc6803; border-radius: 8px; font-weight: 600; text-decoration: none; }
 
+.confirmation-dialog { width:min(430px, calc(100% - 32px)); max-width:430px; padding:0; overflow:visible; background:transparent; border:0; }
+.confirmation-dialog::backdrop { background:rgba(52,64,84,.32); backdrop-filter:blur(2px); }
+.confirmation-dialog-card { position:relative; padding:28px; color:#101828; background:#fff; border:1px solid rgba(208,213,221,.9); border-radius:20px; box-shadow:0 24px 64px rgba(16,24,40,.2); }
+.confirmation-dialog-close { position:absolute; top:16px; right:16px; display:grid; place-items:center; width:32px; height:32px; padding:0; color:#667085; background:#f2f4f7; border:0; border-radius:50%; font-size:22px; line-height:1; cursor:pointer; }
+.confirmation-dialog-icon { display:grid; place-items:center; width:46px; height:46px; margin-bottom:18px; color:#4f46e5; background:#eef2ff; border:8px solid #f5f3ff; border-radius:50%; box-sizing:content-box; }
+.confirmation-dialog-icon svg { width:22px; height:22px; }
+.confirmation-dialog-eyebrow { margin-bottom:6px; color:#4f46e5; font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; }
+.confirmation-dialog h2 { margin:0; font-size:20px; letter-spacing:-.025em; }
+.confirmation-dialog p { margin:10px 0 0; color:#667085; font-size:13px; line-height:1.6; }
+.confirmation-dialog-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:24px; }
+.confirmation-dialog-actions .button { width:100%; }
+
 @media (max-width: 1080px) {
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
 }
@@ -104,6 +116,8 @@ tbody tr:hover { background: #fcfcfd; }
     .verification-banner a { width: 100%; text-align: center; }
     .panel-header { align-items: flex-start; flex-direction: column; }
     .panel-header, .panel-body { padding-left: 18px; padding-right: 18px; }
+    .confirmation-dialog-card { padding:24px 20px 20px; }
+    .confirmation-dialog-actions { grid-template-columns:1fr; }
 }
 
 @include('partials.motion-styles')

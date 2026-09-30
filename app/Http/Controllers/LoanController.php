@@ -6,6 +6,7 @@ use App\Http\Requests\StoreLoanRequest;
 use App\Models\Loan;
 use App\Models\LoanType;
 use App\Services\LoanApplicationService;
+use App\Services\LoanRiskAssessmentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -32,15 +33,16 @@ class LoanController extends Controller
     | CREATE LOAN PAGE
     |--------------------------------------------------------------------------
     */
-    public function create(): View
+    public function create(LoanRiskAssessmentService $riskAssessments): View
     {
         $loanTypes = LoanType::active()
             ->orderBy('min_amount')
             ->get();
 
         $purposeOptions = config('loan_purposes');
+        $affordability = $riskAssessments->clientBaseline(auth()->user());
 
-        return view('client.loans.create', compact('loanTypes', 'purposeOptions'));
+        return view('client.loans.create', compact('loanTypes', 'purposeOptions', 'affordability'));
     }
 
     /*
