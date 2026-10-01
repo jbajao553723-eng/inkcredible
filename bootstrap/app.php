@@ -2,7 +2,10 @@
 
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\AuditUserActions;
+use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\EnsureClientIsVerified;
+use App\Http\Middleware\SuperAdminMiddleware;
+use App\Http\Middleware\StandardAdminMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 
@@ -15,9 +18,12 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function ($middleware) {
         $middleware->appendToGroup('web', AuditUserActions::class);
+        $middleware->appendToGroup('web', EnsureAccountIsActive::class);
 
         $middleware->alias([
             'admin' => AdminMiddleware::class,
+            'standard.admin' => StandardAdminMiddleware::class,
+            'superadmin' => SuperAdminMiddleware::class,
             'client.verified' => EnsureClientIsVerified::class,
         ]);
     })

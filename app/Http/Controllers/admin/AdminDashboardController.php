@@ -8,12 +8,17 @@ use App\Models\Loan;
 use App\Models\Payment;
 use App\Models\PaymentSchedule;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class AdminDashboardController extends Controller
 {
-    public function index(): View
+    public function index(): View|RedirectResponse
     {
+        if (request()->user()?->isSuperAdmin()) {
+            return redirect()->route('admin.security.dashboard');
+        }
+
         $loanStats = Loan::query()
             ->selectRaw('COUNT(*) as total_loans')
             ->selectRaw('SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending_loans', [Loan::STATUS_PENDING])

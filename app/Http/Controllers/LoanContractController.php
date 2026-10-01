@@ -16,7 +16,7 @@ class LoanContractController extends Controller
 {
     public function send(Loan $loan): RedirectResponse
     {
-        abort_unless(request()->user()?->role === 'admin', 403);
+        abort_unless(request()->user()?->isAdministrator(), 403);
 
         if ($loan->status !== Loan::STATUS_PENDING) {
             return back()->with('error', 'Only pending loans can receive a contract.');
@@ -114,7 +114,7 @@ class LoanContractController extends Controller
     private function authorizeAccess(Request $request, Loan $loan): void
     {
         abort_unless(
-            $request->user()?->role === 'admin' || $loan->user_id === $request->user()?->id,
+            $request->user()?->isAdministrator() || $loan->user_id === $request->user()?->id,
             403
         );
     }

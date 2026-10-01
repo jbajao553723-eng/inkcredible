@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Loan;
 use App\Models\Payment;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -13,7 +14,11 @@ class DashboardController extends Controller
     {
         $user = request()->user();
 
-        if ($user->role === 'admin') {
+        if ($user->isSuperAdmin()) {
+            return redirect()->route('admin.security.dashboard');
+        }
+
+        if ($user->role === User::ROLE_ADMIN) {
             return redirect()->route('admin.dashboard');
         }
 

@@ -1,6 +1,7 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Modal from 'bootstrap/js/dist/modal';
 import './ui-motion';
+import './file-downloads';
 
 document.querySelectorAll('[data-admin-table]').forEach((panel) => {
     const rows = [...panel.querySelectorAll('tbody tr[data-search]')];
@@ -237,6 +238,49 @@ if (reportGuideElement) {
     document.querySelectorAll('[data-report-guide]').forEach((trigger) => {
         trigger.addEventListener('click', () => reportGuide.show());
     });
+}
+
+const createAdminElement = document.getElementById('create-admin-modal');
+if (createAdminElement) {
+    const createAdminModal = Modal.getOrCreateInstance(createAdminElement);
+    document.querySelectorAll('[data-create-admin]').forEach((trigger) => {
+        trigger.addEventListener('click', () => createAdminModal.show());
+    });
+    if (createAdminElement.dataset.autoOpen === 'true') createAdminModal.show();
+}
+
+const editAdminElement = document.getElementById('edit-admin-modal');
+if (editAdminElement) {
+    const editAdminModal = Modal.getOrCreateInstance(editAdminElement);
+    const editAdminForm = editAdminElement.querySelector('[data-edit-admin-form]');
+    const fields = {
+        id: editAdminElement.querySelector('[data-edit-admin-id]'),
+        firstName: editAdminElement.querySelector('[data-edit-first-name]'),
+        lastName: editAdminElement.querySelector('[data-edit-last-name]'),
+        email: editAdminElement.querySelector('[data-edit-email]'),
+        contact: editAdminElement.querySelector('[data-edit-contact]'),
+        password: editAdminElement.querySelector('[data-edit-password]'),
+        passwordConfirmation: editAdminElement.querySelector('[data-edit-password-confirmation]'),
+    };
+
+    document.querySelectorAll('[data-edit-admin]').forEach((trigger) => {
+        trigger.addEventListener('click', () => {
+            editAdminForm.action = trigger.dataset.adminUpdateUrl;
+            fields.id.value = trigger.dataset.adminId;
+            fields.firstName.value = trigger.dataset.adminFirstName;
+            fields.lastName.value = trigger.dataset.adminLastName;
+            fields.email.value = trigger.dataset.adminEmail;
+            fields.contact.value = trigger.dataset.adminContact;
+            fields.password.value = '';
+            fields.passwordConfirmation.value = '';
+            editAdminModal.show();
+        });
+    });
+
+    if (editAdminElement.dataset.autoOpen === 'true') {
+        editAdminForm.action = editAdminElement.dataset.editAction;
+        editAdminModal.show();
+    }
 }
 
 const analyticsTabs = [...document.querySelectorAll('[data-analytics-tab]')];

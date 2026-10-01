@@ -166,7 +166,7 @@
         <div><div class="eyebrow">Management intelligence</div><h1>Reports center</h1><p class="subtitle">A clear operational view of profitability, collections, portfolio risk, and individual client records.</p></div>
         <div class="top-actions">
             <button class="button button-secondary" type="button" data-report-guide><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 17h.01M9.1 9a3 3 0 115.83 1c0 2-2.93 2-2.93 4M12 22a10 10 0 100-20 10 10 0 000 20z"/></svg>Report guide</button>
-            <a class="button button-primary" href="{{ route('admin.reports.business.download') }}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"/></svg>Download business PDF</a>
+            <a class="button button-primary" href="{{ route('admin.reports.business.download') }}" download data-no-transition><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"/></svg>Download business PDF</a>
             <details class="report-action-menu"><summary class="button button-secondary">More <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 9l6 6 6-6"/></svg></summary><div class="report-action-dropdown">
                 <a href="{{ route('admin.dashboard') }}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg>Back to dashboard</a>
                 <form method="POST" action="{{ route('logout') }}">@csrf<button type="submit"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10 17l5-5-5-5m5 5H3m12-9h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/></svg>Log out</button></form>
@@ -371,7 +371,7 @@
                 <div class="eyebrow">Management reporting</div>
                 <h3>Business performance report</h3>
                 <p>A structured company-wide PDF covering portfolio size, releases, collections, outstanding and overdue balances, product performance, payment channels, six-month trends, and data-quality controls.</p>
-                <a class="button button-primary" href="{{ route('admin.reports.business.download') }}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"/></svg>Download business PDF</a>
+                <a class="button button-primary" href="{{ route('admin.reports.business.download') }}" download data-no-transition><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"/></svg>Download business PDF</a>
             </div>
             <div class="business-metrics" aria-label="Current business report snapshot">
                 <div class="business-metric"><span>Principal released</span><strong>PHP {{ number_format($business['summary']['principal_released'], 2) }}</strong></div>
@@ -434,7 +434,7 @@
                         <td class="report-summary"><div class="cell-title">{{ $client->loans->count() }} {{ Str::plural('application', $client->loans->count()) }}</div><div class="cell-secondary">{{ $activeLoanCount }} active · {{ $completedLoanCount }} completed</div></td>
                         <td class="amount">PHP {{ number_format($outstanding, 2) }}</td>
                         <td><div>{{ $latestActivity?->copy()->timezone('Asia/Manila')->format('M d, Y') ?? 'No activity' }}</div><div class="cell-secondary">{{ $latestActivity?->copy()->timezone('Asia/Manila')->format('h:i A') }} PHT</div></td>
-                        <td class="report-actions-cell"><a class="button button-small report-button" href="{{ route('admin.reports.download', $client) }}" aria-label="Download PDF report for {{ $client->name }}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"/></svg>PDF</a></td>
+                        <td class="report-actions-cell"><a class="button button-small report-button" href="{{ route('admin.reports.download', $client) }}" download data-no-transition aria-label="Download PDF report for {{ $client->name }}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"/></svg>PDF</a></td>
                     </tr>
                 @endforeach
                 </tbody>

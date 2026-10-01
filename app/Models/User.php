@@ -13,6 +13,17 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
+    public const ROLE_CLIENT = 'client';
+
+    public const ROLE_ADMIN = 'admin';
+
+    public const ROLE_SUPERADMIN = 'superadmin';
+
+    protected $attributes = [
+        'role' => self::ROLE_CLIENT,
+        'is_active' => true,
+    ];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -23,6 +34,7 @@ class User extends Authenticatable
         'first_name',
         'last_name',
         'email',
+        'email_verified_at',
         'password',
         'contact_number',
         'age',
@@ -30,6 +42,10 @@ class User extends Authenticatable
         'profile_photo_path',
         'terms_accepted_at',
         'terms_version',
+        'role',
+        'is_active',
+        'disabled_at',
+        'disabled_by',
 
     ];
 
@@ -54,6 +70,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'terms_accepted_at' => 'datetime',
+            'is_active' => 'boolean',
+            'disabled_at' => 'datetime',
         ];
     }
 
@@ -80,6 +98,21 @@ class User extends Authenticatable
     public function auditLogs()
     {
         return $this->hasMany(AuditLog::class);
+    }
+
+    public function disabledBy()
+    {
+        return $this->belongsTo(self::class, 'disabled_by');
+    }
+
+    public function isAdministrator(): bool
+    {
+        return in_array($this->role, [self::ROLE_ADMIN, self::ROLE_SUPERADMIN], true);
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === self::ROLE_SUPERADMIN;
     }
 
     public function isClientVerified(): bool

@@ -15,6 +15,22 @@ class AuditUserActions
         $response = $next($request);
         $routeName = $request->route()?->getName();
 
+        if ($request->user() && $response->getStatusCode() === 403) {
+            AuditLog::record(
+                'authorization_failed',
+                'Access was denied to a protected application route',
+                $request->user(),
+                [
+                    'response_status' => 403,
+                    'route_parameters' => collect($request->route()?->parameters() ?? [])
+                        ->map(fn ($value) => $value instanceof Model ? $value->getKey() : $value)
+                        ->all(),
+                ]
+            );
+
+            return $response;
+        }
+
         if ($request->user()
             && in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE'], true)
             && ! in_array($routeName, ['login', 'logout', 'register'], true)) {
@@ -46,6 +62,9 @@ class AuditUserActions
             'admin.payment.reject' => 'Rejected a payment',
             'admin.verifications.approve' => 'Approved a client verification',
             'admin.verifications.reject' => 'Rejected a client verification',
+            'admin.access.admins.store' => 'Created an administrator account',
+            'admin.access.admins.update' => 'Updated administrator account information',
+            'admin.access.admins.status' => 'Changed administrator account access',
             'loan.contract.sign' => 'Uploaded and returned a signed loan contract',
             'loan.store' => 'Submitted a loan request',
             default => ucfirst(strtolower($method)).' request to '.($routeName ?: 'an application route'),

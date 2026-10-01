@@ -1,10 +1,12 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminAccessController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\ClientReportController;
 use App\Http\Controllers\Admin\ClientVerificationAdminController;
 use App\Http\Controllers\Admin\LoanAdminController;
+use App\Http\Controllers\Admin\SuperAdminDashboardController;
 use App\Http\Controllers\ClientVerificationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LoanContractController;
@@ -119,68 +121,84 @@ Route::middleware(['auth', 'admin'])
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])
             ->name('dashboard');
 
-        Route::get('/audit-logs', [AuditLogController::class, 'index'])
-            ->name('audit-logs.index');
+        Route::middleware('superadmin')->group(function () {
+            Route::get('/security/dashboard', [SuperAdminDashboardController::class, 'index'])
+                ->name('security.dashboard');
 
-        Route::get('/loans', [LoanAdminController::class, 'index'])
-            ->name('loans');
+            Route::get('/audit-logs', [AuditLogController::class, 'index'])
+                ->name('audit-logs.index');
 
-        Route::get('/loan/{loan}', [LoanAdminController::class, 'show'])
-            ->name('loan.show');
+            Route::get('/access-control', [AdminAccessController::class, 'index'])
+                ->name('access.index');
+            Route::post('/access-control/admins', [AdminAccessController::class, 'store'])
+                ->name('access.admins.store');
+            Route::patch('/access-control/admins/{admin}', [AdminAccessController::class, 'update'])
+                ->name('access.admins.update');
+            Route::patch('/access-control/admins/{admin}/status', [AdminAccessController::class, 'updateStatus'])
+                ->name('access.admins.status');
+        });
 
-        Route::get('/clients', [ClientVerificationAdminController::class, 'index'])
-            ->name('clients');
+        Route::middleware('standard.admin')->group(function () {
+            Route::get('/loans', [LoanAdminController::class, 'index'])
+                ->name('loans');
 
-        Route::get('/client/{client}/profile-photo', [ClientVerificationAdminController::class, 'profilePhoto'])
-            ->name('clients.photo');
+            Route::get('/loan/{loan}', [LoanAdminController::class, 'show'])
+                ->name('loan.show');
 
-        Route::get('/reports', [ClientReportController::class, 'index'])
-            ->name('reports.index');
+            Route::get('/clients', [ClientVerificationAdminController::class, 'index'])
+                ->name('clients');
 
-        Route::get('/reports/business/download', [ClientReportController::class, 'downloadBusiness'])
-            ->name('reports.business.download');
+            Route::get('/client/{client}/profile-photo', [ClientVerificationAdminController::class, 'profilePhoto'])
+                ->name('clients.photo');
 
-        Route::get('/reports/{client}/download', [ClientReportController::class, 'download'])
-            ->name('reports.download');
+            Route::get('/reports', [ClientReportController::class, 'index'])
+                ->name('reports.index');
 
-        Route::get('/verifications', fn () => redirect()->route('admin.clients', ['section' => 'verifications']))
-            ->name('verifications.index');
+            Route::get('/reports/business/download', [ClientReportController::class, 'downloadBusiness'])
+                ->name('reports.business.download');
 
-        Route::get('/verification/{verification}', [ClientVerificationAdminController::class, 'show'])
-            ->name('verifications.show');
+            Route::get('/reports/{client}/download', [ClientReportController::class, 'download'])
+                ->name('reports.download');
 
-        Route::post('/verification/{verification}/approve', [ClientVerificationAdminController::class, 'approve'])
-            ->name('verifications.approve');
+            Route::get('/verifications', fn () => redirect()->route('admin.clients', ['section' => 'verifications']))
+                ->name('verifications.index');
 
-        Route::post('/verification/{verification}/reject', [ClientVerificationAdminController::class, 'reject'])
-            ->name('verifications.reject');
+            Route::get('/verification/{verification}', [ClientVerificationAdminController::class, 'show'])
+                ->name('verifications.show');
 
-        Route::get('/verification/{verification}/document/{type}', [ClientVerificationAdminController::class, 'document'])
-            ->name('verifications.document');
+            Route::post('/verification/{verification}/approve', [ClientVerificationAdminController::class, 'approve'])
+                ->name('verifications.approve');
 
-        Route::post('/loan/{loan}/approve', [LoanAdminController::class, 'approve'])
-            ->name('loan.approve');
+            Route::post('/verification/{verification}/reject', [ClientVerificationAdminController::class, 'reject'])
+                ->name('verifications.reject');
 
-        Route::post('/loan/{loan}/contract/send', [LoanContractController::class, 'send'])
-            ->name('loan.contract.send');
+            Route::get('/verification/{verification}/document/{type}', [ClientVerificationAdminController::class, 'document'])
+                ->name('verifications.document');
 
-        Route::post('/loan/{loan}/reject', [LoanAdminController::class, 'reject'])
-            ->name('loan.reject');
+            Route::post('/loan/{loan}/approve', [LoanAdminController::class, 'approve'])
+                ->name('loan.approve');
 
-        Route::get('/payments', [PaymentController::class, 'adminIndex'])
-            ->name('payments.index');
+            Route::post('/loan/{loan}/contract/send', [LoanContractController::class, 'send'])
+                ->name('loan.contract.send');
 
-        Route::get('/payment/{id}', [PaymentController::class, 'adminShow'])
-            ->name('payment.show');
+            Route::post('/loan/{loan}/reject', [LoanAdminController::class, 'reject'])
+                ->name('loan.reject');
 
-        Route::get('/payment/{id}/receipt', [PaymentController::class, 'adminReceipt'])
-            ->name('payment.receipt');
+            Route::get('/payments', [PaymentController::class, 'adminIndex'])
+                ->name('payments.index');
 
-        Route::post('/payment/{id}/approve', [PaymentController::class, 'approve'])
-            ->name('payment.approve');
+            Route::get('/payment/{id}', [PaymentController::class, 'adminShow'])
+                ->name('payment.show');
 
-        Route::post('/payment/{id}/reject', [PaymentController::class, 'reject'])
-            ->name('payment.reject');
+            Route::get('/payment/{id}/receipt', [PaymentController::class, 'adminReceipt'])
+                ->name('payment.receipt');
+
+            Route::post('/payment/{id}/approve', [PaymentController::class, 'approve'])
+                ->name('payment.approve');
+
+            Route::post('/payment/{id}/reject', [PaymentController::class, 'reject'])
+                ->name('payment.reject');
+        });
     });
 
 /*

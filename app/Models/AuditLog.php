@@ -29,6 +29,19 @@ class AuditLog extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function getSeverityAttribute(): string
+    {
+        if (in_array($this->action, ['login_failed', 'authorization_failed'], true) || str_contains($this->action, 'reject')) {
+            return 'high';
+        }
+
+        if ($this->action === 'logout' || str_starts_with($this->action, 'admin_access_')) {
+            return 'medium';
+        }
+
+        return 'info';
+    }
+
     /**
      * Audit logging must never interrupt the business action being recorded.
      */

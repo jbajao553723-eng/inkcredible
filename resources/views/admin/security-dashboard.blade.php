@@ -36,6 +36,13 @@
 .posture-list { display:grid; gap:10px; margin-top:14px; }
 .posture-item { display:grid; grid-template-columns:20px 1fr; gap:9px; align-items:start; color:#475467; font-size:10px; line-height:1.45; }
 .posture-check { display:grid; place-items:center; width:18px; height:18px; color:#067647; background:#d1fadf; border-radius:50%; font-size:10px; font-weight:800; }
+.monitoring-layout { display:grid; grid-template-columns:minmax(0,1.05fr) minmax(340px,.95fr); gap:18px; margin-bottom:18px; align-items:start; }
+.signal-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:11px; padding:18px; }
+.signal-card { padding:15px; background:#f8fafc; border:1px solid #eaecf0; border-radius:12px; }.signal-card.alert { background:#fffbfa; border-color:#fecdca; }.signal-card.warning { background:#fffcf5; border-color:#fedf89; }
+.signal-label { color:#667085; font-size:9px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; }.signal-value { margin-top:7px; color:#101828; font-size:23px; font-weight:700; }.signal-note { margin-top:4px; color:#667085; font-size:9px; line-height:1.45; }
+.control-list { display:grid; }.control-row { display:grid; grid-template-columns:20px minmax(0,1fr) auto; gap:10px; align-items:start; padding:13px 18px; border-bottom:1px solid #f2f4f7; }.control-row:last-child { border-bottom:0; }
+.control-icon { display:grid; place-items:center; width:19px; height:19px; color:#067647; background:#d1fadf; border-radius:50%; font-size:10px; font-weight:800; }.control-icon.attention { color:#b54708; background:#fef0c7; }
+.control-copy strong,.control-copy span { display:block; }.control-copy strong { color:#344054; font-size:10px; }.control-copy span { margin-top:3px; color:#667085; font-size:9px; line-height:1.45; }.control-state { padding:4px 7px; color:#067647; background:#ecfdf3; border-radius:999px; font-size:8px; font-weight:700; text-transform:uppercase; }.control-state.attention { color:#b54708; background:#fffaeb; }
 .activity-layout { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr); gap:18px; align-items:start; }
 .activity-list,.admin-list { display:grid; }
 .activity-row { display:grid; grid-template-columns:38px minmax(0,1fr) auto; gap:11px; align-items:center; min-height:67px; padding:11px 20px; border-bottom:1px solid #f2f4f7; }
@@ -48,8 +55,8 @@
 .admin-avatar { display:grid; place-items:center; width:36px; height:36px; color:#4338ca; background:#eef2ff; border-radius:10px; font-size:11px; font-weight:800; }
 .admin-copy strong,.admin-copy span { display:block; }.admin-copy strong { color:#344054; font-size:11px; }.admin-copy span { margin-top:3px; color:#667085; font-size:9px; overflow-wrap:anywhere; }
 .dashboard-empty { padding:30px 20px; color:#667085; font-size:10px; text-align:center; }
-@media(max-width:1100px){.security-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.security-grid,.activity-layout{grid-template-columns:1fr}}
-@media(max-width:620px){.security-stats,.quick-actions{grid-template-columns:1fr}.quick-actions{padding:14px}.activity-row{grid-template-columns:36px minmax(0,1fr)}.activity-time{grid-column:2;text-align:left}.top-actions{width:100%}.top-actions .button{flex:1}}
+@media(max-width:1100px){.security-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.security-grid,.monitoring-layout,.activity-layout{grid-template-columns:1fr}}
+@media(max-width:620px){.security-stats,.quick-actions,.signal-grid{grid-template-columns:1fr}.quick-actions{padding:14px}.activity-row{grid-template-columns:36px minmax(0,1fr)}.activity-time{grid-column:2;text-align:left}.top-actions{width:100%}.top-actions .button{flex:1}.control-row{grid-template-columns:20px minmax(0,1fr)}.control-state{grid-column:2;justify-self:start}}
 </style>
 </head>
 <body>
@@ -79,6 +86,18 @@
             <div class="posture-score"><span class="posture-shield"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="m8 12 3 3 5-6M12 3.5 19 6v5c0 4.5-2.8 7.8-7 9.5C7.8 18.8 5 15.5 5 11V6z"/></svg></span><span class="posture-copy"><strong>Security controls enabled</strong><span>Superadmin access is isolated from lending and finance operations.</span></span></div>
             <div class="posture-list"><div class="posture-item"><span class="posture-check">&#10003;</span><span>Only superadmins can create or change administrator access.</span></div><div class="posture-item"><span class="posture-check">&#10003;</span><span>Disabled accounts are signed out and blocked at authentication.</span></div><div class="posture-item"><span class="posture-check">&#10003;</span><span>Privileged changes are preserved in the audit trail.</span></div></div>
         </div></aside>
+    </section>
+
+    <section class="monitoring-layout" aria-label="Security monitoring and control readiness">
+        <article class="panel"><div class="panel-header"><div><h2 class="panel-title">Threat signals</h2><p class="panel-description">Authentication and privileged-access indicators requiring review.</p></div><a class="button button-secondary button-small" href="{{ route('admin.audit-logs.index', ['severity' => 'high']) }}">Investigate</a></div><div class="signal-grid">
+            <div class="signal-card {{ $stats['failed_logins_24h'] ? 'alert' : '' }}"><div class="signal-label">Failed sign-ins</div><div class="signal-value">{{ number_format($stats['failed_logins_24h']) }}</div><div class="signal-note">Across {{ number_format($stats['failure_sources_24h']) }} source {{ Str::plural('IP', $stats['failure_sources_24h']) }} in 24 hours.</div></div>
+            <div class="signal-card {{ $stats['repeat_failure_sources'] ? 'alert' : '' }}"><div class="signal-label">Repeated sources</div><div class="signal-value">{{ number_format($stats['repeat_failure_sources']) }}</div><div class="signal-note">Sources with at least three failed sign-ins in 24 hours.</div></div>
+            <div class="signal-card {{ $stats['authorization_failures_24h'] ? 'alert' : '' }}"><div class="signal-label">Denied access</div><div class="signal-value">{{ number_format($stats['authorization_failures_24h']) }}</div><div class="signal-note">Protected-route authorization failures in 24 hours.</div></div>
+            <div class="signal-card {{ $stats['privileged_changes_7d'] ? 'warning' : '' }}"><div class="signal-label">Privileged changes</div><div class="signal-value">{{ number_format($stats['privileged_changes_7d']) }}</div><div class="signal-note">Administrator access changes during the last seven days.</div></div>
+            <div class="signal-card"><div class="signal-label">Active admin sessions</div><div class="signal-value">{{ $stats['active_admin_sessions'] === null ? 'N/A' : number_format($stats['active_admin_sessions']) }}</div><div class="signal-note">Server-side sessions currently tied to privileged accounts.</div></div>
+        </div></article>
+
+        <aside class="panel"><div class="panel-header"><div><h2 class="panel-title">Control readiness</h2><p class="panel-description">Configuration checks for privileged access.</p></div></div><div class="control-list">@foreach($securityControls as $control)<div class="control-row"><span class="control-icon {{ $control['enabled'] ? '' : 'attention' }}">{{ $control['enabled'] ? '✓' : '!' }}</span><span class="control-copy"><strong>{{ $control['name'] }}</strong><span>{{ $control['note'] }}</span></span><span class="control-state {{ $control['enabled'] ? '' : 'attention' }}">{{ $control['enabled'] ? 'Enabled' : 'Action needed' }}</span></div>@endforeach</div></aside>
     </section>
 
     <section class="activity-layout">

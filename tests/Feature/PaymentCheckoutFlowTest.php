@@ -171,10 +171,14 @@ it('lets a client download only receipts for their own payments', function () {
         'paid_at' => now(),
     ]);
 
-    $this->actingAs($client)->get(route('payments.receipt', $payment))
+    $receiptResponse = $this->actingAs($client)->get(route('payments.receipt', $payment));
+
+    $receiptResponse
         ->assertOk()
-        ->assertHeader('content-type', 'application/pdf')
-        ->assertDownload('payment-receipt-'.$payment->id.'.pdf');
+        ->assertHeader('content-type', 'image/png')
+        ->assertDownload('payment-receipt-'.$payment->id.'.png');
+
+    expect(substr($receiptResponse->getContent(), 0, 8))->toBe("\x89PNG\r\n\x1a\n");
 
     $this->actingAs($client)->get(route('payments.index'))
         ->assertOk()
@@ -182,7 +186,8 @@ it('lets a client download only receipts for their own payments', function () {
 
     $this->actingAs($client)->get(route('payments.success', $payment))
         ->assertOk()
-        ->assertSee('Download receipt')
+        ->assertSee('Download PNG receipt')
+        ->assertSee('download="payment-receipt-'.$payment->id.'.png"', false)
         ->assertSee(route('payments.receipt', $payment), false);
 
     $this->actingAs($otherClient)->get(route('payments.receipt', $payment))
@@ -206,11 +211,12 @@ it('lets administrators download a receipt for every client payment status', fun
 
     $this->actingAs($admin)->get(route('admin.payment.receipt', $payment))
         ->assertOk()
-        ->assertHeader('content-type', 'application/pdf')
-        ->assertDownload('payment-receipt-'.$payment->id.'.pdf');
+        ->assertHeader('content-type', 'image/png')
+        ->assertDownload('payment-receipt-'.$payment->id.'.png');
 
     $this->actingAs($admin)->get(route('admin.payment.show', $payment))
         ->assertOk()
+        ->assertSee('download="payment-receipt-'.$payment->id.'.png"', false)
         ->assertSee(route('admin.payment.receipt', $payment), false);
 })->with(Payment::STATUSES);
 

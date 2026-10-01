@@ -7,8 +7,8 @@ use App\Http\Requests\StorePaymentRequest;
 use App\Models\Loan;
 use App\Models\Payment;
 use App\Services\PaymentLedgerService;
+use App\Services\PaymentReceiptImage;
 use App\Services\PayMongoService;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -184,9 +184,9 @@ class PaymentController extends Controller
         ]);
     }
 
-    public function receipt(int $payment): Response
+    public function receipt(int $payment, PaymentReceiptImage $receiptImage): Response
     {
-        return $this->downloadReceipt($this->findUserPayment($payment));
+        return $this->downloadReceipt($this->findUserPayment($payment), $receiptImage);
     }
 
     public function webhook(Request $request, PayMongoService $payMongo): JsonResponse
@@ -391,9 +391,9 @@ class PaymentController extends Controller
         return view('admin.payments.show', compact('payment'));
     }
 
-    public function adminReceipt(int $id): Response
+    public function adminReceipt(int $id, PaymentReceiptImage $receiptImage): Response
     {
-        return $this->downloadReceipt(Payment::findOrFail($id));
+        return $this->downloadReceipt(Payment::findOrFail($id), $receiptImage);
     }
 
     /*
@@ -490,12 +490,16 @@ class PaymentController extends Controller
             ->firstOrFail();
     }
 
-    private function downloadReceipt(Payment $payment): Response
+    private function downloadReceipt(Payment $payment, PaymentReceiptImage $receiptImage): Response
     {
         $payment->loadMissing(['loan.user', 'loan.loanType']);
 
-        return Pdf::loadView('payments.receipt', ['payment' => $payment])
-            ->setPaper('a4')
-            ->download('payment-receipt-'.$payment->id.'.pdf');
+        $filename = 'payment-receipt-'.$payment->id.'.png';
+
+        return response($receiptImage->render($payment), 200, [
+            'Content-Type' => 'image/png',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+            'Cache-Control' => 'private, no-store, max-age=0',
+        ]);
     }
 }

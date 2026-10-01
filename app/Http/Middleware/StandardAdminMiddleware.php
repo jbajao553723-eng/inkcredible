@@ -7,18 +7,13 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class AdminMiddleware
+class StandardAdminMiddleware
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  Closure(Request): (Response)  $next
-     */
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
         abort_unless(
             $request->user()?->is_active
-            && in_array($request->user()->role, [User::ROLE_ADMIN, User::ROLE_SUPERADMIN], true),
+            && $request->user()->role === User::ROLE_ADMIN,
             403
         );
 

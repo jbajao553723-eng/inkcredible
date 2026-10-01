@@ -444,7 +444,7 @@ tbody tr:hover { background: #fcfcfd; }
                                     <td>{{ $payment->method_label }}</td>
                                     <td><span class="badge {{ $statusClass }}">{{ ucfirst($payment->status) }}</span></td>
                                     <td class="amount">&#8369;{{ number_format($payment->amount, 2) }}</td>
-                                    <td><a class="receipt-link" href="{{ route('payments.receipt', $payment) }}">Download PDF</a></td>
+                                    <td><a class="receipt-link" href="{{ route('payments.receipt', $payment) }}" download="payment-receipt-{{ $payment->id }}.png" data-no-transition>Download PNG</a></td>
                                 </tr>
                             @endforeach
                         </tbody>

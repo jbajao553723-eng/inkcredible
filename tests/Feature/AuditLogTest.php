@@ -21,14 +21,17 @@ it('records successful and failed login activity with timestamps', function () {
         ->and(AuditLog::where('action', 'login')->first()->occurred_at)->not->toBeNull();
 });
 
-it('only exposes the audit module to administrators', function () {
+it('only exposes the audit module to superadministrators', function () {
     $client = User::factory()->create(['role' => 'client']);
     $admin = User::factory()->create(['role' => 'admin']);
+    $superadmin = User::factory()->create(['role' => User::ROLE_SUPERADMIN]);
 
     $this->actingAs($client)->get(route('admin.audit-logs.index'))->assertForbidden();
-    $this->actingAs($admin)->get(route('admin.audit-logs.index'))
+    $this->actingAs($admin)->get(route('admin.audit-logs.index'))->assertForbidden();
+    $this->actingAs($superadmin)->get(route('admin.audit-logs.index'))
         ->assertOk()
-        ->assertSee('Audit logs')
+        ->assertSee('Security audit logs')
+        ->assertSee('Severity')
         ->assertSee('data-async-filter', false)
         ->assertSee('data-async-filter-region', false)
         ->assertSee('name="event_action"', false)
@@ -36,7 +39,7 @@ it('only exposes the audit module to administrators', function () {
 });
 
 it('returns only matching audit rows while preserving the asynchronous result region', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
+    $admin = User::factory()->create(['role' => User::ROLE_SUPERADMIN]);
     AuditLog::create([
         'user_id' => $admin->id,
         'action' => 'login',
@@ -56,6 +59,31 @@ it('returns only matching audit rows while preserving the asynchronous result re
         ->assertSee('Visible matching login event')
         ->assertDontSee('Hidden logout event')
         ->assertSee('id="audit-results"', false);
+});
+
+it('filters audit events by severity and searchable security context', function () {
+    $superadmin = User::factory()->create(['role' => User::ROLE_SUPERADMIN]);
+    AuditLog::create(['action' => 'login_failed', 'description' => 'Suspicious sign-in from a new source', 'ip_address' => '203.0.113.8', 'occurred_at' => now()]);
+    AuditLog::create(['user_id' => $superadmin->id, 'action' => 'login', 'description' => 'Normal sign-in', 'ip_address' => '127.0.0.1', 'occurred_at' => now()]);
+
+    $this->actingAs($superadmin)
+        ->get(route('admin.audit-logs.index', ['severity' => 'high', 'q' => '203.0.113.8']))
+        ->assertOk()
+        ->assertSee('Suspicious sign-in from a new source')
+        ->assertSee('severity-high', false)
+        ->assertDontSee('Normal sign-in');
+});
+
+it('records denied access to protected administrator routes as a high severity event', function () {
+    $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+
+    $this->actingAs($admin)->get(route('admin.audit-logs.index'))->assertForbidden();
+
+    $event = AuditLog::where('action', 'authorization_failed')->latest('id')->firstOrFail();
+
+    expect($event->user_id)->toBe($admin->id)
+        ->and($event->severity)->toBe('high')
+        ->and(data_get($event->metadata, 'response_status'))->toBe(403);
 });
 
 it('enables asynchronous filtering on the server-backed payment directory', function () {

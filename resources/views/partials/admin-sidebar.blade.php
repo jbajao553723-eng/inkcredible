@@ -1,20 +1,22 @@
 <a class="skip-link" href="#main-content">Skip to main content</a>
+@php($isSuperAdmin = auth()->user()?->isSuperAdmin())
 <aside class="sidebar">
     <div class="sidebar-inner">
         <div class="sidebar-brand">
             <span class="brand-mark" aria-hidden="true">I</span>
-            <span class="brand-copy"><strong>Inkcredible</strong><small>Admin workspace</small></span>
+            <span class="brand-copy"><strong>Inkcredible</strong><small>{{ $isSuperAdmin ? 'Security workspace' : 'Admin workspace' }}</small></span>
         </div>
 
         <nav class="sidebar-nav" aria-label="Admin navigation">
             <div class="nav-section">
                 <div class="nav-label">Overview</div>
-                <a class="nav-link {{ $active === 'dashboard' ? 'active' : '' }}" href="{{ route('admin.dashboard') }}" @if($active === 'dashboard') aria-current="page" @endif>
+                <a class="nav-link {{ $active === 'dashboard' ? 'active' : '' }}" href="{{ $isSuperAdmin ? route('admin.security.dashboard') : route('admin.dashboard') }}" @if($active === 'dashboard') aria-current="page" @endif>
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg>
                     <span>Dashboard</span>
                 </a>
             </div>
 
+            @unless($isSuperAdmin)
             <div class="nav-section">
                 <div class="nav-label">Lending</div>
                 <a class="nav-link {{ $active === 'loans' ? 'active' : '' }}" href="{{ route('admin.loans') }}" @if($active === 'loans') aria-current="page" @endif>
@@ -38,19 +40,26 @@
                     <span>Reports</span>
                 </a>
             </div>
+            @endunless
 
             <div class="nav-section">
-                <div class="nav-label">System</div>
+                <div class="nav-label">{{ $isSuperAdmin ? 'Security' : 'System' }}</div>
+                @if($isSuperAdmin)
+                <a class="nav-link {{ $active === 'access-control' ? 'active' : '' }}" href="{{ route('admin.access.index') }}" @if($active === 'access-control') aria-current="page" @endif>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3.5 19 6v5c0 4.5-2.8 7.8-7 9.5C7.8 18.8 5 15.5 5 11V6zM8.5 12h7M12 8.5v7"/></svg>
+                    <span>Admin access</span>
+                </a>
                 <a class="nav-link {{ $active === 'audit-logs' ? 'active' : '' }}" href="{{ route('admin.audit-logs.index') }}" @if($active === 'audit-logs') aria-current="page" @endif>
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3.5 19 6v5c0 4.5-2.8 7.8-7 9.5C7.8 18.8 5 15.5 5 11V6zM9 11.5l2 2 4-4"/></svg>
                     <span>Audit logs</span>
                 </a>
+                @endif
             </div>
         </nav>
 
         <div class="sidebar-account">
             <span class="account-avatar">{{ strtoupper(substr(auth()->user()?->name ?? 'A', 0, 1)) }}</span>
-            <span class="account-copy"><strong>{{ auth()->user()?->name ?? 'Administrator' }}</strong><small>Administrator</small></span>
+            <span class="account-copy"><strong>{{ auth()->user()?->name ?? 'Administrator' }}</strong><small>{{ $isSuperAdmin ? 'Super Administrator' : 'Administrator' }}</small></span>
             <span class="account-status" title="Signed in"></span>
         </div>
     </div>

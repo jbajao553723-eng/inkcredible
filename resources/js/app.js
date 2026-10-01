@@ -1,5 +1,6 @@
 import './bootstrap';
 import './ui-motion';
+import './file-downloads';
 
 import Alpine from 'alpinejs';
 
