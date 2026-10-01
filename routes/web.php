@@ -67,6 +67,9 @@ Route::middleware(['auth'])
         Route::get('/payments/status/{payment}', [PaymentController::class, 'status'])
             ->name('payments.status');
 
+        Route::get('/payments/{payment}/receipt', [PaymentController::class, 'receipt'])
+            ->name('payments.receipt');
+
         Route::get('/profile', [ProfileController::class, 'edit'])
             ->name('profile.edit');
 
@@ -169,6 +172,9 @@ Route::middleware(['auth', 'admin'])
 
         Route::get('/payment/{id}', [PaymentController::class, 'adminShow'])
             ->name('payment.show');
+
+        Route::get('/payment/{id}/receipt', [PaymentController::class, 'adminReceipt'])
+            ->name('payment.receipt');
 
         Route::post('/payment/{id}/approve', [PaymentController::class, 'approve'])
             ->name('payment.approve');

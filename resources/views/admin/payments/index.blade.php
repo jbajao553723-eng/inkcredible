@@ -134,6 +134,7 @@
                         <td><span class="badge {{ $statusClass }}">{{ ucfirst($payment->status) }}</span>@if($needsReview)<div class="cell-secondary">Needs review</div>@endif</td>
                         <td class="amount-actions"><span class="amount">&#8369;{{ number_format($payment->amount, 2) }}</span><div class="action-group">
                             <a class="button button-secondary button-small" href="{{ route('admin.payment.show', $payment->id) }}">Details</a>
+                            <a class="button button-secondary button-small" href="{{ route('admin.payment.receipt', $payment->id) }}">Receipt</a>
                             @if($needsReview)
                                 <form method="POST" action="{{ route('admin.payment.approve', $payment->id) }}" data-confirm="Approve this cash payment?">@csrf<button class="button button-success button-small" type="submit">Approve</button></form>
                                 <form method="POST" action="{{ route('admin.payment.reject', $payment->id) }}" data-confirm="Reject this cash payment?">@csrf<button class="button button-danger button-small" type="submit">Reject</button></form>

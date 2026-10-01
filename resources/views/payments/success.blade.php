@@ -275,6 +275,12 @@
                         @endif
 
                         <div class="actions" aria-label="Next steps">
+                            @if($isApproved)
+                                <a class="button button-primary" href="{{ route('payments.receipt', $payment) }}">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/></svg>
+                                    Download receipt
+                                </a>
+                            @endif
                             <a class="button button-primary" href="{{ route('dashboard') }}">
                                 View dashboard
                                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9"/></svg>

@@ -179,6 +179,8 @@ tbody tr:hover { background: #fcfcfd; }
 .transaction-ref { max-width: 190px; overflow: hidden; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .cell-secondary { margin-top: 4px; color: var(--muted); font-size: 11px; }
 .amount { font-weight: 700; white-space: nowrap; }
+.receipt-link { display:inline-flex; align-items:center; justify-content:center; min-height:32px; padding:7px 10px; color:#4338ca; background:#f5f3ff; border:1px solid #ddd6fe; border-radius:8px; font-size:11px; font-weight:700; text-decoration:none; white-space:nowrap; }
+.receipt-link:hover { color:#3730a3; background:#ede9fe; border-color:#c4b5fd; }
 .empty-state { padding: 48px 24px; color: var(--muted); text-align: center; }
 .empty-state strong { display: block; margin-bottom: 7px; color: #344054; }
 
@@ -423,7 +425,7 @@ tbody tr:hover { background: #fcfcfd; }
             @else
                 <div class="table-wrap">
                     <table>
-                        <thead><tr><th>Reference</th><th>Loan</th><th>Date &amp; time</th><th>Method</th><th>Status</th><th>Amount</th></tr></thead>
+                        <thead><tr><th>Reference</th><th>Loan</th><th>Date &amp; time</th><th>Method</th><th>Status</th><th>Amount</th><th>Receipt</th></tr></thead>
                         <tbody>
                             @foreach($payments as $payment)
                                 @php
@@ -442,6 +444,7 @@ tbody tr:hover { background: #fcfcfd; }
                                     <td>{{ $payment->method_label }}</td>
                                     <td><span class="badge {{ $statusClass }}">{{ ucfirst($payment->status) }}</span></td>
                                     <td class="amount">&#8369;{{ number_format($payment->amount, 2) }}</td>
+                                    <td><a class="receipt-link" href="{{ route('payments.receipt', $payment) }}">Download PDF</a></td>
                                 </tr>
                             @endforeach
                         </tbody>

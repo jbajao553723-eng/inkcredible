@@ -8,6 +8,7 @@ use App\Models\Loan;
 use App\Models\Payment;
 use App\Services\PaymentLedgerService;
 use App\Services\PayMongoService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -181,6 +182,11 @@ class PaymentController extends Controller
             'status' => $paymentModel->status,
             'redirect_url' => $redirectUrl,
         ]);
+    }
+
+    public function receipt(int $payment): Response
+    {
+        return $this->downloadReceipt($this->findUserPayment($payment));
     }
 
     public function webhook(Request $request, PayMongoService $payMongo): JsonResponse
@@ -385,6 +391,11 @@ class PaymentController extends Controller
         return view('admin.payments.show', compact('payment'));
     }
 
+    public function adminReceipt(int $id): Response
+    {
+        return $this->downloadReceipt(Payment::findOrFail($id));
+    }
+
     /*
     |----------------------------------------------------------------------
     | APPROVE PAYMENT (FIXED)
@@ -477,5 +488,14 @@ class PaymentController extends Controller
         return Payment::whereKey($payment)
             ->whereHas('loan', fn ($query) => $query->where('user_id', auth()->id()))
             ->firstOrFail();
+    }
+
+    private function downloadReceipt(Payment $payment): Response
+    {
+        $payment->loadMissing(['loan.user', 'loan.loanType']);
+
+        return Pdf::loadView('payments.receipt', ['payment' => $payment])
+            ->setPaper('a4')
+            ->download('payment-receipt-'.$payment->id.'.pdf');
     }
 }

@@ -156,6 +156,64 @@ it('gives administrators a simplified cash payment review workspace', function (
         ->assertSee('Reject');
 });
 
+it('lets a client download only receipts for their own payments', function () {
+    $client = User::factory()->create(['role' => 'client']);
+    $otherClient = User::factory()->create(['role' => 'client']);
+    $loan = checkoutFlowLoan($client);
+    $payment = Payment::create([
+        'loan_id' => $loan->id,
+        'user_id' => $client->id,
+        'amount' => 500,
+        'reference' => 'LOANPAY-CLIENT-RECEIPT',
+        'currency' => 'PHP',
+        'method' => 'cash',
+        'status' => Payment::STATUS_APPROVED,
+        'paid_at' => now(),
+    ]);
+
+    $this->actingAs($client)->get(route('payments.receipt', $payment))
+        ->assertOk()
+        ->assertHeader('content-type', 'application/pdf')
+        ->assertDownload('payment-receipt-'.$payment->id.'.pdf');
+
+    $this->actingAs($client)->get(route('payments.index'))
+        ->assertOk()
+        ->assertSee(route('payments.receipt', $payment), false);
+
+    $this->actingAs($client)->get(route('payments.success', $payment))
+        ->assertOk()
+        ->assertSee('Download receipt')
+        ->assertSee(route('payments.receipt', $payment), false);
+
+    $this->actingAs($otherClient)->get(route('payments.receipt', $payment))
+        ->assertNotFound();
+});
+
+it('lets administrators download a receipt for every client payment status', function (string $status) {
+    $admin = User::factory()->create(['role' => 'admin']);
+    $client = User::factory()->create(['role' => 'client']);
+    $loan = checkoutFlowLoan($client);
+    $payment = Payment::create([
+        'loan_id' => $loan->id,
+        'user_id' => $client->id,
+        'amount' => 500,
+        'reference' => 'LOANPAY-ADMIN-'.strtoupper($status),
+        'currency' => 'PHP',
+        'method' => 'cash',
+        'status' => $status,
+        'paid_at' => $status === Payment::STATUS_APPROVED ? now() : null,
+    ]);
+
+    $this->actingAs($admin)->get(route('admin.payment.receipt', $payment))
+        ->assertOk()
+        ->assertHeader('content-type', 'application/pdf')
+        ->assertDownload('payment-receipt-'.$payment->id.'.pdf');
+
+    $this->actingAs($admin)->get(route('admin.payment.show', $payment))
+        ->assertOk()
+        ->assertSee(route('admin.payment.receipt', $payment), false);
+})->with(Payment::STATUSES);
+
 it('redirects a rejected PayMongo authorization to the local payment result', function () {
     $client = User::factory()->create(['role' => 'client']);
     $loan = checkoutFlowLoan($client);
