@@ -122,3 +122,28 @@ Uploaded verification documents use private storage. Public profile images, paym
 - Keep `APP_DEBUG=false` and use unique production credentials.
 - Cache configuration, routes, and views during deployment with `php artisan optimize`.
 - Back up both the database and uploaded files.
+
+## Render with Clever Cloud MySQL
+
+This repository includes `Dockerfile`, `docker/start.sh`, and `render.yaml` for
+deployment as a Render Docker web service. Create a MySQL add-on in Clever
+Cloud, then map its credentials to these Render environment variables:
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=<MYSQL_ADDON_HOST>
+DB_PORT=<MYSQL_ADDON_PORT>
+DB_DATABASE=<MYSQL_ADDON_DB>
+DB_USERNAME=<MYSQL_ADDON_USER>
+DB_PASSWORD=<MYSQL_ADDON_PASSWORD>
+```
+
+The Render Blueprint generates a stable `APP_KEY_SEED`; the startup script
+derives a valid Laravel application key from it. It also derives `APP_URL` from
+Render's external hostname. The container runs pending migrations on startup
+and then caches Laravel configuration, routes, events, and views.
+
+Render's filesystem is ephemeral unless a persistent disk is attached. Use an
+S3-compatible disk or a Render persistent disk before relying on uploaded
+verification documents, profile photos, payment proofs, or signed contracts in
+production.
