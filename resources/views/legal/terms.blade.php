@@ -9,7 +9,7 @@
 <style>@include('partials.legal-styles')</style>
 </head>
 <body>
-<header class="legal-header"><div class="header-inner"><a class="brand" href="{{ route('login') }}"><span class="brand-mark">I</span>Inkcredible</a><div class="eyebrow">Account agreement</div><h1>Terms and Conditions</h1><p class="header-description">The rules for creating and using an Inkcredible account and accessing its lending-management services.</p></div></header>
+<header class="legal-header"><div class="header-inner"><a class="brand" href="{{ route('login') }}"><x-brand-mark />Inkcredible</a><div class="eyebrow">Account agreement</div><h1>Terms and Conditions</h1><p class="header-description">The rules for creating and using an Inkcredible account and accessing its lending-management services.</p></div></header>
 <main class="legal-main"><article class="legal-card">
     <div class="legal-meta"><span>Version {{ config('legal.account_terms_version') }}</span><span>Effective September 14, 2026</span></div>
     <div class="legal-notice"><strong>Local project notice:</strong> This is a practical terms template for the localhost application. Before operating a real lending business, the operator should have these terms, rates, licenses, contact details, and privacy practices reviewed by qualified Philippine counsel.</div>

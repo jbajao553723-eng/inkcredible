@@ -31,7 +31,7 @@
 <body>
 <main class="auth-page">
     <section class="brand-panel" aria-label="About email code verification">
-        <a class="brand" href="{{ route('login') }}"><span class="brand-mark">I</span><span>Inkcredible</span></a>
+        <a class="brand" href="{{ route('login') }}"><x-brand-mark /><span>Inkcredible</span></a>
         <div class="brand-content">
             <div class="brand-eyebrow">Email security check</div>
             <h2 class="brand-title">One more step keeps your account protected.</h2>
@@ -47,7 +47,7 @@
 
     <section class="form-panel">
         <div class="form-shell">
-            <a class="brand mobile-brand" href="{{ route('login') }}"><span class="brand-mark">I</span><span>Inkcredible</span></a>
+            <a class="brand mobile-brand" href="{{ route('login') }}"><x-brand-mark /><span>Inkcredible</span></a>
             <div class="otp-icon" aria-hidden="true"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3.5 19 6v5c0 4.5-2.8 7.8-7 9.5C7.8 18.8 5 15.5 5 11V6z"/><path stroke-linecap="round" stroke-width="1.8" d="M9 10h.01M12 10h.01M15 10h.01M9 14h.01M12 14h.01M15 14h.01"/></svg></div>
             <div class="form-eyebrow">{{ $eyebrow }}</div>
             <h1>{{ $title }}</h1>

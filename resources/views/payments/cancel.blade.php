@@ -28,7 +28,7 @@
         .page::after { bottom:-210px; left:-80px; border-color:rgba(240,68,56,.08); box-shadow:0 0 0 52px rgba(240,68,56,.02),0 0 0 105px rgba(240,68,56,.015); }
         .site-header { position:relative; z-index:1; display:flex; align-items:center; justify-content:space-between; width:min(1120px,calc(100% - 48px)); margin:0 auto; padding:26px 0; }
         .brand { display:inline-flex; align-items:center; gap:11px; font-size:18px; font-weight:750; letter-spacing:-.02em; text-decoration:none; }
-        .brand-mark { display:grid; place-items:center; width:36px; height:36px; color:#fff; background:linear-gradient(135deg,#6366f1,#8b5cf6); border-radius:11px; box-shadow:0 9px 22px rgba(99,102,241,.25); font-size:16px; }
+        .brand-mark { display:block; width:36px; height:36px; flex:0 0 36px; object-fit:cover; background:#fff; border-radius:11px; box-shadow:0 9px 22px rgba(239,68,68,.2); }
         .secure-note { display:inline-flex; align-items:center; gap:7px; color:#475467; font-size:12px; font-weight:600; }
         .secure-note svg { width:16px; height:16px; color:#667085; }
         .content { position:relative; z-index:1; display:grid; place-items:center; width:min(960px,calc(100% - 48px)); margin:auto; padding:32px 0 64px; }
@@ -77,7 +77,7 @@
 <body>
     <div class="page">
         <header class="site-header">
-            <a class="brand" href="{{ route('dashboard') }}" aria-label="Inkcredible dashboard"><span class="brand-mark" aria-hidden="true">I</span><span>Inkcredible</span></a>
+            <a class="brand" href="{{ route('dashboard') }}" aria-label="Inkcredible dashboard"><x-brand-mark /><span>Inkcredible</span></a>
             <div class="secure-note"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2" stroke-width="1.8"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke-linecap="round" stroke-width="1.8"/></svg><span>Secure payment return</span></div>
         </header>
         <main class="content">

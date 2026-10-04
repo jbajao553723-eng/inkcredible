@@ -89,7 +89,7 @@
         }
 
         .brand { display: inline-flex; align-items: center; gap: 11px; text-decoration: none; font-size: 18px; font-weight: 750; letter-spacing: -.02em; }
-        .brand-mark { display: grid; place-items: center; width: 36px; height: 36px; color: #fff; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 11px; box-shadow: 0 9px 22px rgba(99, 102, 241, .25); font-size: 16px; }
+        .brand-mark { display: block; width: 36px; height: 36px; flex: 0 0 36px; object-fit: cover; background: #fff; border-radius: 11px; box-shadow: 0 9px 22px rgba(239, 68, 68, .2); }
         .secure-note { display: inline-flex; align-items: center; gap: 7px; color: #475467; font-size: 12px; font-weight: 600; }
         .secure-note svg { width: 16px; height: 16px; color: #667085; }
 
@@ -236,7 +236,7 @@
     <div class="page">
         <header class="site-header">
             <a class="brand" href="{{ route('dashboard') }}" aria-label="Inkcredible dashboard">
-                <span class="brand-mark" aria-hidden="true">I</span>
+                <x-brand-mark />
                 <span>Inkcredible</span>
             </a>
             <div class="secure-note">

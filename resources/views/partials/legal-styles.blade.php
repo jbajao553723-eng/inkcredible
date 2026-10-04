@@ -4,7 +4,7 @@ body { margin:0; color:var(--navy); background:var(--canvas); font-family:'Inter
 .legal-header { color:#fff; background:linear-gradient(145deg,#111827,#312e81 65%,#4f46e5); }
 .header-inner { max-width:940px; margin:0 auto; padding:38px 24px 56px; }
 .brand { display:inline-flex; align-items:center; gap:11px; color:#fff; font-size:18px; font-weight:700; text-decoration:none; }
-.brand-mark { display:grid; place-items:center; width:36px; height:36px; background:rgba(255,255,255,.13); border:1px solid rgba(255,255,255,.16); border-radius:11px; }
+.brand-mark { display:block; width:36px; height:36px; flex:0 0 36px; object-fit:cover; background:#fff; border:1px solid rgba(255,255,255,.16); border-radius:11px; box-shadow:0 7px 18px rgba(0,0,0,.14); }
 .eyebrow { margin-top:54px; color:#c7d2fe; font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; }
 h1 { max-width:720px; margin:10px 0 0; font-size:38px; line-height:1.15; letter-spacing:-.04em; }
 .header-description { max-width:720px; margin:16px 0 0; color:#c7d2fe; font-size:14px; line-height:1.65; }

@@ -19,7 +19,7 @@ button, input, textarea { font: inherit; }
 .brand-panel::before { right: -180px; bottom: -170px; width: 480px; height: 480px; }
 .brand-panel::after { right: -80px; bottom: -70px; width: 280px; height: 280px; }
 .brand { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 12px; color: #fff; font-size: 19px; font-weight: 700; text-decoration: none; }
-.brand-mark { display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid rgba(255, 255, 255, .18); border-radius: 12px; background: rgba(255, 255, 255, .13); box-shadow: 0 8px 20px rgba(0, 0, 0, .12); backdrop-filter: blur(8px); }
+.brand-mark { display: block; width: 40px; height: 40px; flex: 0 0 40px; object-fit: cover; border: 1px solid rgba(255, 255, 255, .18); border-radius: 12px; background: #fff; box-shadow: 0 8px 20px rgba(0, 0, 0, .16); }
 .brand-content { position: relative; z-index: 1; max-width: 470px; margin: auto 0; padding: 70px 0; }
 .brand-eyebrow { margin-bottom: 16px; color: #c7d2fe; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 .brand-title { max-width: 450px; margin: 0; font-size: clamp(36px, 4vw, 56px); line-height: 1.08; letter-spacing: -.05em; }
@@ -33,7 +33,7 @@ button, input, textarea { font: inherit; }
 .form-shell { width: 100%; max-width: 440px; }
 .form-shell.register { max-width: 540px; }
 .mobile-brand { display: none; margin-bottom: 34px; color: var(--navy); }
-.mobile-brand .brand-mark { color: #fff; background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+.mobile-brand .brand-mark { background: #fff; }
 .form-eyebrow { margin-bottom: 8px; color: var(--primary); font-size: 11px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
 h1 { margin: 0; font-size: 32px; line-height: 1.2; letter-spacing: -.04em; }
 .form-description { margin: 10px 0 30px; color: var(--muted); font-size: 14px; line-height: 1.55; }

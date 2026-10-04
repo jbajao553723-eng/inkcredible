@@ -9,7 +9,7 @@
 <style>@include('partials.legal-styles')</style>
 </head>
 <body>
-<header class="legal-header"><div class="header-inner"><a class="brand" href="{{ route('login') }}"><span class="brand-mark">I</span>Inkcredible</a><div class="eyebrow">Borrower disclosure</div><h1>Loan Terms and Conditions</h1><p class="header-description">Important information about approval, interest, repayment, penalties, lawful collection, privacy, and fraud reporting.</p></div></header>
+<header class="legal-header"><div class="header-inner"><a class="brand" href="{{ route('login') }}"><x-brand-mark />Inkcredible</a><div class="eyebrow">Borrower disclosure</div><h1>Loan Terms and Conditions</h1><p class="header-description">Important information about approval, interest, repayment, penalties, lawful collection, privacy, and fraud reporting.</p></div></header>
 <main class="legal-main"><article class="legal-card">
     <div class="legal-meta"><span>Version {{ config('legal.loan_terms_version') }}</span><span>Effective September 24, 2026</span></div>
     <div class="legal-notice"><strong>Read before applying:</strong> The product card and live estimate show the selected loan's current principal limits, interest rate, repayment term, and estimated total. Review them together with these terms before accepting.</div>

@@ -12,7 +12,7 @@
 <aside class="sidebar">
     <div class="sidebar-inner">
         <a class="sidebar-brand" href="{{ route('dashboard') }}" aria-label="Inkcredible client dashboard">
-            <img class="brand-mark" src="{{ asset('images/inkcredible-logo.png') }}" alt="" aria-hidden="true">
+            <x-brand-mark />
             <span class="brand-copy"><strong>Inkcredible</strong><small>Client workspace</small></span>
         </a>
 

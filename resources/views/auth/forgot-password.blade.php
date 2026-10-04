@@ -23,7 +23,7 @@
 <body>
 <main class="auth-page">
     <section class="brand-panel" aria-label="About account recovery">
-        <a class="brand" href="{{ route('login') }}"><span class="brand-mark">I</span><span>Inkcredible</span></a>
+        <a class="brand" href="{{ route('login') }}"><x-brand-mark /><span>Inkcredible</span></a>
         <div class="brand-content">
             <div class="brand-eyebrow">Secure account recovery</div>
             <h2 class="brand-title">Regain access without compromising your account.</h2>
@@ -39,7 +39,7 @@
 
     <section class="form-panel">
         <div class="form-shell">
-            <a class="brand mobile-brand" href="{{ route('login') }}"><span class="brand-mark">I</span><span>Inkcredible</span></a>
+            <a class="brand mobile-brand" href="{{ route('login') }}"><x-brand-mark /><span>Inkcredible</span></a>
             <div class="recovery-icon" aria-hidden="true"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2" stroke-width="1.8"/><path stroke-linecap="round" stroke-width="1.8" d="M8 10V7a4 4 0 0 1 8 0v3M12 14v2"/></svg></div>
             <div class="form-eyebrow">Password recovery</div>
             <h1>Forgot your password?</h1>

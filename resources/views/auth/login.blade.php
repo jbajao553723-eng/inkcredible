@@ -14,7 +14,7 @@
 <body>
 <main class="auth-page">
     <section class="brand-panel" aria-label="About Inkcredible">
-        <a class="brand" href="{{ route('login') }}"><span class="brand-mark">I</span><span>Inkcredible</span></a>
+        <a class="brand" href="{{ route('login') }}"><x-brand-mark /><span>Inkcredible</span></a>
 
         <div class="brand-content">
             <div class="brand-eyebrow">Lending made clearer</div>
@@ -32,7 +32,7 @@
 
     <section class="form-panel">
         <div class="form-shell">
-            <a class="brand mobile-brand" href="{{ route('login') }}"><span class="brand-mark">I</span><span>Inkcredible</span></a>
+            <a class="brand mobile-brand" href="{{ route('login') }}"><x-brand-mark /><span>Inkcredible</span></a>
             <div class="form-eyebrow">Account access</div>
             <h1>Welcome back</h1>
             <p class="form-description">Enter your account details to continue to your dashboard.</p>

@@ -15,7 +15,7 @@
         .nav { position:absolute; z-index:2; inset:0 0 auto; }
         .nav-inner { height:82px; display:flex; align-items:center; justify-content:space-between; gap:24px; color:var(--white); }
         .brand { display:inline-flex; align-items:center; gap:11px; font-size:18px; font-weight:750; text-decoration:none; letter-spacing:-.02em; }
-        .brand-mark { display:grid; width:34px; height:34px; place-items:center; color:var(--navy); background:var(--gold-soft); border-radius:10px 10px 10px 3px; font-family:Georgia,serif; font-size:21px; font-weight:700; }
+        .brand-mark { display:block; width:34px; height:34px; flex:0 0 34px; object-fit:cover; background:#fff; border-radius:10px 10px 10px 3px; box-shadow:0 6px 16px rgba(239,68,68,.18); }
         .nav-links { display:flex; align-items:center; gap:26px; }
         .nav-link { color:#d9e0ec; font-size:14px; font-weight:600; text-decoration:none; }
         .nav-link:hover,.nav-link:focus-visible { color:#fff; }
@@ -80,7 +80,7 @@
 <body>
 <header class="nav">
     <div class="shell nav-inner">
-        <a class="brand" href="{{ route('home') }}" aria-label="Inkcredible home"><span class="brand-mark">I</span><span>Inkcredible</span></a>
+        <a class="brand" href="{{ route('home') }}" aria-label="Inkcredible home"><x-brand-mark /><span>Inkcredible</span></a>
         <nav class="nav-links" aria-label="Primary navigation">
             <a class="nav-link" href="#features">Why Inkcredible</a><a class="nav-link" href="#how-it-works">How it works</a>
             @auth<a class="button button-primary" href="{{ route('dashboard') }}">Go to dashboard</a>
