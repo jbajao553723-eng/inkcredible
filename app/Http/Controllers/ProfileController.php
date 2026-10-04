@@ -96,7 +96,7 @@ class ProfileController extends Controller
         $previousPhoto = $request->user()->profile_photo_path;
 
         if ($request->hasFile('profile_photo')) {
-            $validated['profile_photo_path'] = $request->file('profile_photo')->store('profile-photos', 'public');
+            $validated['profile_photo_path'] = $request->file('profile_photo')->store('profile-photos', config('filesystems.public_disk'));
         }
 
         $request->user()->fill($validated);
@@ -111,7 +111,7 @@ class ProfileController extends Controller
         $request->user()->save();
 
         if (isset($validated['profile_photo_path']) && $previousPhoto) {
-            Storage::disk('public')->delete($previousPhoto);
+            Storage::disk(config('filesystems.public_disk'))->delete($previousPhoto);
         }
 
         if ($requiresEmailVerification) {
@@ -137,9 +137,11 @@ class ProfileController extends Controller
     {
         $path = $request->user()->profile_photo_path;
 
-        abort_unless($path && Storage::disk('public')->exists($path), 404);
+        $disk = Storage::disk(config('filesystems.public_disk'));
 
-        return Storage::disk('public')->response($path, null, [
+        abort_unless($path && $disk->exists($path), 404);
+
+        return $disk->response($path, null, [
             'Cache-Control' => 'private, max-age=300',
         ]);
     }

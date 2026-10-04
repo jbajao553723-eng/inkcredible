@@ -52,9 +52,11 @@ class LoanAdminController extends Controller
             ->latest()
             ->firstOrFail();
 
-        abort_unless(Storage::disk('public')->exists($document->file_path), 404);
+        $disk = Storage::disk(config('filesystems.public_disk'));
 
-        return Storage::disk('public')->response(
+        abort_unless($disk->exists($document->file_path), 404);
+
+        return $disk->response(
             $document->file_path,
             $document->original_filename ?: basename($document->file_path),
             [
@@ -82,7 +84,7 @@ class LoanAdminController extends Controller
 
         if (! $loan->contract_signed_at
             || ! $loan->signed_contract_path
-            || ! Storage::disk('local')->exists($loan->signed_contract_path)) {
+            || ! Storage::disk(config('filesystems.private_disk'))->exists($loan->signed_contract_path)) {
             return back()->with('error', 'The client must digitally sign and submit the contract before final approval.');
         }
 
@@ -110,7 +112,7 @@ class LoanAdminController extends Controller
         ])->setPaper('a4');
         $finalPath = 'loan-contracts/'.$loan->id.'/'.Str::uuid().'-final-contract.pdf';
 
-        if (! Storage::disk('local')->put($finalPath, $pdf->output())) {
+        if (! Storage::disk(config('filesystems.private_disk'))->put($finalPath, $pdf->output())) {
             return back()->withErrors(['admin_signature' => 'The final signed contract could not be generated. Please try again.']);
         }
 
@@ -126,7 +128,7 @@ class LoanAdminController extends Controller
         ]);
 
         if ($previousPath !== $finalPath) {
-            Storage::disk('local')->delete($previousPath);
+            Storage::disk(config('filesystems.private_disk'))->delete($previousPath);
         }
 
         $approvals->approve($loan);

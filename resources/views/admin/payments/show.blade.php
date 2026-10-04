@@ -96,8 +96,8 @@
                 <div class="panel-header"><div><h2 class="panel-title">Payment proof</h2><p class="panel-description">{{ $payment->method === 'cash' ? 'Verify before deciding.' : 'Provider-verified payment.' }}</p></div></div>
                 <div class="panel-body">
                     @if($payment->proof)
-                        <a href="{{ asset('storage/'.$payment->proof) }}" target="_blank" rel="noopener"><img class="proof-image" src="{{ asset('storage/'.$payment->proof) }}" alt="Payment proof for transaction {{ $payment->id }}"></a>
-                        <div class="proof-actions"><a class="button button-secondary" href="{{ asset('storage/'.$payment->proof) }}" target="_blank" rel="noopener">Open full-size proof</a></div>
+                        <a href="{{ route('admin.payment.proof', $payment) }}" target="_blank" rel="noopener"><img class="proof-image" src="{{ route('admin.payment.proof', $payment) }}" alt="Payment proof for transaction {{ $payment->id }}"></a>
+                        <div class="proof-actions"><a class="button button-secondary" href="{{ route('admin.payment.proof', $payment) }}" target="_blank" rel="noopener">Open full-size proof</a></div>
                     @else
                         <div class="empty-state" style="padding:18px 0"><strong>No proof uploaded</strong>{{ $payment->method === 'cash' ? 'This cash payment has no attachment.' : 'Online payments are verified through PayMongo.' }}</div>
                     @endif

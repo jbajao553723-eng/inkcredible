@@ -15,6 +15,11 @@ return [
 
     'default' => env('FILESYSTEM_DISK', 'local'),
 
+    // Uploaded documents are served through authenticated controller routes.
+    // Set both values to "s3" in serverless production environments.
+    'private_disk' => env('FILESYSTEM_PRIVATE_DISK', 'local'),
+    'public_disk' => env('FILESYSTEM_PUBLIC_DISK', 'public'),
+
     /*
     |--------------------------------------------------------------------------
     | Filesystem Disks

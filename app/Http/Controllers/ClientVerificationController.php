@@ -27,13 +27,13 @@ class ClientVerificationController extends Controller
 
         $documentDirectory = 'client-verifications/'.$request->user()->id;
         $validIdPath = $request->hasFile('valid_id')
-            ? $request->file('valid_id')->store($documentDirectory, 'local')
+            ? $request->file('valid_id')->store($documentDirectory, config('filesystems.private_disk'))
             : $verification?->valid_id_path;
         $selfiePath = $request->hasFile('selfie_with_id')
-            ? $request->file('selfie_with_id')->store($documentDirectory, 'local')
+            ? $request->file('selfie_with_id')->store($documentDirectory, config('filesystems.private_disk'))
             : $verification?->selfie_with_id_path;
         $payslipPath = $request->hasFile('payslip')
-            ? $request->file('payslip')->store($documentDirectory, 'local')
+            ? $request->file('payslip')->store($documentDirectory, config('filesystems.private_disk'))
             : $verification?->payslip_path;
         $digitalSignature = $validated['digital_signature'] ?? $verification?->digital_signature;
 
@@ -101,7 +101,7 @@ class ClientVerificationController extends Controller
             'payslip' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:4096'],
         ]);
         $previousPath = $verification->payslip_path;
-        $path = $validated['payslip']->store('client-verifications/'.$request->user()->id, 'local');
+        $path = $validated['payslip']->store('client-verifications/'.$request->user()->id, config('filesystems.private_disk'));
 
         $verification->update([
             'payslip_path' => $path,
@@ -115,7 +115,7 @@ class ClientVerificationController extends Controller
         ]);
 
         if ($previousPath && $previousPath !== $path) {
-            Storage::disk('local')->delete($previousPath);
+            Storage::disk(config('filesystems.private_disk'))->delete($previousPath);
         }
 
         return back()->with('success', 'Your payslip was submitted for administrator verification. The score bonus applies after approval.');

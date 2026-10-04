@@ -29,7 +29,7 @@ class LoanApplicationService
         $purpose = $data['purpose_choice'] === 'other'
             ? trim((string) ($data['purpose_other'] ?? ''))
             : $purposeOptions[$data['purpose_choice']];
-        $filePath = $governmentId->store('ids', 'public');
+        $filePath = $governmentId->store('ids', config('filesystems.public_disk'));
 
         try {
             return DB::transaction(function () use ($user, $loanType, $amount, $purpose, $interestAmount, $totalPayable, $installmentCount, $repaymentPeriodDays, $filePath, $governmentId) {
@@ -78,7 +78,7 @@ class LoanApplicationService
                 return $loan;
             });
         } catch (Throwable $exception) {
-            Storage::disk('public')->delete($filePath);
+            Storage::disk(config('filesystems.public_disk'))->delete($filePath);
 
             throw $exception;
         }

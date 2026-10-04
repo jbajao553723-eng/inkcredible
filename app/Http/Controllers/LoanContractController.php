@@ -25,7 +25,7 @@ class LoanContractController extends Controller
         }
 
         if ($loan->signed_contract_path) {
-            Storage::disk('local')->delete($loan->signed_contract_path);
+            Storage::disk(config('filesystems.private_disk'))->delete($loan->signed_contract_path);
         }
 
         $loan->update([
@@ -72,11 +72,11 @@ class LoanContractController extends Controller
 
         abort_unless(
             $loan->signed_contract_path
-                && Storage::disk('local')->exists($loan->signed_contract_path),
+                && Storage::disk(config('filesystems.private_disk'))->exists($loan->signed_contract_path),
             404
         );
 
-        return Storage::disk('local')->download(
+        return Storage::disk(config('filesystems.private_disk'))->download(
             $loan->signed_contract_path,
             ($loan->loan_code ?: 'loan-'.$loan->id).($loan->admin_signed_at ? '-final-signed-contract.pdf' : '-signed-contract.pdf'),
             ['Content-Type' => 'application/pdf']
@@ -113,12 +113,12 @@ class LoanContractController extends Controller
         ])->setPaper('a4');
         $path = 'loan-contracts/'.$loan->id.'/'.Str::uuid().'-signed-contract.pdf';
 
-        if (! Storage::disk('local')->put($path, $pdf->output())) {
+        if (! Storage::disk(config('filesystems.private_disk'))->put($path, $pdf->output())) {
             return back()->withErrors(['contract' => 'The signed contract could not be generated. Please try again.']);
         }
 
         if ($loan->signed_contract_path) {
-            Storage::disk('local')->delete($loan->signed_contract_path);
+            Storage::disk(config('filesystems.private_disk'))->delete($loan->signed_contract_path);
         }
 
         $loan->update([

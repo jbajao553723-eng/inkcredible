@@ -1,0 +1,32 @@
+{
+  "_signature-pad-B8wGoSUX.js": {
+    "file": "assets/signature-pad-B8wGoSUX.js",
+    "name": "signature-pad"
+  },
+  "resources/css/app.css": {
+    "file": "assets/app-nivwOf4O.css",
+    "src": "resources/css/app.css",
+    "isEntry": true
+  },
+  "resources/js/admin.js": {
+    "file": "assets/admin-BIzyzYwg.js",
+    "name": "admin",
+    "src": "resources/js/admin.js",
+    "isEntry": true,
+    "imports": [
+      "_signature-pad-B8wGoSUX.js"
+    ],
+    "css": [
+      "assets/admin-HZdVjPll.css"
+    ]
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-DvSdkd9K.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true,
+    "imports": [
+      "_signature-pad-B8wGoSUX.js"
+    ]
+  }
+}

@@ -224,6 +224,9 @@ Route::middleware(['auth', 'admin'])
             Route::get('/payment/{id}/receipt', [PaymentController::class, 'adminReceipt'])
                 ->name('payment.receipt');
 
+            Route::get('/payment/{id}/proof', [PaymentController::class, 'adminProof'])
+                ->name('payment.proof');
+
             Route::post('/payment/{id}/approve', [PaymentController::class, 'approve'])
                 ->name('payment.approve');
 

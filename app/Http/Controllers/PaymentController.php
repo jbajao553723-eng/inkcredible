@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -75,7 +76,7 @@ class PaymentController extends Controller
         $proofPath = null;
 
         if ($validated['method'] === 'cash' && $request->hasFile('proof')) {
-            $proofPath = $request->file('proof')->store('payments', 'public');
+            $proofPath = $request->file('proof')->store('payments', config('filesystems.public_disk'));
         }
 
         $payment = Payment::create([
@@ -394,6 +395,19 @@ class PaymentController extends Controller
     public function adminReceipt(int $id, PaymentReceiptImage $receiptImage): Response
     {
         return $this->downloadReceipt(Payment::findOrFail($id), $receiptImage);
+    }
+
+    public function adminProof(int $id): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $payment = Payment::findOrFail($id);
+        $disk = Storage::disk(config('filesystems.public_disk'));
+
+        abort_unless($payment->proof && $disk->exists($payment->proof), 404);
+
+        return $disk->response($payment->proof, null, [
+            'Cache-Control' => 'private, no-store',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 
     /*

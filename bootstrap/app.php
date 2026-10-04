@@ -18,6 +18,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function ($middleware) {
+        $middleware->trustProxies(at: '*');
+
         $middleware->appendToGroup('web', AuditUserActions::class);
         $middleware->appendToGroup('web', EnsureAccountIsActive::class);
 

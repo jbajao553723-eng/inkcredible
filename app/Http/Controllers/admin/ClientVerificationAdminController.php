@@ -54,9 +54,11 @@ class ClientVerificationAdminController extends Controller
 
         $path = $client->profile_photo_path;
 
-        abort_unless($path && Storage::disk('public')->exists($path), 404);
+        $disk = Storage::disk(config('filesystems.public_disk'));
 
-        return Storage::disk('public')->response($path, null, [
+        abort_unless($path && $disk->exists($path), 404);
+
+        return $disk->response($path, null, [
             'Cache-Control' => 'private, max-age=300',
         ]);
     }
@@ -115,8 +117,10 @@ class ClientVerificationAdminController extends Controller
             default => abort(404),
         };
 
-        abort_unless($path && Storage::disk('local')->exists($path), 404);
+        $disk = Storage::disk(config('filesystems.private_disk'));
 
-        return Storage::disk('local')->response($path);
+        abort_unless($path && $disk->exists($path), 404);
+
+        return $disk->response($path);
     }
 }

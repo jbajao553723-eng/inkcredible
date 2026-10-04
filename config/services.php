@@ -40,4 +40,8 @@ return [
         'webhook_secret' => env('PAYMONGO_WEBHOOK_SECRET'),
     ],
 
+    'vercel' => [
+        'cron_secret' => env('CRON_SECRET'),
+    ],
+
 ];
