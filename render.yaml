@@ -38,3 +38,9 @@ services:
         value: database
       - key: RUN_MIGRATIONS
         value: "true"
+      - key: RUN_SEEDERS
+        value: "true"
+      - key: SEED_SUPERADMIN_EMAIL
+        sync: false
+      - key: SEED_SUPERADMIN_PASSWORD
+        sync: false

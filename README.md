@@ -141,7 +141,12 @@ DB_PASSWORD=<MYSQL_ADDON_PASSWORD>
 The Render Blueprint generates a stable `APP_KEY_SEED`; the startup script
 derives a valid Laravel application key from it. It also derives `APP_URL` from
 Render's external hostname. The container runs pending migrations on startup
-and then caches Laravel configuration, routes, events, and views.
+and then caches Laravel configuration, routes, events, and views. On the first
+deployment, provide `SEED_SUPERADMIN_EMAIL` and `SEED_SUPERADMIN_PASSWORD` so
+the idempotent seeders create the initial administrator and loan products.
+After the first successful deployment, set `RUN_SEEDERS=false` and remove both
+seed credential variables from Render so a later deploy cannot reset the
+administrator password.
 
 Render's filesystem is ephemeral unless a persistent disk is attached. Use an
 S3-compatible disk or a Render persistent disk before relying on uploaded
