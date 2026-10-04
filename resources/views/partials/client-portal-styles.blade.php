@@ -20,7 +20,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .brand-copy, .account-copy { display: flex; min-width: 0; flex-direction: column; }
 .brand-copy strong { font-size: 18px; letter-spacing: -.02em; }
 .brand-copy small { margin-top: 2px; color: #98a2b3; font-size: 10px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
-.brand-mark { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 11px; background: linear-gradient(135deg, #6366f1, #8b5cf6); box-shadow: 0 8px 20px rgba(99, 102, 241, .3); }
+.brand-mark { display: block; width: 36px; height: 36px; flex: 0 0 36px; object-fit: cover; border: 1px solid rgba(255,255,255,.14); border-radius: 11px; background: #fff; box-shadow: 0 8px 20px rgba(239,68,68,.24); }
 .sidebar-nav { flex: 1; min-height: 0; padding: 18px 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #344054 transparent; }
 .nav-section + .nav-section { margin-top: 20px; }
 .nav-label { margin: 0 12px 8px; color: #667085; font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }

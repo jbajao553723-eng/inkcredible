@@ -27,7 +27,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .sidebar { position: fixed; inset: 0 auto 0 0; width: var(--sidebar-width); padding: 18px 16px; color: #fff; background: linear-gradient(180deg, #111827 0%, #0b1220 100%); border-right: 1px solid rgba(255,255,255,.06); z-index: 10; }
 .sidebar-inner { display: flex; flex-direction: column; height: 100%; min-height: 0; }
 .sidebar-brand { display: flex; align-items: center; gap: 12px; padding: 10px 10px 22px; color: #fff; border-bottom: 1px solid rgba(255,255,255,.07); text-decoration: none; }
-.brand-mark { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 11px; background: linear-gradient(135deg, #6366f1, #8b5cf6); box-shadow: 0 8px 20px rgba(99, 102, 241, .3); }
+.brand-mark { display: block; width: 36px; height: 36px; flex: 0 0 36px; object-fit: cover; border: 1px solid rgba(255,255,255,.14); border-radius: 11px; background: #fff; box-shadow: 0 8px 20px rgba(239,68,68,.24); }
 .brand-copy, .account-copy { display: flex; min-width: 0; flex-direction: column; }
 .brand-copy strong { font-size: 18px; letter-spacing: -.02em; }
 .brand-copy small { margin-top: 2px; color: #98a2b3; font-size: 10px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }

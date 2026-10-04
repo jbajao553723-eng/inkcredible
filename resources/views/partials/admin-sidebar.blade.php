@@ -13,7 +13,7 @@
 <aside class="sidebar">
     <div class="sidebar-inner">
         <a class="sidebar-brand" href="{{ $isSuperAdmin ? route('admin.security.dashboard') : route('admin.dashboard') }}" aria-label="Inkcredible {{ $isSuperAdmin ? 'security' : 'admin' }} dashboard">
-            <span class="brand-mark" aria-hidden="true">I</span>
+            <img class="brand-mark" src="{{ asset('images/inkcredible-logo.png') }}" alt="" aria-hidden="true">
             <span class="brand-copy"><strong>Inkcredible</strong><small>{{ $isSuperAdmin ? 'Security workspace' : 'Admin workspace' }}</small></span>
         </a>
 
