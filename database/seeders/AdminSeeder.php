@@ -25,6 +25,7 @@ class AdminSeeder extends Seeder
             'password' => Hash::make($password),
             'role' => User::ROLE_ADMIN,
             'is_active' => true,
+            'email_verified_at' => now(),
             'disabled_at' => null,
             'disabled_by' => null,
             'contact_number' => 'Not provided',

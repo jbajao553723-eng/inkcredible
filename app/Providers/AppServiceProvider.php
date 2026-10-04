@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Event;
@@ -45,6 +46,10 @@ class AppServiceProvider extends ServiceProvider
 
         Event::listen(Registered::class, function (Registered $event): void {
             AuditLog::record('account_registered', 'Created a client account', $event->user instanceof User ? $event->user : null);
+        });
+
+        Event::listen(PasswordReset::class, function (PasswordReset $event): void {
+            AuditLog::record('password_reset', 'Reset account password through email recovery', $event->user instanceof User ? $event->user : null);
         });
     }
 }

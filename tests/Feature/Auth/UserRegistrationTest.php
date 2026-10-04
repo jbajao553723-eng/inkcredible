@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\User;
+use App\Notifications\EmailOtpNotification;
+use Illuminate\Support\Facades\Notification;
 
 test('registration screen can be rendered', function () {
     $response = $this->get('/register');
@@ -15,27 +17,36 @@ test('registration screen can be rendered', function () {
 });
 
 test('new users can register', function () {
+    Notification::fake();
+
     $response = $this->post('/register', [
         'first_name' => 'Test',
         'last_name' => 'User',
         'email' => 'test@example.com',
         'contact_number' => '09171234567',
         'age' => 25,
-        'address' => '123 Test Street, Manila',
+        'street_address' => '123 Test Street',
+        'barangay' => 'Barangay 1',
+        'city_municipality' => 'City of Manila',
+        'province' => 'Metro Manila',
         'password' => 'Password1',
         'password_confirmation' => 'Password1',
         'terms_accepted' => '1',
     ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect(route('dashboard', absolute: false));
+    $response->assertRedirect(route('verification.notice', absolute: false));
 
     $user = User::where('email', 'test@example.com')->sole();
     expect($user->first_name)->toBe('Test')
         ->and($user->last_name)->toBe('User')
         ->and($user->name)->toBe('Test User')
         ->and($user->terms_accepted_at)->not->toBeNull()
-        ->and($user->terms_version)->toBe(config('legal.account_terms_version'));
+        ->and($user->terms_version)->toBe(config('legal.account_terms_version'))
+        ->and($user->email_verified_at)->toBeNull();
+
+    Notification::assertSentTo($user, EmailOtpNotification::class, fn (EmailOtpNotification $notification) => $notification->purpose === 'email-verification'
+    );
 });
 
 test('all registration fields are required', function () {
@@ -44,7 +55,7 @@ test('all registration fields are required', function () {
         'password' => 'Password1',
         'password_confirmation' => 'Password1',
         'terms_accepted' => '1',
-    ])->assertSessionHasErrors(['first_name', 'last_name', 'contact_number', 'age', 'address']);
+    ])->assertSessionHasErrors(['first_name', 'last_name', 'contact_number', 'age', 'street_address', 'barangay', 'city_municipality', 'province']);
 
     $this->assertGuest();
     $this->assertDatabaseMissing('users', ['email' => 'incomplete@example.com']);
@@ -57,7 +68,10 @@ test('users must accept the terms before registering', function () {
         'email' => 'terms@example.com',
         'contact_number' => '09171234567',
         'age' => 25,
-        'address' => '123 Test Street, Manila',
+        'street_address' => '123 Test Street',
+        'barangay' => 'Barangay 1',
+        'city_municipality' => 'City of Manila',
+        'province' => 'Metro Manila',
         'password' => 'Password1',
         'password_confirmation' => 'Password1',
     ])->assertSessionHasErrors('terms_accepted');
@@ -73,8 +87,10 @@ test('registration requires a number or special character in an eight character 
         'email' => 'policy@example.com',
         'contact_number' => '09171234567',
         'age' => 25,
-        'street_address' => '12 Rizal Street, Barangay Uno',
-        'address_location' => 'Batangas',
+        'street_address' => '12 Rizal Street',
+        'barangay' => 'Barangay Uno',
+        'city_municipality' => 'Batangas City',
+        'province' => 'Batangas',
         'password' => 'abcdefgh',
         'password_confirmation' => 'abcdefgh',
         'terms_accepted' => '1',
@@ -84,19 +100,23 @@ test('registration requires a number or special character in an eight character 
 });
 
 test('registration combines the street input and selected location', function () {
+    Notification::fake();
+
     $this->post('/register', [
         'first_name' => 'Address',
         'last_name' => 'Test',
         'email' => 'address@example.com',
         'contact_number' => '09171234567',
         'age' => 25,
-        'street_address' => '12 Rizal Street, Barangay Uno',
-        'address_location' => 'Batangas',
+        'street_address' => '12 Rizal Street',
+        'barangay' => 'Barangay Uno',
+        'city_municipality' => 'Batangas City',
+        'province' => 'Batangas',
         'password' => 'Password1',
         'password_confirmation' => 'Password1',
         'terms_accepted' => '1',
-    ])->assertRedirect(route('dashboard', absolute: false));
+    ])->assertRedirect(route('verification.notice', absolute: false));
 
     expect(User::where('email', 'address@example.com')->value('address'))
-        ->toBe('12 Rizal Street, Barangay Uno, Batangas');
+        ->toBe('12 Rizal Street, Barangay Uno, Batangas City, Batangas');
 });

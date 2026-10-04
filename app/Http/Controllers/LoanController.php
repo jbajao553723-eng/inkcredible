@@ -40,7 +40,10 @@ class LoanController extends Controller
             ->get();
 
         $purposeOptions = config('loan_purposes');
-        $affordability = $riskAssessments->clientBaseline(auth()->user());
+        $affordability = [
+            ...$riskAssessments->clientBaseline(auth()->user()),
+            ...$riskAssessments->profile(auth()->user()),
+        ];
 
         return view('client.loans.create', compact('loanTypes', 'purposeOptions', 'affordability'));
     }

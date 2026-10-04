@@ -110,7 +110,7 @@
 <main class="main" id="main-content" tabindex="-1"><div class="page-shell">
     <header class="topbar">
         <div><div class="eyebrow">Loan operations</div><div class="queue-heading"><h1>Loan requests</h1>@if($pendingCount)<span class="queue-pulse">{{ $pendingCount }} waiting for review</span>@endif</div><p class="subtitle">Review and compare applications, then open the details page to record a decision.</p></div>
-        <div class="top-actions"><a class="button button-secondary" href="{{ route('admin.dashboard') }}">Dashboard</a><form method="POST" action="{{ route('logout') }}">@csrf<button class="button button-secondary" type="submit">Log out</button></form></div>
+        <div class="top-actions"><a class="button button-secondary" href="{{ route('admin.dashboard') }}">Dashboard</a></div>
     </header>
     <x-flash-messages />
     @if($errors->any())<div class="alert alert-error" role="alert">{{ $errors->first() }}</div>@endif

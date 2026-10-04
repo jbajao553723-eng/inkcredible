@@ -153,7 +153,6 @@ html.motion-enabled.motion-in .profit-ring { --profit-interest:var(--target-inte
         </div>
         <div class="top-actions">
             <a class="button button-primary" href="{{ route('admin.loans') }}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 4h12v16H6zM9 8h6M9 12h6"/></svg>Review requests</a>
-            <form method="POST" action="{{ route('logout') }}">@csrf<button class="button button-secondary" type="submit">Log out</button></form>
         </div>
     </header>
 

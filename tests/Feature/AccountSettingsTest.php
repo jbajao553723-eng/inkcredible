@@ -1,7 +1,9 @@
 <?php
 
 use App\Models\User;
+use App\Notifications\EmailOtpNotification;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 
 test('profile page is displayed', function () {
@@ -25,6 +27,31 @@ test('profile page is displayed', function () {
         ->assertOk()
         ->assertSee('Update password')
         ->assertDontSee('Delete account');
+
+    $this->actingAs($user)
+        ->get(route('profile.motion.edit'))
+        ->assertOk()
+        ->assertSee('Motion accessibility')
+        ->assertSee('Reduce motion');
+});
+
+test('a client can reduce motion across the client workspace', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->patch(route('profile.motion.update'), [
+        'reduce_motion' => '1',
+    ])->assertRedirect(route('profile.motion.edit'));
+
+    expect($user->fresh()->ui_preferences)->toBe(['reduce_motion' => true]);
+
+    $this->actingAs($user->fresh())->get(route('dashboard'))
+        ->assertOk()
+        ->assertSee('transition-duration:.01ms', false);
+
+    $this->actingAs($user->fresh())->patch(route('profile.motion.update'))
+        ->assertRedirect(route('profile.motion.edit'));
+
+    expect($user->fresh()->ui_preferences)->toBe(['reduce_motion' => false]);
 });
 
 test('required personal information cannot be cleared from a profile', function () {
@@ -36,11 +63,15 @@ test('required personal information cannot be cleared from a profile', function 
         'email' => $user->email,
         'contact_number' => '',
         'age' => '',
-        'address' => '',
-    ])->assertSessionHasErrors(['first_name', 'last_name', 'contact_number', 'age', 'address']);
+        'street_address' => '',
+        'barangay' => '',
+        'city_municipality' => '',
+        'province' => '',
+    ])->assertSessionHasErrors(['first_name', 'last_name', 'contact_number', 'age', 'street_address', 'barangay', 'city_municipality', 'province']);
 });
 
 test('profile information can be updated', function () {
+    Notification::fake();
     $user = User::factory()->create();
 
     $response = $this->actingAs($user)->patch('/profile', [
@@ -49,10 +80,13 @@ test('profile information can be updated', function () {
         'email' => 'test@example.com',
         'contact_number' => '09171234567',
         'age' => 26,
-        'address' => '123 Test Street, Manila',
+        'street_address' => $user->street_address,
+        'barangay' => $user->barangay,
+        'city_municipality' => $user->city_municipality,
+        'province' => $user->province,
     ]);
 
-    $response->assertSessionHasNoErrors()->assertRedirect('/profile');
+    $response->assertSessionHasNoErrors()->assertRedirect(route('verification.notice'));
 
     $user->refresh();
 
@@ -62,6 +96,36 @@ test('profile information can be updated', function () {
     $this->assertSame('Updated Client', $user->full_name);
     $this->assertSame('test@example.com', $user->email);
     $this->assertNull($user->email_verified_at);
+
+    Notification::assertSentTo($user, EmailOtpNotification::class, fn (EmailOtpNotification $notification) => $notification->purpose === 'email-verification'
+    );
+});
+
+test('profile address settings use the same fields as account creation and update the dashboard identity', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user)->patch(route('profile.update'), [
+        'first_name' => 'Dashboard',
+        'last_name' => 'Client',
+        'email' => $user->email,
+        'contact_number' => '09171234567',
+        'age' => 27,
+        'street_address' => '42 Example Street',
+        'barangay' => 'Barangay Uno',
+        'city_municipality' => 'Batangas City',
+        'province' => 'Batangas',
+    ])->assertSessionHasNoErrors()->assertRedirect(route('profile.edit'));
+
+    expect($user->fresh()->address)->toBe('42 Example Street, Barangay Uno, Batangas City, Batangas')
+        ->and($user->fresh()->street_address)->toBe('42 Example Street')
+        ->and($user->fresh()->barangay)->toBe('Barangay Uno')
+        ->and($user->fresh()->city_municipality)->toBe('Batangas City')
+        ->and($user->fresh()->province)->toBe('Batangas')
+        ->and($user->fresh()->name)->toBe('Dashboard Client');
+
+    $this->actingAs($user->fresh())->get(route('dashboard'))
+        ->assertOk()
+        ->assertSee('Welcome back, Dashboard')
+        ->assertSee('Update dashboard profile');
 });
 
 test('a client can upload and privately view a profile picture', function () {
@@ -79,7 +143,10 @@ test('a client can upload and privately view a profile picture', function () {
         'email' => $user->email,
         'contact_number' => $user->contact_number,
         'age' => $user->age,
-        'address' => $user->address,
+        'street_address' => $user->street_address,
+        'barangay' => $user->barangay,
+        'city_municipality' => $user->city_municipality,
+        'province' => $user->province,
         'profile_photo' => $image,
     ])->assertSessionHasNoErrors()->assertRedirect('/profile');
 
@@ -117,7 +184,10 @@ test('email verification status is unchanged when the email address is unchanged
         'email' => $user->email,
         'contact_number' => '09171234567',
         'age' => 26,
-        'address' => '123 Test Street, Manila',
+        'street_address' => $user->street_address,
+        'barangay' => $user->barangay,
+        'city_municipality' => $user->city_municipality,
+        'province' => $user->province,
     ]);
 
     $response->assertSessionHasNoErrors()->assertRedirect('/profile');

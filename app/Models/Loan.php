@@ -40,6 +40,10 @@ class Loan extends Model
         'contract_signature_name',
         'signed_contract_path',
         'signed_contract_original_name',
+        'admin_signature',
+        'admin_signature_name',
+        'admin_signed_at',
+        'admin_signed_by',
         'disbursed_at',
         'terms_accepted_at',
         'terms_version',
@@ -57,6 +61,8 @@ class Loan extends Model
         'approved_at' => 'datetime',
         'contract_sent_at' => 'datetime',
         'contract_signed_at' => 'datetime',
+        'admin_signature' => 'encrypted',
+        'admin_signed_at' => 'datetime',
         'disbursed_at' => 'datetime',
         'terms_accepted_at' => 'datetime',
     ];
@@ -69,6 +75,11 @@ class Loan extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function adminSigner()
+    {
+        return $this->belongsTo(User::class, 'admin_signed_by');
     }
 
     public function loanType()

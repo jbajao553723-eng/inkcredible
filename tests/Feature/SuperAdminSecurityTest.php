@@ -14,10 +14,16 @@ it('keeps the superadmin workspace focused on security', function () {
         ->assertSee('Audit activity')
         ->assertSee('Threat signals')
         ->assertSee('Control readiness')
-        ->assertSee('Multi-factor authentication')
+        ->assertSee('Active-account enforcement')
+        ->assertDontSee('Multi-factor authentication')
         ->assertDontSee('Loan requests')
         ->assertDontSee('Payments')
         ->assertDontSee('Reports');
+
+    $this->actingAs($superadmin)->get(route('admin.settings.edit'))
+        ->assertOk()
+        ->assertSee('Administrator account')
+        ->assertSee('Motion accessibility');
 
     $this->actingAs($superadmin)->get(route('admin.loans'))->assertForbidden();
     $this->actingAs($superadmin)->get(route('admin.clients'))->assertForbidden();

@@ -75,10 +75,10 @@ it('shows the client the same affordability calculation used during review', fun
 
     $this->actingAs($client)->get(route('loan.create'))
         ->assertOk()
-        ->assertSee('Affordability assessment')
+        ->assertSee('Application readiness preview')
         ->assertSee('Verified monthly income')
         ->assertSee('Existing approved commitments')
-        ->assertSee('same 30% guide used during administrator review');
+        ->assertSee('Verified payslip');
 });
 
 it('submits the application, loan, and supporting document together', function () {

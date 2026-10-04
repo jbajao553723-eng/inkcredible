@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ClientVerification;
 use App\Models\User;
+use App\Notifications\ClientVerificationApprovedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -66,12 +67,19 @@ class ClientVerificationAdminController extends Controller
             return back()->with('error', 'Only pending verification submissions can be approved.');
         }
 
+        if (! $verification->digital_signature) {
+            return back()->with('error', 'The client must provide a digital signature before verification can be approved.');
+        }
+
         $verification->update([
             'status' => ClientVerification::STATUS_APPROVED,
+            'payslip_verified_at' => $verification->payslip_path ? now() : null,
             'reviewed_at' => now(),
             'reviewed_by' => $request->user()->id,
             'rejection_reason' => null,
         ]);
+
+        $verification->user?->notify(new ClientVerificationApprovedNotification);
 
         return redirect()->route('admin.clients', ['section' => 'verifications'])
             ->with('success', 'Client verification approved. The client may now request a loan.');
@@ -103,6 +111,7 @@ class ClientVerificationAdminController extends Controller
         $path = match ($type) {
             'valid-id' => $verification->valid_id_path,
             'selfie' => $verification->selfie_with_id_path,
+            'payslip' => $verification->payslip_path,
             default => abort(404),
         };
 

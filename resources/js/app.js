@@ -1,6 +1,7 @@
 import './bootstrap';
 import './ui-motion';
 import './file-downloads';
+import './signature-pad';
 
 import Alpine from 'alpinejs';
 

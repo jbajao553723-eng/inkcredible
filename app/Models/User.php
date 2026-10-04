@@ -39,7 +39,12 @@ class User extends Authenticatable
         'contact_number',
         'age',
         'address',
+        'street_address',
+        'barangay',
+        'city_municipality',
+        'province',
         'profile_photo_path',
+        'ui_preferences',
         'terms_accepted_at',
         'terms_version',
         'role',
@@ -72,6 +77,7 @@ class User extends Authenticatable
             'terms_accepted_at' => 'datetime',
             'is_active' => 'boolean',
             'disabled_at' => 'datetime',
+            'ui_preferences' => 'array',
         ];
     }
 

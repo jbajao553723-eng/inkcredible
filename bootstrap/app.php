@@ -4,8 +4,9 @@ use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\AuditUserActions;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\EnsureClientIsVerified;
-use App\Http\Middleware\SuperAdminMiddleware;
+use App\Http\Middleware\EnsureEmailIsVerifiedWithOtp;
 use App\Http\Middleware\StandardAdminMiddleware;
+use App\Http\Middleware\SuperAdminMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 
@@ -25,6 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'standard.admin' => StandardAdminMiddleware::class,
             'superadmin' => SuperAdminMiddleware::class,
             'client.verified' => EnsureClientIsVerified::class,
+            'email.verified' => EnsureEmailIsVerifiedWithOtp::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

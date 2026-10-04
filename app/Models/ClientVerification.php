@@ -25,6 +25,11 @@ class ClientVerification extends Model
         'valid_id_number',
         'valid_id_path',
         'selfie_with_id_path',
+        'payslip_path',
+        'payslip_uploaded_at',
+        'payslip_verified_at',
+        'digital_signature',
+        'signature_captured_at',
         'additional_information',
         'rejection_reason',
         'submitted_at',
@@ -35,6 +40,10 @@ class ClientVerification extends Model
     protected $casts = [
         'monthly_income' => 'decimal:2',
         'valid_id_number' => 'encrypted',
+        'digital_signature' => 'encrypted',
+        'signature_captured_at' => 'datetime',
+        'payslip_uploaded_at' => 'datetime',
+        'payslip_verified_at' => 'datetime',
         'submitted_at' => 'datetime',
         'reviewed_at' => 'datetime',
     ];

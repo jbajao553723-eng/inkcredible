@@ -48,14 +48,14 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label" for="first-name">First name <span class="required-mark" aria-hidden="true">*</span></label>
+                        <label class="form-label" for="first-name">First name <span class="required-label">Required</span></label>
                         <input type="text" name="first_name" id="first-name" class="form-control @error('first_name') is-invalid @enderror"
                                value="{{ old('first_name') }}" placeholder="Juan" autocomplete="given-name" maxlength="100" @error('first_name') aria-invalid="true" aria-describedby="first-name-error" @enderror autofocus required>
                         @error('first_name')<p class="field-error" id="first-name-error">{{ $message }}</p>@enderror
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="last-name">Last name <span class="required-mark" aria-hidden="true">*</span></label>
+                        <label class="form-label" for="last-name">Last name <span class="required-label">Required</span></label>
                         <input type="text" name="last_name" id="last-name" class="form-control @error('last_name') is-invalid @enderror"
                                value="{{ old('last_name') }}" placeholder="Dela Cruz" autocomplete="family-name" maxlength="100" @error('last_name') aria-invalid="true" aria-describedby="last-name-error" @enderror required>
                         @error('last_name')<p class="field-error" id="last-name-error">{{ $message }}</p>@enderror
@@ -63,7 +63,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="email">Email address <span class="required-mark" aria-hidden="true">*</span></label>
+                    <label class="form-label" for="email">Email address <span class="required-label">Required</span></label>
                     <input type="email" name="email" id="email" class="form-control @error('email') is-invalid @enderror"
                            value="{{ old('email') }}" placeholder="you@example.com" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" @error('email') aria-invalid="true" aria-describedby="email-error" @enderror required>
                     @error('email')<p class="field-error" id="email-error">{{ $message }}</p>@enderror
@@ -71,39 +71,56 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label" for="contact-number">Contact number <span class="required-mark" aria-hidden="true">*</span></label>
+                        <label class="form-label" for="contact-number">Contact number <span class="required-label">Required</span></label>
                         <input type="tel" name="contact_number" id="contact-number" class="form-control @error('contact_number') is-invalid @enderror"
                                value="{{ old('contact_number') }}" placeholder="09XX XXX XXXX" autocomplete="tel" inputmode="tel" maxlength="30" @error('contact_number') aria-invalid="true" aria-describedby="contact-number-error" @enderror required>
                         @error('contact_number')<p class="field-error" id="contact-number-error">{{ $message }}</p>@enderror
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="age">Age <span class="required-mark" aria-hidden="true">*</span></label>
+                        <label class="form-label" for="age">Age <span class="required-label">Required</span></label>
                         <input type="number" name="age" id="age" class="form-control @error('age') is-invalid @enderror"
                                value="{{ old('age') }}" min="18" max="120" placeholder="Your age" inputmode="numeric" @error('age') aria-invalid="true" aria-describedby="age-error" @enderror required>
                         @error('age')<p class="field-error" id="age-error">{{ $message }}</p>@enderror
                     </div>
                 </div>
 
-                <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="street-address">Street / building no. <span class="required-label">Required</span></label>
+                    <input type="text" name="street_address" id="street-address" class="form-control @error('street_address') is-invalid @enderror" value="{{ old('street_address') }}" placeholder="House no., building, or street" autocomplete="address-line1" maxlength="255" required>
+                    @error('street_address')<p class="field-error">{{ $message }}</p>@enderror
+                </div>
+
+                <div class="form-row" data-address-selects data-selected-city="{{ old('city_municipality') }}" data-selected-barangay="{{ old('barangay') }}">
                     <div class="form-group">
-                        <label class="form-label" for="street-address">Street / building no. <span class="required-mark" aria-hidden="true">*</span></label>
-                        <input type="text" name="street_address" id="street-address" class="form-control @error('street_address') is-invalid @enderror" value="{{ old('street_address') }}" placeholder="Building, street, barangay, city" autocomplete="street-address" maxlength="255" required>
-                        @error('street_address')<p class="field-error">{{ $message }}</p>@enderror
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="address-location">Province / location <span class="required-mark" aria-hidden="true">*</span></label>
-                        <select name="address_location" id="address-location" class="form-control @error('address_location') is-invalid @enderror" required>
-                            <option value="">Select location</option>
-                            @foreach(config('philippine_locations') as $location)<option value="{{ $location }}" @selected(old('address_location') === $location)>{{ $location }}</option>@endforeach
+                        <label class="form-label" for="province">Province <span class="required-label">Required</span></label>
+                        <select name="province" id="province" class="form-control @error('province') is-invalid @enderror" autocomplete="address-level1" required>
+                            <option value="">Select province</option>
+                            @foreach(config('philippine_locations') as $location)<option value="{{ $location }}" @selected(old('province') === $location)>{{ $location }}</option>@endforeach
                         </select>
-                        @error('address_location')<p class="field-error">{{ $message }}</p>@enderror
+                        @error('province')<p class="field-error">{{ $message }}</p>@enderror
                     </div>
+                    <div class="form-group">
+                        <label class="form-label" for="city-municipality">City / municipality <span class="required-label">Required</span></label>
+                        <select name="city_municipality" id="city-municipality" class="form-control @error('city_municipality') is-invalid @enderror" autocomplete="address-level2" required disabled>
+                            <option value="">Select province first</option>
+                        </select>
+                        @error('city_municipality')<p class="field-error">{{ $message }}</p>@enderror
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="barangay">Barangay <span class="required-label">Required</span></label>
+                    <select name="barangay" id="barangay" class="form-control @error('barangay') is-invalid @enderror" autocomplete="address-level3" required disabled>
+                        <option value="">Select city or municipality first</option>
+                    </select>
+                    <p class="field-help" id="address-lookup-status" aria-live="polite">Choose your province to load its cities and municipalities.</p>
+                    @error('barangay')<p class="field-error">{{ $message }}</p>@enderror
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label" for="password">Password <span class="required-mark" aria-hidden="true">*</span></label>
+                        <label class="form-label" for="password">Password</label>
                         <div class="input-wrap">
                             <input type="password" name="password" id="password" class="form-control password-input @error('password') is-invalid @enderror"
                                    placeholder="Create a password" autocomplete="new-password" aria-describedby="password-help @error('password') password-error @enderror" @error('password') aria-invalid="true" @enderror required>
@@ -115,7 +132,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="password-confirmation">Confirm password <span class="required-mark" aria-hidden="true">*</span></label>
+                        <label class="form-label" for="password-confirmation">Confirm password</label>
                         <div class="input-wrap">
                             <input type="password" name="password_confirmation" id="password-confirmation" class="form-control password-input"
                                    placeholder="Repeat your password" autocomplete="new-password" aria-describedby="password-match" required>
@@ -186,6 +203,95 @@ const updatePasswordFeedback = () => {
 passwordInput.addEventListener('input', updatePasswordFeedback);
 confirmationInput.addEventListener('input', updatePasswordFeedback);
 document.querySelector('[data-error-summary]')?.focus({ preventScroll: true });
+
+const addressContainer = document.querySelector('[data-address-selects]');
+const provinceSelect = document.getElementById('province');
+const citySelect = document.getElementById('city-municipality');
+const barangaySelect = document.getElementById('barangay');
+const addressStatus = document.getElementById('address-lookup-status');
+const selectedCity = addressContainer?.dataset.selectedCity || '';
+const selectedBarangay = addressContainer?.dataset.selectedBarangay || '';
+const psgcBaseUrl = 'https://psgc.cloud/api/v2';
+
+const responseItems = (payload) => Array.isArray(payload) ? payload : (payload.data || []);
+
+const setAddressOptions = (select, items, placeholder, selectedValue = '') => {
+    select.innerHTML = '';
+    select.append(new Option(placeholder, ''));
+    items
+        .filter((item) => item.name && item.code)
+        .sort((left, right) => left.name.localeCompare(right.name))
+        .forEach((item) => {
+            const option = new Option(item.name, item.name, false, item.name === selectedValue);
+            option.dataset.code = item.code;
+            select.append(option);
+        });
+    select.disabled = false;
+};
+
+const loadBarangays = async (cityCode, selectedValue = '') => {
+    barangaySelect.disabled = true;
+    barangaySelect.innerHTML = '<option value="">Loading barangays...</option>';
+    addressStatus.textContent = 'Loading barangays...';
+
+    try {
+        const response = await fetch(`${psgcBaseUrl}/cities-municipalities/${encodeURIComponent(cityCode)}/barangays`, { headers: { Accept: 'application/json' } });
+        if (!response.ok) throw new Error('Barangays could not be loaded.');
+        setAddressOptions(barangaySelect, responseItems(await response.json()), 'Select barangay', selectedValue);
+        addressStatus.textContent = 'Select the barangay for your current residential address.';
+    } catch (error) {
+        barangaySelect.innerHTML = '<option value="">Unable to load barangays</option>';
+        addressStatus.textContent = 'Location service is unavailable. Select the city again to retry.';
+    }
+};
+
+const loadCities = async (province, cityValue = '', barangayValue = '') => {
+    citySelect.disabled = true;
+    barangaySelect.disabled = true;
+    citySelect.innerHTML = '<option value="">Loading cities...</option>';
+    barangaySelect.innerHTML = '<option value="">Select city or municipality first</option>';
+    addressStatus.textContent = 'Loading cities and municipalities...';
+
+    const endpoint = province === 'Metro Manila'
+        ? `${psgcBaseUrl}/regions/1300000000/cities-municipalities`
+        : `${psgcBaseUrl}/provinces/${encodeURIComponent(province)}/cities-municipalities`;
+
+    try {
+        const response = await fetch(endpoint, { headers: { Accept: 'application/json' } });
+        if (!response.ok) throw new Error('Cities could not be loaded.');
+        const cities = responseItems(await response.json()).filter((item) => item.type !== 'SubMun');
+        setAddressOptions(citySelect, cities, 'Select city or municipality', cityValue);
+        addressStatus.textContent = 'Choose a city or municipality to load its barangays.';
+
+        const selectedOption = citySelect.selectedOptions[0];
+        if (cityValue && selectedOption?.dataset.code) {
+            await loadBarangays(selectedOption.dataset.code, barangayValue);
+        }
+    } catch (error) {
+        citySelect.innerHTML = '<option value="">Unable to load cities</option>';
+        addressStatus.textContent = 'Location service is unavailable. Select the province again to retry.';
+    }
+};
+
+provinceSelect?.addEventListener('change', () => {
+    if (!provinceSelect.value) {
+        citySelect.disabled = true;
+        barangaySelect.disabled = true;
+        citySelect.innerHTML = '<option value="">Select province first</option>';
+        barangaySelect.innerHTML = '<option value="">Select city or municipality first</option>';
+        addressStatus.textContent = 'Choose your province to load its cities and municipalities.';
+        return;
+    }
+
+    loadCities(provinceSelect.value);
+});
+
+citySelect?.addEventListener('change', () => {
+    const cityCode = citySelect.selectedOptions[0]?.dataset.code;
+    if (cityCode) loadBarangays(cityCode);
+});
+
+if (provinceSelect?.value) loadCities(provinceSelect.value, selectedCity, selectedBarangay);
 
 document.getElementById('register-form').addEventListener('submit', function () {
     const button = document.getElementById('submit-register');

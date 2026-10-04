@@ -29,7 +29,10 @@ class ProfileUpdateRequest extends FormRequest
             ],
             'contact_number' => ['required', 'string', 'max:30'],
             'age' => ['required', 'integer', 'min:18', 'max:120'],
-            'address' => ['required', 'string', 'max:500'],
+            'street_address' => ['required', 'string', 'max:255'],
+            'barangay' => ['required', 'string', 'max:150'],
+            'city_municipality' => ['required', 'string', 'max:150'],
+            'province' => ['required', 'string', 'max:100', 'in:'.implode(',', config('philippine_locations'))],
             'profile_photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ];
     }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Rules\ContainsNumberOrSymbol;
+use App\Services\EmailOtpService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,7 +27,7 @@ class RegisteredUserController extends Controller
     /**
      * Handle registration request
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, EmailOtpService $otp): RedirectResponse
     {
         $request->validate([
             'first_name' => ['required', 'string', 'max:100'],
@@ -37,9 +38,10 @@ class RegisteredUserController extends Controller
 
             'contact_number' => ['required', 'string', 'max:30'],
             'age' => ['required', 'integer', 'min:18', 'max:120'],
-            'address' => ['nullable', 'string', 'max:500', 'required_without_all:street_address,address_location'],
-            'street_address' => ['nullable', 'string', 'max:255', 'required_with:address_location'],
-            'address_location' => ['nullable', 'string', 'max:100', 'in:'.implode(',', config('philippine_locations')), 'required_with:street_address'],
+            'street_address' => ['required', 'string', 'max:255'],
+            'barangay' => ['required', 'string', 'max:150'],
+            'city_municipality' => ['required', 'string', 'max:150'],
+            'province' => ['required', 'string', 'max:100', 'in:'.implode(',', config('philippine_locations'))],
         ]);
 
         $user = User::create([
@@ -51,9 +53,16 @@ class RegisteredUserController extends Controller
             'role' => 'client',
             'contact_number' => $request->contact_number,
             'age' => $request->age,
-            'address' => $request->filled('street_address')
-                ? trim($request->street_address).', '.$request->address_location
-                : $request->address,
+            'street_address' => trim($request->street_address),
+            'barangay' => $request->barangay,
+            'city_municipality' => $request->city_municipality,
+            'province' => $request->province,
+            'address' => implode(', ', [
+                trim($request->street_address),
+                $request->barangay,
+                $request->city_municipality,
+                $request->province,
+            ]),
             'terms_accepted_at' => now(),
             'terms_version' => config('legal.account_terms_version'),
         ]);
@@ -62,6 +71,15 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        $otp->issue(
+            $request,
+            EmailOtpService::EMAIL_VERIFICATION_SESSION_KEY,
+            $user,
+            'email-verification',
+            $user->email
+        );
+
+        return redirect()->route('verification.notice')
+            ->with('status', 'verification-code-sent');
     }
 }

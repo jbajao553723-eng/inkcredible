@@ -30,7 +30,7 @@
 <main class="main" id="main-content" tabindex="-1"><div class="page-shell">
     <header class="topbar">
         <div><div class="eyebrow">Client management</div><h1>Clients and verification</h1><p class="subtitle">Manage registered clients, lending activity, and verification reviews in one workspace.</p></div>
-        <div class="top-actions"><a class="button button-secondary" href="{{ route('admin.dashboard') }}">Dashboard</a><form method="POST" action="{{ route('logout') }}">@csrf<button class="button button-secondary" type="submit">Log out</button></form></div>
+        <div class="top-actions"><a class="button button-secondary" href="{{ route('admin.dashboard') }}">Dashboard</a></div>
     </header>
 
     <x-flash-messages />

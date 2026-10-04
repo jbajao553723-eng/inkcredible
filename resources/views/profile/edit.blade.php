@@ -92,8 +92,8 @@
 @include('partials.client-sidebar', ['active' => 'settings'])
 <main class="main" id="main-content" tabindex="-1"><div class="page-shell settings-shell">
     <header class="topbar">
-        <div><div class="eyebrow">Account settings</div><h1>Personal profile</h1><p class="subtitle">Keep your identity and contact information accurate and up to date.</p></div>
-        <div class="top-actions"><a class="button button-secondary" href="{{ route('dashboard') }}">Back to dashboard</a><form method="POST" action="{{ route('logout') }}">@csrf<button class="button button-secondary" type="submit">Log out</button></form></div>
+        <div><div class="eyebrow">Account settings</div><h1>Personal profile</h1><p class="subtitle">Update the same identity and address details used at registration. Saved changes appear across your dashboard and future applications.</p></div>
+        <div class="top-actions"><a class="button button-secondary" href="{{ route('dashboard') }}">Back to dashboard</a></div>
     </header>
 
     @include('partials.settings-tabs', ['activeSettings' => 'profile'])
@@ -137,7 +137,7 @@
 
         <section class="panel profile-form-panel">
             <div class="panel-header"><div><h2 class="panel-title">Profile details</h2><p class="panel-description">Used for your loan applications, account notices, and payment communication.</p></div><span class="required-note">All fields are required</span></div>
-            <form class="profile-form" id="profile-form" method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data">
+            <form class="profile-form" id="profile-form" method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data" data-address-selects data-selected-city="{{ old('city_municipality', $cityMunicipality) }}" data-selected-barangay="{{ old('barangay', $barangay) }}">
                 @csrf
                 @method('patch')
 
@@ -159,8 +159,13 @@
                 </div>
 
                 <div class="profile-form-section">
-                    <div class="form-section-head"><span class="form-section-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11z"/><circle cx="12" cy="10" r="2" stroke-width="1.8"/></svg></span><div><h3 class="form-section-title">Residential address</h3><p class="form-section-note">Provide your complete current address, including city and province.</p></div></div>
-                    <div class="form-group"><label class="form-label" for="address">Complete address</label><textarea class="form-control" id="address" name="address" maxlength="500" autocomplete="street-address" rows="4" required aria-invalid="{{ $errors->has('address') ? 'true' : 'false' }}">{{ old('address', $user->address) }}</textarea>@error('address')<p class="field-error">{{ $message }}</p>@enderror</div>
+                    <div class="form-section-head"><span class="form-section-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11z"/><circle cx="12" cy="10" r="2" stroke-width="1.8"/></svg></span><div><h3 class="form-section-title">Residential address</h3><p class="form-section-note">Uses the same street and Philippine location structure as account creation.</p></div></div>
+                    <div class="form-grid">
+                        <div class="form-group"><label class="form-label" for="street-address">Street / building no.</label><input class="form-control" id="street-address" name="street_address" value="{{ old('street_address', $streetAddress) }}" placeholder="House no., building, or street" maxlength="255" autocomplete="address-line1" required aria-invalid="{{ $errors->has('street_address') ? 'true' : 'false' }}">@error('street_address')<p class="field-error">{{ $message }}</p>@enderror</div>
+                        <div class="form-group"><label class="form-label" for="province">Province</label><select class="form-control" id="province" name="province" autocomplete="address-level1" required aria-invalid="{{ $errors->has('province') ? 'true' : 'false' }}"><option value="">Select province</option>@foreach(config('philippine_locations') as $location)<option value="{{ $location }}" @selected(old('province', $province) === $location)>{{ $location }}</option>@endforeach</select>@error('province')<p class="field-error">{{ $message }}</p>@enderror</div>
+                        <div class="form-group"><label class="form-label" for="city-municipality">City / municipality</label><select class="form-control" id="city-municipality" name="city_municipality" autocomplete="address-level2" required disabled aria-invalid="{{ $errors->has('city_municipality') ? 'true' : 'false' }}"><option value="">Select province first</option></select>@error('city_municipality')<p class="field-error">{{ $message }}</p>@enderror</div>
+                        <div class="form-group"><label class="form-label" for="barangay">Barangay</label><select class="form-control" id="barangay" name="barangay" autocomplete="address-level3" required disabled aria-invalid="{{ $errors->has('barangay') ? 'true' : 'false' }}"><option value="">Select city or municipality first</option></select><p class="form-help" id="address-lookup-status" aria-live="polite">Choose your province to load its cities and municipalities.</p>@error('barangay')<p class="field-error">{{ $message }}</p>@enderror</div>
+                    </div>
                 </div>
 
                 <div class="form-actions"><span class="save-state" id="profile-save-state">All changes saved</span><button class="save-button" type="submit"><span>Save changes</span></button></div>
@@ -169,6 +174,95 @@
     </div>
 </div></main>
 <script>
+const addressContainer = document.querySelector('[data-address-selects]');
+const provinceSelect = document.getElementById('province');
+const citySelect = document.getElementById('city-municipality');
+const barangaySelect = document.getElementById('barangay');
+const addressStatus = document.getElementById('address-lookup-status');
+const selectedCity = addressContainer?.dataset.selectedCity || '';
+const selectedBarangay = addressContainer?.dataset.selectedBarangay || '';
+const psgcBaseUrl = 'https://psgc.cloud/api/v2';
+
+const responseItems = (payload) => Array.isArray(payload) ? payload : (payload.data || []);
+
+const setAddressOptions = (select, items, placeholder, selectedValue = '') => {
+    select.innerHTML = '';
+    select.append(new Option(placeholder, ''));
+    items
+        .filter((item) => item.name && item.code)
+        .sort((left, right) => left.name.localeCompare(right.name))
+        .forEach((item) => {
+            const option = new Option(item.name, item.name, false, item.name === selectedValue);
+            option.dataset.code = item.code;
+            select.append(option);
+        });
+    select.disabled = false;
+};
+
+const loadBarangays = async (cityCode, selectedValue = '') => {
+    barangaySelect.disabled = true;
+    barangaySelect.innerHTML = '<option value="">Loading barangays...</option>';
+    addressStatus.textContent = 'Loading barangays...';
+
+    try {
+        const response = await fetch(`${psgcBaseUrl}/cities-municipalities/${encodeURIComponent(cityCode)}/barangays`, { headers: { Accept: 'application/json' } });
+        if (!response.ok) throw new Error('Barangays could not be loaded.');
+        setAddressOptions(barangaySelect, responseItems(await response.json()), 'Select barangay', selectedValue);
+        addressStatus.textContent = 'Select the barangay for the current residential address.';
+    } catch (error) {
+        barangaySelect.innerHTML = '<option value="">Unable to load barangays</option>';
+        addressStatus.textContent = 'Location service is unavailable. Select the city again to retry.';
+    }
+};
+
+const loadCities = async (provinceValue, cityValue = '', barangayValue = '') => {
+    citySelect.disabled = true;
+    barangaySelect.disabled = true;
+    citySelect.innerHTML = '<option value="">Loading cities...</option>';
+    barangaySelect.innerHTML = '<option value="">Select city or municipality first</option>';
+    addressStatus.textContent = 'Loading cities and municipalities...';
+
+    const endpoint = provinceValue === 'Metro Manila'
+        ? `${psgcBaseUrl}/regions/1300000000/cities-municipalities`
+        : `${psgcBaseUrl}/provinces/${encodeURIComponent(provinceValue)}/cities-municipalities`;
+
+    try {
+        const response = await fetch(endpoint, { headers: { Accept: 'application/json' } });
+        if (!response.ok) throw new Error('Cities could not be loaded.');
+        const cities = responseItems(await response.json()).filter((item) => item.type !== 'SubMun');
+        setAddressOptions(citySelect, cities, 'Select city or municipality', cityValue);
+        addressStatus.textContent = 'Choose a city or municipality to load its barangays.';
+
+        const selectedOption = citySelect.selectedOptions[0];
+        if (cityValue && selectedOption?.dataset.code) {
+            await loadBarangays(selectedOption.dataset.code, barangayValue);
+        }
+    } catch (error) {
+        citySelect.innerHTML = '<option value="">Unable to load cities</option>';
+        addressStatus.textContent = 'Location service is unavailable. Select the province again to retry.';
+    }
+};
+
+provinceSelect?.addEventListener('change', () => {
+    if (!provinceSelect.value) {
+        citySelect.disabled = true;
+        barangaySelect.disabled = true;
+        citySelect.innerHTML = '<option value="">Select province first</option>';
+        barangaySelect.innerHTML = '<option value="">Select city or municipality first</option>';
+        addressStatus.textContent = 'Choose your province to load its cities and municipalities.';
+        return;
+    }
+
+    loadCities(provinceSelect.value);
+});
+
+citySelect?.addEventListener('change', () => {
+    const cityCode = citySelect.selectedOptions[0]?.dataset.code;
+    if (cityCode) loadBarangays(cityCode);
+});
+
+if (provinceSelect?.value) loadCities(provinceSelect.value, selectedCity, selectedBarangay);
+
 const profileForm = document.getElementById('profile-form');
 const profileSaveState = document.getElementById('profile-save-state');
 const profilePhotoInput = document.getElementById('profile-photo');

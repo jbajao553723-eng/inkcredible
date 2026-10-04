@@ -1,7 +1,8 @@
 <?php
 
-use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminAccessController;
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminSettingsController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\ClientReportController;
 use App\Http\Controllers\Admin\ClientVerificationAdminController;
@@ -33,7 +34,7 @@ Route::view('/loan-terms', 'legal.loan-terms')->name('loan.terms');
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', 'verified'])
+Route::middleware(['auth', 'email.verified'])
     ->get('/dashboard', [DashboardController::class, 'index'])
     ->name('dashboard');
 
@@ -43,7 +44,7 @@ Route::middleware(['auth', 'verified'])
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth'])
+Route::middleware(['auth', 'email.verified'])
     ->group(function () {
 
         Route::get('/loan/create', [LoanController::class, 'create'])
@@ -73,22 +74,40 @@ Route::middleware(['auth'])
             ->name('payments.receipt');
 
         Route::get('/profile', [ProfileController::class, 'edit'])
+            ->withoutMiddleware('email.verified')
             ->name('profile.edit');
 
         Route::get('/profile/photo', [ProfileController::class, 'photo'])
+            ->withoutMiddleware('email.verified')
             ->name('profile.photo');
 
         Route::get('/profile/verification', [ProfileController::class, 'verification'])
             ->name('profile.verification.edit');
 
         Route::get('/profile/security', [ProfileController::class, 'security'])
+            ->withoutMiddleware('email.verified')
             ->name('profile.security.edit');
 
+        Route::get('/profile/motion', [ProfileController::class, 'motion'])
+            ->withoutMiddleware('email.verified')
+            ->name('profile.motion.edit');
+
         Route::patch('/profile', [ProfileController::class, 'update'])
+            ->withoutMiddleware('email.verified')
             ->name('profile.update');
+
+        Route::patch('/profile/motion', [ProfileController::class, 'updateMotion'])
+            ->withoutMiddleware('email.verified')
+            ->name('profile.motion.update');
 
         Route::post('/profile/verification', [ClientVerificationController::class, 'store'])
             ->name('profile.verification.store');
+
+        Route::post('/profile/verification/signature', [ClientVerificationController::class, 'storeSignature'])
+            ->name('profile.verification.signature.store');
+
+        Route::post('/profile/verification/payslip', [ClientVerificationController::class, 'storePayslip'])
+            ->name('profile.verification.payslip.store');
 
         Route::get('/loan/{loan}/contract', [LoanContractController::class, 'show'])
             ->name('loan.contract.show');
@@ -118,6 +137,15 @@ Route::middleware(['auth', 'admin'])
     ->name('admin.')
     ->group(function () {
 
+        Route::get('/settings', [AdminSettingsController::class, 'edit'])
+            ->name('settings.edit');
+        Route::patch('/settings/profile', [AdminSettingsController::class, 'updateProfile'])
+            ->name('settings.profile.update');
+        Route::put('/settings/password', [AdminSettingsController::class, 'updatePassword'])
+            ->name('settings.password.update');
+        Route::patch('/settings/motion', [AdminSettingsController::class, 'updateMotion'])
+            ->name('settings.motion.update');
+
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])
             ->name('dashboard');
 
@@ -144,6 +172,9 @@ Route::middleware(['auth', 'admin'])
 
             Route::get('/loan/{loan}', [LoanAdminController::class, 'show'])
                 ->name('loan.show');
+
+            Route::get('/loan/{loan}/government-id', [LoanAdminController::class, 'governmentId'])
+                ->name('loan.government-id');
 
             Route::get('/clients', [ClientVerificationAdminController::class, 'index'])
                 ->name('clients');

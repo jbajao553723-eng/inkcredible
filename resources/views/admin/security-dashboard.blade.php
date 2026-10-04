@@ -64,7 +64,7 @@
 <main class="main" id="main-content" tabindex="-1"><div class="page-shell">
     <header class="topbar">
         <div><div class="eyebrow">Security administration</div><h1>Security dashboard</h1><p class="subtitle">Monitor administrator access, sign-in activity, and account protection from one focused workspace.</p></div>
-        <div class="top-actions"><a class="button button-primary" href="{{ route('admin.access.index') }}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 5v14m-7-7h14"/></svg>Manage admins</a><form method="POST" action="{{ route('logout') }}">@csrf<button class="button button-secondary" type="submit">Log out</button></form></div>
+        <div class="top-actions"><a class="button button-primary" href="{{ route('admin.access.index') }}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 5v14m-7-7h14"/></svg>Manage admins</a></div>
     </header>
 
     <x-flash-messages />

@@ -58,6 +58,11 @@
 .accept-row input { width:16px; height:16px; flex:0 0 16px; margin-top:1px; accent-color:#4f46e5; }
 .signed-note { padding:18px; color:#05603a; background:linear-gradient(145deg,#ecfdf3,#f6fef9); border:1px solid #abefc6; border-radius:12px; font-size:12px; line-height:1.6; }
 .signed-note strong { display:block; margin-bottom:5px; font-size:13px; }
+.stored-signature { padding:15px; background:#fff; border:1px solid #d9d6fe; border-radius:12px; text-align:center; }
+.stored-signature img { display:block; width:100%; max-width:250px; height:78px; margin:0 auto 7px; object-fit:contain; }
+.stored-signature span { color:#667085; font-size:9px; }
+.signature-missing { padding:16px; color:#7a2e0e; background:#fffaeb; border:1px solid #fedf89; border-radius:12px; font-size:11px; line-height:1.55; }
+.signature-missing strong { display:block; margin-bottom:4px; color:#93370d; font-size:12px; }
 .workflow-steps { display:grid; margin-bottom:18px; }
 .workflow-step { position:relative; display:flex; align-items:flex-start; gap:11px; padding-bottom:16px; color:#475467; font-size:11px; line-height:1.5; }
 .workflow-step:not(:last-child)::after { position:absolute; top:26px; bottom:4px; left:12px; width:1px; background:#d9d6fe; content:''; }
@@ -83,21 +88,17 @@
 <body>
 @php
     $contractReturned = filled($loan->signed_contract_path);
-    $clientRiskMessage = match (true) {
-        $riskAssessment['ratio'] === null => 'We could not calculate this guide because verified monthly income is unavailable.',
-        $riskAssessment['ratio'] <= 30 => 'This agreement is within the recommended 30% monthly commitment guide.',
-        $riskAssessment['suggestedPrincipal'] > 0 => 'This agreement is above the 30% guide. A principal near PHP '.number_format($riskAssessment['suggestedPrincipal'], 2).' would be closer to the recommended range.',
-        default => 'Existing approved commitments already meet or exceed the recommended 30% guide.',
-    };
+    $verification = $loan->user->clientVerification;
+    $hasDigitalSignature = filled($verification?->digital_signature);
 @endphp
 @include('partials.client-sidebar', ['active' => 'dashboard'])
 <main class="main" id="main-content" tabindex="-1"><div class="page-shell">
-<header class="topbar"><div><div class="eyebrow">Final application step</div><h1>Loan contract</h1><p class="subtitle">Review your agreement and return one signed PDF for final approval.</p></div><div class="top-actions"><a class="button button-secondary" href="{{ route('dashboard') }}">Back to dashboard</a></div></header>
+<header class="topbar"><div><div class="eyebrow">Final application step</div><h1>Loan contract</h1><p class="subtitle">Review the agreement, apply your verified signature, and submit it for final approval.</p></div><div class="top-actions"><a class="button button-secondary" href="{{ route('dashboard') }}">Back to dashboard</a></div></header>
 <x-flash-messages />
 @if($errors->any())<div class="alert alert-error" role="alert">{{ $errors->first() }}</div>@endif
 
 <section class="contract-hero">
-<div class="contract-hero-copy"><div class="contract-hero-label">{{ $loan->loan_code ?: 'Loan #'.$loan->id }}</div><h2>{{ $contractReturned ? 'Your signed contract has been submitted' : 'Your agreement is ready to sign' }}</h2><p>{{ $contractReturned ? 'The administrator will verify your signed PDF before making the final loan decision.' : 'Download the agreement, add your signature on the borrower line, and upload the signed PDF below.' }}</p></div>
+<div class="contract-hero-copy"><div class="contract-hero-label">{{ $loan->loan_code ?: 'Loan #'.$loan->id }}</div><h2>{{ $contractReturned ? 'Your signed contract has been submitted' : 'Your agreement is ready to sign' }}</h2><p>{{ $contractReturned ? 'The administrator will verify the digitally signed PDF before making the final loan decision.' : 'Your verified signature can be applied automatically—no download, manual signing, or upload is required.' }}</p></div>
 <div class="contract-hero-actions"><div class="contract-status {{ $contractReturned ? 'complete' : '' }}"><span class="contract-status-dot"></span>{{ $contractReturned ? 'Submitted for review' : 'Action required' }}</div><a class="button contract-download" href="{{ route('loan.contract.download', $loan) }}" download="{{ $loan->loan_code ?: 'loan-'.$loan->id }}-contract.pdf" data-no-transition><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12m0 0 5-5m-5 5-5-5M5 20h14"/></svg>Download PDF</a></div>
 </section>
 
@@ -113,36 +114,26 @@
 <div class="contract-item"><div class="contract-label">Current stage</div><div class="contract-value">{{ $contractReturned ? 'Administrator review' : 'Borrower signature' }}</div></div>
 </div></div></section>
 <section class="panel"><div class="panel-header"><div><h2 class="panel-title">Your affordability assessment</h2><p class="panel-description">The same calculation visible during administrator review.</p></div></div><div class="panel-body client-assessment">
-<div class="assessment-score"><div class="assessment-score-value">{{ $riskAssessment['ratio'] === null ? '—' : number_format($riskAssessment['ratio'], 1).'%' }}</div><div class="assessment-score-label">Commitment-to-income ratio</div><span class="assessment-level {{ $riskAssessment['tone'] }}">{{ $riskAssessment['level'] }} ratio</span></div>
-<div class="assessment-details"><div class="assessment-track" aria-label="{{ $riskAssessment['ratio'] === null ? 'Assessment unavailable' : number_format($riskAssessment['ratio'], 1).' percent commitment-to-income ratio' }}"><span style="width:{{ min(100, max(0, (float) ($riskAssessment['ratio'] ?? 0))) }}%"></span></div><div class="assessment-formula"><div class="assessment-formula-item"><span>Verified monthly income</span><strong>PHP {{ number_format($riskAssessment['income'], 2) }}</strong></div><div class="assessment-formula-item"><span>Existing commitments</span><strong>PHP {{ number_format($riskAssessment['existingCommitments'], 2) }}</strong></div><div class="assessment-formula-item"><span>This agreement</span><strong>PHP {{ number_format($riskAssessment['proposedCommitment'], 2) }}</strong></div></div><p class="assessment-guidance">{{ $clientRiskMessage }}</p><p class="assessment-note">Calculation: (existing approved commitments + this agreement) ÷ verified monthly income. This guide does not guarantee approval.</p></div>
+<div class="assessment-score"><div class="assessment-score-value">{{ $riskAssessment['readinessScore'] }}</div><div class="assessment-score-label">Readiness score / 100</div><span class="assessment-level {{ $riskAssessment['tone'] }}">{{ $riskAssessment['level'] }} risk</span></div>
+<div class="assessment-details"><div class="assessment-track" aria-label="{{ $riskAssessment['readinessScore'] }} out of 100 readiness score"><span style="width:{{ $riskAssessment['readinessScore'] }}%"></span></div><div class="assessment-formula"><div class="assessment-formula-item"><span>Affordability ratio</span><strong>{{ $riskAssessment['ratio'] === null ? 'Unavailable' : number_format($riskAssessment['ratio'], 1).'%' }}</strong></div><div class="assessment-formula-item"><span>Verified payslip</span><strong>{{ $riskAssessment['verifiedPayslip'] ? 'Yes · score bonus' : 'Not yet' }}</strong></div><div class="assessment-formula-item"><span>Payment behavior</span><strong>{{ $riskAssessment['earlyPayments'] }} early · {{ $riskAssessment['latePayments'] }} late</strong></div></div><p class="assessment-guidance">{{ $riskAssessment['suggestion'] }}</p><p class="assessment-note">Early and on-time repayment can improve future assessments; late payments reduce the score. This guide does not guarantee approval.</p></div>
 </div></section>
-<section class="panel"><div class="panel-header"><div><h2 class="panel-title">Before you sign</h2><p class="panel-description">The downloaded PDF contains the complete agreement and signature line.</p></div></div><div class="panel-body"><ol class="terms-list"><li>Your submitted identity and income information must remain accurate.</li><li>The repayment schedule starts only after final administrator approval.</li><li>Overdue unpaid installments may receive the penalty described in the accepted loan terms.</li><li>Use a valid digital signature, or print, sign, and scan the agreement back to PDF.</li><li>Keep a copy of the signed contract for your records.</li></ol></div></section>
+<section class="panel"><div class="panel-header"><div><h2 class="panel-title">Before you sign</h2><p class="panel-description">Confirm the agreement details before applying your stored signature.</p></div></div><div class="panel-body"><ol class="terms-list"><li>Your submitted identity and income information must remain accurate.</li><li>The repayment schedule starts only after final administrator approval.</li><li>Overdue unpaid installments may receive the penalty described in the accepted loan terms.</li><li>Pressing the signing button applies the digital signature captured during verification to this agreement.</li><li>A signed PDF is generated automatically and retained for you and the administrator.</li></ol></div></section>
 </div>
-<aside class="contract-sidebar"><section class="panel upload-panel"><div class="panel-header"><div><h2 class="panel-title">{{ $contractReturned ? 'Submission received' : 'Return signed contract' }}</h2><p class="panel-description">{{ $contractReturned ? 'Your document is securely on file.' : 'Complete these three short steps.' }}</p></div></div><div class="panel-body">
+<aside class="contract-sidebar"><section class="panel upload-panel"><div class="panel-header"><div><h2 class="panel-title">{{ $contractReturned ? 'Submission received' : 'Digital contract signing' }}</h2><p class="panel-description">{{ $contractReturned ? 'Your document is securely on file.' : 'Apply your verified signature in one step.' }}</p></div></div><div class="panel-body">
 @if($contractReturned)
-<div class="signed-note"><strong>Signed PDF sent to the administrator</strong>{{ $loan->signed_contract_original_name }}<br>Submitted {{ $loan->contract_signed_at->timezone('Asia/Manila')->format('M d, Y - h:i A') }} PHT</div>
+<div class="signed-note"><strong>Digitally signed PDF sent to the administrator</strong>{{ $loan->signed_contract_original_name }}<br>Submitted {{ $loan->contract_signed_at->timezone('Asia/Manila')->format('M d, Y - h:i A') }} PHT</div>
 <a class="button button-secondary" style="width:100%;margin-top:12px" href="{{ route('loan.contract.signed.download', $loan) }}" download="{{ $loan->loan_code ?: 'loan-'.$loan->id }}-signed-contract.pdf" data-no-transition>Download submitted signed PDF</a>
+@elseif(! $hasDigitalSignature)
+<div class="signature-missing"><strong>Digital signature required</strong>Your verified profile does not yet have a signature. Add it once in verification settings, then return here to sign this contract.</div>
+<a class="button button-primary" style="width:100%;margin-top:14px" href="{{ route('profile.verification.edit') }}">Add digital signature</a>
 @else
-<div class="download-block"><div class="download-block-label">Step 1 &middot; Get your agreement</div><a class="button button-primary" href="{{ route('loan.contract.download', $loan) }}" download="{{ $loan->loan_code ?: 'loan-'.$loan->id }}-contract.pdf" data-no-transition><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12m0 0 5-5m-5 5-5-5M5 20h14"/></svg>Download contract PDF</a><p class="download-block-note">The file downloads here without leaving this page.</p></div>
-<div class="workflow-steps"><div class="workflow-step"><span class="step-number">1</span><span><strong>Download</strong>Save the contract PDF to your device.</span></div><div class="workflow-step"><span class="step-number">2</span><span><strong>Sign</strong>Add your signature and save the document as a PDF.</span></div><div class="workflow-step"><span class="step-number">3</span><span><strong>Upload</strong>Select the signed PDF and send it for review.</span></div></div>
-<form class="sign-box" method="POST" action="{{ route('loan.contract.sign', $loan) }}" enctype="multipart/form-data" data-confirm="Send this signed PDF to the administrator for final review?">@csrf
-<label class="file-upload" for="signed_contract"><span class="upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V4m0 0L7 9m5-5 5 5M5 15v4h14v-4"/></svg></span><strong>Select your signed contract</strong><span>PDF only, maximum 10 MB</span><input id="signed_contract" type="file" name="signed_contract" accept="application/pdf,.pdf" data-signed-contract-input required></label>
-<div class="file-selection" data-signed-contract-selection><span class="file-selection-mark">&#10003;</span><span data-signed-contract-name></span></div>
-<label class="accept-row"><input type="checkbox" name="contract_accepted" value="1" required><span>I confirm that I signed this contract and that the uploaded PDF is the document I want to return for final review.</span></label>
-<button class="button button-primary" type="submit">Send signed PDF to administrator</button>
+<div class="stored-signature"><img src="{{ $verification->digital_signature }}" alt="Your stored digital signature"><span>Verified signature captured {{ $verification->signature_captured_at?->timezone('Asia/Manila')->format('M d, Y') }}</span></div>
+<form class="sign-box" style="margin-top:14px" method="POST" action="{{ route('loan.contract.sign', $loan) }}" data-confirm="Apply your verified digital signature and send this contract to the administrator for final approval?">@csrf
+<label class="accept-row"><input type="checkbox" name="contract_accepted" value="1" required><span>I reviewed this agreement and authorize Inkcredible to apply my stored digital signature to this contract.</span></label>
+<button class="button button-primary" type="submit">Sign contract and send to admin</button>
 </form>
 @endif
 </div></section></aside>
 </div></div></main>
 @include('partials.client-confirmation')
-<script>
-const signedContractInput = document.querySelector('[data-signed-contract-input]');
-signedContractInput?.addEventListener('change', () => {
-    const selection = document.querySelector('[data-signed-contract-selection]');
-    const name = document.querySelector('[data-signed-contract-name]');
-    const file = signedContractInput.files?.[0];
-    if (name) name.textContent = file?.name ?? '';
-    selection?.classList.toggle('visible', Boolean(file));
-});
-</script>
 </body></html>

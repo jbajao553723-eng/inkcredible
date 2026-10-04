@@ -5,11 +5,15 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Loan;
 use App\Notifications\LoanApprovedNotification;
+use App\Rules\DigitalSignature;
 use App\Services\LoanApprovalService;
 use App\Services\LoanRiskAssessmentService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class LoanAdminController extends Controller
 {
@@ -41,12 +45,32 @@ class LoanAdminController extends Controller
         return view('admin.loans.show', compact('loan', 'riskAssessment'));
     }
 
+    public function governmentId(Loan $loan): StreamedResponse
+    {
+        $document = $loan->loanDocuments()
+            ->where('document_type', 'government_id')
+            ->latest()
+            ->firstOrFail();
+
+        abort_unless(Storage::disk('public')->exists($document->file_path), 404);
+
+        return Storage::disk('public')->response(
+            $document->file_path,
+            $document->original_filename ?: basename($document->file_path),
+            [
+                'Cache-Control' => 'private, no-store',
+                'X-Content-Type-Options' => 'nosniff',
+            ],
+            'inline'
+        );
+    }
+
     /*
     |--------------------------------------------------------------------------
     | APPROVE LOAN
     |--------------------------------------------------------------------------
     */
-    public function approve(Loan $loan, LoanApprovalService $approvals): RedirectResponse
+    public function approve(Request $request, Loan $loan, LoanApprovalService $approvals): RedirectResponse
     {
         if ($loan->status !== Loan::STATUS_PENDING) {
             return back()->with('error', 'Only pending loan requests can be approved.');
@@ -59,14 +83,57 @@ class LoanAdminController extends Controller
         if (! $loan->contract_signed_at
             || ! $loan->signed_contract_path
             || ! Storage::disk('local')->exists($loan->signed_contract_path)) {
-            return back()->with('error', 'The client must upload and return the signed PDF before final approval.');
+            return back()->with('error', 'The client must digitally sign and submit the contract before final approval.');
+        }
+
+        $validated = $request->validate([
+            'admin_signature' => ['required', 'string', 'max:500000', new DigitalSignature],
+            'approval_accepted' => ['accepted'],
+        ]);
+
+        $loan->load(['user.clientVerification', 'loanType']);
+        $clientSignature = $loan->user?->clientVerification?->digital_signature;
+
+        if (! $clientSignature) {
+            return back()->with('error', 'The verified client signature is unavailable. The contract cannot be finalized.');
+        }
+
+        $adminSignedAt = now();
+        $adminName = $request->user()->full_name;
+        $pdf = Pdf::loadView('contracts.loan', [
+            'loan' => $loan,
+            'clientSignature' => $clientSignature,
+            'signedAt' => $loan->contract_signed_at,
+            'adminSignature' => $validated['admin_signature'],
+            'adminSignatureName' => $adminName,
+            'adminSignedAt' => $adminSignedAt,
+        ])->setPaper('a4');
+        $finalPath = 'loan-contracts/'.$loan->id.'/'.Str::uuid().'-final-contract.pdf';
+
+        if (! Storage::disk('local')->put($finalPath, $pdf->output())) {
+            return back()->withErrors(['admin_signature' => 'The final signed contract could not be generated. Please try again.']);
+        }
+
+        $previousPath = $loan->signed_contract_path;
+
+        $loan->update([
+            'admin_signature' => $validated['admin_signature'],
+            'admin_signature_name' => $adminName,
+            'admin_signed_at' => $adminSignedAt,
+            'admin_signed_by' => $request->user()->id,
+            'signed_contract_path' => $finalPath,
+            'signed_contract_original_name' => ($loan->loan_code ?: 'loan-'.$loan->id).'-final-signed-contract.pdf',
+        ]);
+
+        if ($previousPath !== $finalPath) {
+            Storage::disk('local')->delete($previousPath);
         }
 
         $approvals->approve($loan);
         $loan->refresh();
         $loan->user?->notify(new LoanApprovedNotification($loan));
 
-        return back()->with('success', 'Signed contract verified and loan final-approved successfully.');
+        return back()->with('success', 'The contract was digitally signed by the administrator and the loan was final-approved.');
     }
 
     /*

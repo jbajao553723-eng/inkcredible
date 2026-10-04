@@ -18,15 +18,30 @@ it('serves every primary admin navigation page without a 404 response', function
         'admin.clients',
         'admin.payments.index',
         'admin.reports.index',
+        'admin.settings.edit',
     ] as $routeName) {
         $this->actingAs($admin)->get(route($routeName))->assertSuccessful();
     }
+
+    $this->actingAs($admin)
+        ->get(route('admin.dashboard'))
+        ->assertSee('Admin workspace')
+        ->assertSee('Log out')
+        ->assertDontSee('Audit logs');
 
     $this->actingAs($admin)
         ->get(route('admin.verifications.index'))
         ->assertRedirect(route('admin.clients', ['section' => 'verifications']));
 
     $superadmin = User::factory()->create(['role' => User::ROLE_SUPERADMIN]);
+    $this->actingAs($superadmin)
+        ->get(route('admin.security.dashboard'))
+        ->assertSuccessful()
+        ->assertSee('Security workspace')
+        ->assertSee('Admin access')
+        ->assertSee('Audit logs')
+        ->assertSee('Log out');
+
     $this->actingAs($superadmin)->get(route('admin.audit-logs.index'))->assertSuccessful();
 });
 
@@ -56,4 +71,11 @@ it('serves every primary client navigation page without a 404 response', functio
     ] as $routeName) {
         $this->actingAs($client)->get(route($routeName))->assertSuccessful();
     }
+
+    $this->actingAs($client)
+        ->get(route('dashboard'))
+        ->assertSee('Client workspace')
+        ->assertSee('Account verification')
+        ->assertSee('Log out')
+        ->assertDontSee('Total loans');
 });

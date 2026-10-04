@@ -10,8 +10,8 @@ class SuperAdminSeeder extends Seeder
 {
     public function run(): void
     {
-        $email = config('seed_accounts.superadmin_email') ?: config('seed_accounts.admin_email');
-        $password = config('seed_accounts.superadmin_password') ?: config('seed_accounts.admin_password');
+        $email = config('seed_accounts.superadmin_email');
+        $password = config('seed_accounts.superadmin_password');
 
         if (! $email || ! $password) {
             return;

@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Support\Facades\Notification;
 
 test('login screen can be rendered', function () {
     $response = $this->get('/login');
@@ -12,7 +13,8 @@ test('login screen can be rendered', function () {
         ->assertSee('Create account');
 });
 
-test('users can authenticate using the login screen', function () {
+test('users authenticate directly with their email and password', function () {
+    Notification::fake();
     $user = User::factory()->create();
 
     $response = $this->post('/login', [
@@ -20,11 +22,30 @@ test('users can authenticate using the login screen', function () {
         'password' => 'password',
     ]);
 
-    $this->assertAuthenticated();
+    $this->assertAuthenticatedAs($user);
     $response->assertRedirect(route('dashboard', absolute: false));
+    Notification::assertNothingSent();
 });
 
+test('administrator roles sign in without otp or email verification', function (string $role) {
+    Notification::fake();
+    $user = User::factory()->unverified()->create(['role' => $role]);
+
+    $this->post(route('login'), [
+        'email' => $user->email,
+        'password' => 'password',
+    ])->assertRedirect(route('dashboard', absolute: false));
+
+    $this->assertAuthenticatedAs($user);
+    $adminDashboard = $this->get(route('admin.dashboard'));
+    $role === User::ROLE_SUPERADMIN
+        ? $adminDashboard->assertRedirect(route('admin.security.dashboard'))
+        : $adminDashboard->assertOk();
+    Notification::assertNothingSent();
+})->with([User::ROLE_ADMIN, User::ROLE_SUPERADMIN]);
+
 test('users can not authenticate with invalid password', function () {
+    Notification::fake();
     $user = User::factory()->create();
 
     $this->post('/login', [
@@ -33,6 +54,7 @@ test('users can not authenticate with invalid password', function () {
     ]);
 
     $this->assertGuest();
+    Notification::assertNothingSent();
 });
 
 test('users can logout', function () {

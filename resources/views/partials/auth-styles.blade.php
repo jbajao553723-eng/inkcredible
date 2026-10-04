@@ -45,6 +45,7 @@ h1 { margin: 0; font-size: 32px; line-height: 1.2; letter-spacing: -.04em; }
 .form-group { margin-bottom: 17px; }
 .form-label { display: flex; align-items: center; justify-content: flex-start; gap: 4px; margin-bottom: 7px; color: #344054; font-size: 12px; font-weight: 600; }
 .required-mark { color: var(--danger); font-weight: 600; }
+.required-label { margin-left:auto; color:#667085; font-size:9px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
 .optional { margin-left: auto; color: #98a2b3; font-size: 10px; font-weight: 500; }
 .input-wrap { position: relative; }
 .form-control { width: 100%; min-height: 48px; padding: 11px 13px; color: var(--navy); background: #fff; border: 1px solid var(--border); border-radius: 10px; outline: none; caret-color: var(--primary); transition: border-color .15s, box-shadow .15s, background-color .15s; }

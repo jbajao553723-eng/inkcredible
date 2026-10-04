@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\DigitalSignature;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -32,6 +33,8 @@ class StoreClientVerificationRequest extends FormRequest
             'valid_id_number' => ['required', 'string', 'max:255'],
             'valid_id' => [$verification?->valid_id_path ? 'nullable' : 'required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:4096'],
             'selfie_with_id' => [$verification?->selfie_with_id_path ? 'nullable' : 'required', 'image', 'mimes:jpg,jpeg,png', 'max:4096'],
+            'payslip' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:4096'],
+            'digital_signature' => [$verification?->digital_signature ? 'nullable' : 'required', 'string', 'max:500000', new DigitalSignature],
             'additional_information' => ['nullable', 'string', 'max:2000'],
         ];
     }

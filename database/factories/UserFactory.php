@@ -26,6 +26,10 @@ class UserFactory extends Factory
     {
         $firstName = fake()->firstName();
         $lastName = fake()->lastName();
+        $streetAddress = fake()->streetAddress();
+        $barangay = 'Barangay 1';
+        $cityMunicipality = 'City of Manila';
+        $province = 'Metro Manila';
 
         return [
             'first_name' => $firstName,
@@ -36,7 +40,11 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'contact_number' => fake()->numerify('09#########'),
             'age' => fake()->numberBetween(18, 80),
-            'address' => fake()->address(),
+            'address' => implode(', ', [$streetAddress, $barangay, $cityMunicipality, $province]),
+            'street_address' => $streetAddress,
+            'barangay' => $barangay,
+            'city_municipality' => $cityMunicipality,
+            'province' => $province,
             'remember_token' => Str::random(10),
         ];
     }

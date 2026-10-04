@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Services\EmailOtpService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
@@ -21,6 +22,10 @@ class ProfileController extends Controller
 
         return view('profile.edit', [
             'user' => $request->user(),
+            'streetAddress' => $request->user()->street_address ?: $request->user()->address,
+            'barangay' => $request->user()->barangay,
+            'cityMunicipality' => $request->user()->city_municipality,
+            'province' => $request->user()->province,
         ]);
     }
 
@@ -45,13 +50,48 @@ class ProfileController extends Controller
     }
 
     /**
+     * Display motion accessibility settings.
+     */
+    public function motion(Request $request): View
+    {
+        return view('profile.motion', [
+            'reduceMotion' => (bool) data_get($request->user()->ui_preferences, 'reduce_motion', false),
+        ]);
+    }
+
+    /**
+     * Update the client's motion accessibility setting.
+     */
+    public function updateMotion(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'reduce_motion' => ['nullable', 'boolean'],
+        ]);
+
+        $request->user()->forceFill([
+            'ui_preferences' => [
+                'reduce_motion' => $request->boolean('reduce_motion'),
+            ],
+        ])->save();
+
+        return Redirect::route('profile.motion.edit')->with('status', 'motion-updated');
+    }
+
+    /**
      * Update the user's profile information.
      */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function update(ProfileUpdateRequest $request, EmailOtpService $otp): RedirectResponse
     {
         $validated = $request->validated();
         unset($validated['profile_photo']);
         $validated['name'] = trim($validated['first_name'].' '.$validated['last_name']);
+        $validated['street_address'] = trim($validated['street_address']);
+        $validated['address'] = implode(', ', [
+            $validated['street_address'],
+            $validated['barangay'],
+            $validated['city_municipality'],
+            $validated['province'],
+        ]);
 
         $previousPhoto = $request->user()->profile_photo_path;
 
@@ -61,7 +101,10 @@ class ProfileController extends Controller
 
         $request->user()->fill($validated);
 
-        if ($request->user()->isDirty('email')) {
+        $emailChanged = $request->user()->isDirty('email');
+        $requiresEmailVerification = $emailChanged && ! $request->user()->isAdministrator();
+
+        if ($requiresEmailVerification) {
             $request->user()->email_verified_at = null;
         }
 
@@ -69,6 +112,19 @@ class ProfileController extends Controller
 
         if (isset($validated['profile_photo_path']) && $previousPhoto) {
             Storage::disk('public')->delete($previousPhoto);
+        }
+
+        if ($requiresEmailVerification) {
+            $otp->issue(
+                $request,
+                EmailOtpService::EMAIL_VERIFICATION_SESSION_KEY,
+                $request->user(),
+                'email-verification',
+                $request->user()->email
+            );
+
+            return Redirect::route('verification.notice')
+                ->with('status', 'verification-code-sent');
         }
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');

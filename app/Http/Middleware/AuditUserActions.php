@@ -65,7 +65,10 @@ class AuditUserActions
             'admin.access.admins.store' => 'Created an administrator account',
             'admin.access.admins.update' => 'Updated administrator account information',
             'admin.access.admins.status' => 'Changed administrator account access',
-            'loan.contract.sign' => 'Uploaded and returned a signed loan contract',
+            'admin.settings.profile.update' => 'Updated administrator profile settings',
+            'admin.settings.password.update' => 'Changed administrator account password',
+            'admin.settings.motion.update' => 'Updated administrator motion preference',
+            'loan.contract.sign' => 'Digitally signed and submitted a loan contract',
             'loan.store' => 'Submitted a loan request',
             default => ucfirst(strtolower($method)).' request to '.($routeName ?: 'an application route'),
         };

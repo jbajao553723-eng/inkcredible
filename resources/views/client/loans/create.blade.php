@@ -146,10 +146,6 @@ textarea.form-control { min-height: 105px; resize: vertical; }
             </div>
             <div class="top-actions">
                 <a class="button button-secondary" href="{{ route('dashboard') }}">Back to dashboard</a>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button class="button button-secondary" type="submit">Log out</button>
-                </form>
             </div>
         </header>
 
@@ -292,13 +288,15 @@ textarea.form-control { min-height: 105px; resize: vertical; }
                 </section>
 
                 <section class="panel assessment-card" id="affordability-assessment" aria-live="polite">
-                    <div class="assessment-head"><div><h2 class="assessment-title">Affordability assessment</h2><p class="assessment-subtitle">See the same 30% guide used during administrator review.</p></div><span class="assessment-badge" id="assessment-level">Waiting</span></div>
-                    <div class="assessment-score"><div class="assessment-ratio" id="assessment-ratio">Select amount</div><div class="assessment-ratio-label">Commitments to<br>verified monthly income</div></div>
+                    <div class="assessment-head"><div><h2 class="assessment-title">Application readiness preview</h2><p class="assessment-subtitle">Includes affordability, verified payslip evidence, and repayment behavior.</p></div><span class="assessment-badge" id="assessment-level">Waiting</span></div>
+                    <div class="assessment-score"><div class="assessment-ratio" id="assessment-ratio">Select amount</div><div class="assessment-ratio-label">Behavior-adjusted<br>score out of 100</div></div>
                     <div class="assessment-track" aria-hidden="true"><span id="assessment-progress"></span></div>
                     <div class="assessment-formula">
                         <div><span>Verified monthly income</span><strong>{{ $affordability['income'] > 0 ? 'PHP '.number_format($affordability['income'], 2) : 'Unavailable' }}</strong></div>
                         <div><span>Existing approved commitments</span><strong>PHP {{ number_format($affordability['existingCommitments'], 2) }}</strong></div>
                         <div><span>This application</span><strong id="assessment-proposed">&mdash;</strong></div>
+                        <div><span>Verified payslip</span><strong>{{ $affordability['verifiedPayslip'] ? 'Yes · bonus included' : 'Not yet' }}</strong></div>
+                        <div><span>Payment record</span><strong>{{ $affordability['earlyPayments'] }} early · {{ $affordability['latePayments'] }} late</strong></div>
                     </div>
                     <p class="assessment-message" id="assessment-message">Select a loan type and enter an amount to calculate your assessment.</p>
                     <p class="assessment-disclaimer">This guide supports responsible borrowing. It does not guarantee approval or replace the administrator's final review.</p>
@@ -396,18 +394,20 @@ function updateAffordability(selected, proposedCommitment = 0) {
     const rate = Number(selected.dataset.rate || 0);
     const availablePayment = Math.max(0, (income * 0.30) - existing);
     const suggestedPrincipal = Math.floor((availablePayment / (1 + (rate / 100))) / 100) * 100;
-    const level = ratio <= 30 ? 'Low' : ratio <= 50 ? 'Moderate' : ratio <= 70 ? 'High' : 'Very high';
-    const tone = ratio <= 30 ? 'is-low' : ratio <= 50 ? 'is-moderate' : 'is-high';
+    const baseScore = ratio <= 30 ? 72 : ratio <= 50 ? 57 : ratio <= 70 ? 42 : 25;
+    const readinessScore = Math.max(0, Math.min(100, baseScore + Number(affordabilityBaseline.scoreAdjustment || 0)));
+    const level = readinessScore >= 75 ? 'Low' : readinessScore >= 55 ? 'Moderate' : readinessScore >= 35 ? 'High' : 'Very high';
+    const tone = readinessScore >= 75 ? 'is-low' : readinessScore >= 55 ? 'is-moderate' : 'is-high';
 
     assessmentCard.classList.add(tone);
-    assessmentLevel.textContent = `${level} ratio`;
-    assessmentRatio.textContent = `${ratio.toFixed(1)}%`;
-    assessmentProgress.style.width = `${Math.min(ratio, 100)}%`;
-    assessmentMessage.textContent = ratio <= 30
-        ? 'This estimate is within the recommended 30% monthly commitment guide.'
+    assessmentLevel.textContent = `${level} risk`;
+    assessmentRatio.textContent = `${readinessScore}/100`;
+    assessmentProgress.style.width = `${readinessScore}%`;
+    assessmentMessage.textContent = readinessScore >= 75
+        ? 'Verified evidence, affordability, and repayment behavior support a stronger review.'
         : suggestedPrincipal > 0
-            ? `This estimate is above the 30% guide. A principal near ${peso(suggestedPrincipal)} would be closer to the recommended range.`
-            : 'Existing approved commitments already meet or exceed the recommended 30% guide.';
+            ? `A principal near ${peso(suggestedPrincipal)} would be closer to the affordability guide. Early and on-time payments can improve future scores.`
+            : 'Existing commitments are above the affordability guide. Lower balances and consistent payments can improve future scores.';
 }
 
 function syncOtherPurpose() {

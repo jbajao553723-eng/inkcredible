@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ClientVerification;
 use App\Models\Loan;
 use App\Notifications\ContractReadyNotification;
 use App\Services\LoanRiskAssessmentService;
@@ -9,6 +10,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -32,6 +34,10 @@ class LoanContractController extends Controller
             'contract_signature_name' => null,
             'signed_contract_path' => null,
             'signed_contract_original_name' => null,
+            'admin_signature' => null,
+            'admin_signature_name' => null,
+            'admin_signed_at' => null,
+            'admin_signed_by' => null,
         ]);
 
         $loan->user?->notify(new ContractReadyNotification($loan));
@@ -43,7 +49,7 @@ class LoanContractController extends Controller
     {
         abort_unless($loan->user_id === $request->user()?->id, 403);
         abort_unless($loan->contract_sent_at, 404);
-        $loan->load(['user', 'loanType']);
+        $loan->load(['user.clientVerification', 'loanType']);
         $riskAssessment = $riskAssessments->assess($loan);
 
         return view('client.loans.contract', compact('loan', 'riskAssessment'));
@@ -72,7 +78,7 @@ class LoanContractController extends Controller
 
         return Storage::disk('local')->download(
             $loan->signed_contract_path,
-            ($loan->loan_code ?: 'loan-'.$loan->id).'-signed-contract.pdf',
+            ($loan->loan_code ?: 'loan-'.$loan->id).($loan->admin_signed_at ? '-final-signed-contract.pdf' : '-signed-contract.pdf'),
             ['Content-Type' => 'application/pdf']
         );
     }
@@ -85,16 +91,30 @@ class LoanContractController extends Controller
             return back()->with('error', 'This contract is not available for signature.');
         }
 
-        $validated = $request->validate([
-            'signed_contract' => ['required', 'file', 'mimes:pdf', 'max:10240'],
+        $request->validate([
             'contract_accepted' => ['accepted'],
         ]);
 
-        $uploadedContract = $validated['signed_contract'];
-        $path = $uploadedContract->store('loan-contracts/'.$loan->id, 'local');
+        $loan->load(['user.clientVerification', 'loanType']);
+        $verification = $loan->user?->clientVerification;
 
-        if (! $path) {
-            return back()->withErrors(['signed_contract' => 'The signed contract could not be saved. Please try again.']);
+        if (! $verification
+            || $verification->status !== ClientVerification::STATUS_APPROVED
+            || ! $verification->digital_signature) {
+            return redirect()->route('profile.verification.edit')
+                ->with('error', 'Add your digital signature to verification before signing a contract.');
+        }
+
+        $signedAt = now();
+        $pdf = Pdf::loadView('contracts.loan', [
+            'loan' => $loan,
+            'clientSignature' => $verification->digital_signature,
+            'signedAt' => $signedAt,
+        ])->setPaper('a4');
+        $path = 'loan-contracts/'.$loan->id.'/'.Str::uuid().'-signed-contract.pdf';
+
+        if (! Storage::disk('local')->put($path, $pdf->output())) {
+            return back()->withErrors(['contract' => 'The signed contract could not be generated. Please try again.']);
         }
 
         if ($loan->signed_contract_path) {
@@ -103,12 +123,12 @@ class LoanContractController extends Controller
 
         $loan->update([
             'contract_signature_name' => $loan->user->full_name,
-            'contract_signed_at' => now(),
+            'contract_signed_at' => $signedAt,
             'signed_contract_path' => $path,
-            'signed_contract_original_name' => $uploadedContract->getClientOriginalName(),
+            'signed_contract_original_name' => ($loan->loan_code ?: 'loan-'.$loan->id).'-digitally-signed.pdf',
         ]);
 
-        return redirect()->route('dashboard')->with('success', 'Your signed PDF was returned to the administrator for review and final approval.');
+        return redirect()->route('dashboard')->with('success', 'Your contract was digitally signed and sent to the administrator for final approval.');
     }
 
     private function authorizeAccess(Request $request, Loan $loan): void

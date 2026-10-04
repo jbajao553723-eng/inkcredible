@@ -21,6 +21,8 @@ p { margin:7px 0; }
 .signature-cell { width:46%; padding-top:35px; border-top:1px solid #344054; text-align:center; }
 .signature-name { margin-top:5px; font-weight:bold; }
 .signed { color:#067647; font-size:13px; font-style:italic; }
+.signature-image { display:block; width:180px; height:58px; margin:-29px auto 3px; object-fit:contain; }
+.signature-time { margin-top:3px; color:#667085; font-size:8px; }
 .footer { position:fixed; right:0; bottom:-20px; left:0; color:#98a2b3; font-size:8px; text-align:center; }
 </style>
 </head>
@@ -50,12 +52,28 @@ p { margin:7px 0; }
 <table class="signature-grid"><tr>
 <td style="width:8%"></td>
 <td class="signature-cell">
+@if(! empty($clientSignature))
+<img class="signature-image" src="{{ $clientSignature }}" alt="Borrower digital signature">
+<div class="signed">Digitally signed</div>
+@else
 <div>&nbsp;</div>
+@endif
 <div class="signature-name">{{ $loan->user->full_name }}</div>
 <div>Borrower / Client</div>
+@if(! empty($signedAt))<div class="signature-time">Signed {{ $signedAt->timezone('Asia/Manila')->format('F j, Y h:i A') }} PHT</div>@endif
 </td>
 <td style="width:8%"></td>
-<td class="signature-cell"><div>&nbsp;</div><div class="signature-name">Inkcredible Authorized Representative</div><div>Final approval</div></td>
+<td class="signature-cell">
+@if(! empty($adminSignature))
+<img class="signature-image" src="{{ $adminSignature }}" alt="Administrator digital signature">
+<div class="signed">Digitally signed</div>
+@else
+<div>&nbsp;</div>
+@endif
+<div class="signature-name">{{ $adminSignatureName ?? 'Inkcredible Authorized Representative' }}</div>
+<div>Final approval</div>
+@if(! empty($adminSignedAt))<div class="signature-time">Signed {{ $adminSignedAt->timezone('Asia/Manila')->format('F j, Y h:i A') }} PHT</div>@endif
+</td>
 <td style="width:8%"></td>
 </tr></table>
 

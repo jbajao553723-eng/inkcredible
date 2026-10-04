@@ -25,6 +25,9 @@ textarea:focus { outline:none; border-color:#818cf8; box-shadow:0 0 0 3px rgba(9
 .document-card:hover { border-color:#c7d2fe; }
 .document-card strong { display:block; margin-bottom:5px; }
 .privacy-note { padding:14px; color:#344054; background:#f8fafc; border:1px solid var(--border); border-radius:10px; font-size:11px; line-height:1.55; }
+.signature-review { padding:14px; background:#fff; border:1px solid #d9d6fe; border-radius:12px; text-align:center; }
+.signature-review img { width:100%; height:72px; object-fit:contain; }
+.signature-review span { display:block; margin-top:7px; color:#667085; font-size:9px; }
 .decision-body { display:grid; gap:16px; }
 .decision-reason { display:grid; gap:7px; }
 .decision-help { margin:0; color:var(--muted); font-size:11px; line-height:1.45; }
@@ -123,6 +126,8 @@ textarea:focus { outline:none; border-color:#818cf8; box-shadow:0 0 0 3px rgba(9
                 <div class="panel-body" style="display:grid;gap:12px">
                     <a class="document-card" href="{{ route('admin.verifications.document', [$verification, 'valid-id']) }}" target="_blank" rel="noopener"><strong>Valid identification</strong><span class="cell-secondary">Open the submitted ID image or PDF</span></a>
                     <a class="document-card" href="{{ route('admin.verifications.document', [$verification, 'selfie']) }}" target="_blank" rel="noopener"><strong>Selfie holding valid ID</strong><span class="cell-secondary">Open the submitted identity selfie</span></a>
+                    @if($verification->payslip_path)<a class="document-card" href="{{ route('admin.verifications.document', [$verification, 'payslip']) }}" target="_blank" rel="noopener"><strong>Recent payslip</strong><span class="cell-secondary">Review income evidence before approval</span></a>@else<div class="document-card"><strong>No payslip provided</strong><span class="cell-secondary">The assessment receives no verified-income-evidence bonus.</span></div>@endif
+                    @if($verification->digital_signature)<div class="signature-review"><img src="{{ $verification->digital_signature }}" alt="{{ $client?->full_name }} digital signature"><span>Digital signature captured {{ $verification->signature_captured_at?->timezone('Asia/Manila')->format('M d, Y - h:i A') }} PHT</span></div>@else<div class="alert alert-error" style="margin:0">Digital signature missing. Request changes before approving this verification.</div>@endif
                     <div class="privacy-note"><strong>Restricted personal data.</strong> Access these files only for authorized verification, do not download or share them unnecessarily, and record decisions based on relevant lending criteria.</div>
                 </div>
             </section>

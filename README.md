@@ -41,10 +41,10 @@ The application is then available at `http://127.0.0.1:8000`.
 Seed accounts are optional. Add these values to `.env` before running `php artisan db:seed`:
 
 ```env
+SEED_SUPERADMIN_EMAIL=superadmin@example.test
+SEED_SUPERADMIN_PASSWORD=use-a-different-local-password
 SEED_ADMIN_EMAIL=admin@example.test
 SEED_ADMIN_PASSWORD=use-a-local-password
-SEED_CLIENT_EMAIL=client@example.test
-SEED_CLIENT_PASSWORD=use-a-local-password
 ```
 
 The seeders skip account creation when the corresponding email or password is missing. Never commit real or shared credentials.
@@ -74,6 +74,24 @@ php artisan config:clear
 ```
 
 For local webhook testing, expose the app through an HTTPS tunnel and update both `APP_URL` and the PayMongo webhook endpoint to the tunnel URL.
+
+## Gmail notifications
+
+The application emails clients when their account is fully verified, a contract is ready to sign, a loan is approved, or an overdue penalty is applied. Dashboard notifications are also retained.
+
+Create a Google App Password for the sending account, then set the mail values in `.env`:
+
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=your-gmail-address@gmail.com
+MAIL_PASSWORD=your-16-character-google-app-password
+MAIL_FROM_ADDRESS=your-gmail-address@gmail.com
+MAIL_FROM_NAME="${APP_NAME}"
+```
+
+Do not commit the real App Password. After changing these values, run `php artisan config:clear`. Gmail App Passwords require 2-Step Verification on the Google account.
 
 ## Quality checks
 

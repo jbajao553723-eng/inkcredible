@@ -2,6 +2,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import Modal from 'bootstrap/js/dist/modal';
 import './ui-motion';
 import './file-downloads';
+import './signature-pad';
 
 document.querySelectorAll('[data-admin-table]').forEach((panel) => {
     const rows = [...panel.querySelectorAll('tbody tr[data-search]')];
@@ -237,6 +238,25 @@ if (reportGuideElement) {
     const reportGuide = Modal.getOrCreateInstance(reportGuideElement);
     document.querySelectorAll('[data-report-guide]').forEach((trigger) => {
         trigger.addEventListener('click', () => reportGuide.show());
+    });
+}
+
+const governmentIdElement = document.getElementById('government-id-modal');
+if (governmentIdElement) {
+    const governmentIdModal = Modal.getOrCreateInstance(governmentIdElement);
+    const frame = governmentIdElement.querySelector('[data-government-id-frame]');
+
+    document.querySelectorAll('[data-government-id-open]').forEach((trigger) => {
+        trigger.addEventListener('click', () => {
+            if (frame && frame.src !== trigger.dataset.documentUrl) {
+                frame.src = trigger.dataset.documentUrl;
+            }
+            governmentIdModal.show();
+        });
+    });
+
+    governmentIdElement.addEventListener('hidden.bs.modal', () => {
+        if (frame) frame.removeAttribute('src');
     });
 }
 
