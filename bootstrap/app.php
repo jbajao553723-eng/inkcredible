@@ -35,13 +35,17 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        $exceptions->report(function (\Throwable $exception): void {
+        $exceptions->report(function (\Throwable $exception): bool {
             Log::error('Unhandled application exception.', [
                 'exception' => $exception::class,
                 'message' => $exception->getMessage(),
                 'file' => $exception->getFile(),
                 'line' => $exception->getLine(),
             ]);
+
+            // Vercel truncates long stack traces. Keep the compact record above
+            // as the only report so the root cause remains visible in its logs.
+            return false;
         });
 
         $exceptions->render(function (PostTooLargeException $exception, Request $request) {

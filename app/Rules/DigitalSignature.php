@@ -24,9 +24,8 @@ class DigitalSignature implements ValidationRule
         }
 
         $imageInfo = @getimagesizefromstring($imageData);
-        $image = @imagecreatefromstring($imageData);
 
-        if ($imageInfo === false || ($imageInfo['mime'] ?? null) !== 'image/png' || $image === false) {
+        if ($imageInfo === false || ($imageInfo['mime'] ?? null) !== 'image/png') {
             $fail('The digital signature must be a valid PNG image.');
 
             return;
@@ -35,8 +34,22 @@ class DigitalSignature implements ValidationRule
         [$width, $height] = $imageInfo;
 
         if ($width < 200 || $height < 80 || $width > 2_000 || $height > 1_000) {
-            imagedestroy($image);
             $fail('The digital signature has invalid dimensions.');
+
+            return;
+        }
+
+        // The Vercel PHP runtime does not provide GD. The browser signature
+        // pad already rejects an empty canvas, while the checks above still
+        // enforce a genuine, bounded PNG on runtimes without that extension.
+        if (! function_exists('imagecreatefromstring') || ! function_exists('imagecolorat')) {
+            return;
+        }
+
+        $image = @imagecreatefromstring($imageData);
+
+        if ($image === false) {
+            $fail('The digital signature must be a valid PNG image.');
 
             return;
         }
