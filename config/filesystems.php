@@ -16,7 +16,7 @@ return [
     'default' => env('FILESYSTEM_DISK', 'local'),
 
     // Uploaded documents are served through authenticated controller routes.
-    // Set both values to "s3" in serverless production environments.
+    // Use the database disks below when the runtime filesystem is ephemeral.
     'private_disk' => env('FILESYSTEM_PRIVATE_DISK', 'local'),
     'public_disk' => env('FILESYSTEM_PUBLIC_DISK', 'public'),
 
@@ -50,6 +50,22 @@ return [
             'visibility' => 'public',
             'throw' => false,
             'report' => false,
+        ],
+
+        'database-private' => [
+            'driver' => 'database',
+            'name' => 'private',
+            'visibility' => 'private',
+            'throw' => true,
+            'report' => true,
+        ],
+
+        'database-public' => [
+            'driver' => 'database',
+            'name' => 'public',
+            'visibility' => 'public',
+            'throw' => true,
+            'report' => true,
         ],
 
         's3' => [

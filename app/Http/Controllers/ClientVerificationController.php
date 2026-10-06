@@ -8,6 +8,7 @@ use App\Rules\DigitalSignature;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
 
@@ -87,6 +88,14 @@ class ClientVerificationController extends Controller
             if ($newProfilePhotoPath && $newProfilePhotoPath !== $previousProfilePhotoPath) {
                 $publicDisk->delete($newProfilePhotoPath);
             }
+
+            Log::error('Client verification submission failed.', [
+                'user_id' => $request->user()->id,
+                'exception' => $exception::class,
+                'message' => $exception->getMessage(),
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+            ]);
 
             throw $exception;
         }
