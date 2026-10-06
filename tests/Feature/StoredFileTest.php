@@ -9,6 +9,24 @@ use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
+function storedFileTestSignature(): string
+{
+    $image = imagecreatetruecolor(720, 220);
+    $white = imagecolorallocate($image, 255, 255, 255);
+    $ink = imagecolorallocate($image, 20, 30, 50);
+    imagefill($image, 0, 0, $white);
+    imagesetthickness($image, 5);
+    imageline($image, 90, 145, 250, 65, $ink);
+    imageline($image, 250, 65, 420, 150, $ink);
+    imageline($image, 420, 150, 630, 80, $ink);
+    ob_start();
+    imagepng($image);
+    $signature = 'data:image/png;base64,'.base64_encode(ob_get_clean());
+    imagedestroy($image);
+
+    return $signature;
+}
+
 it('stores and retrieves private files from the database disk', function () {
     $disk = Storage::disk('database-private');
 
@@ -46,19 +64,6 @@ it('submits verification documents through database-backed storage', function ()
 
     $client = User::factory()->create(['role' => User::ROLE_CLIENT]);
 
-    $image = imagecreatetruecolor(720, 220);
-    $white = imagecolorallocate($image, 255, 255, 255);
-    $ink = imagecolorallocate($image, 20, 30, 50);
-    imagefill($image, 0, 0, $white);
-    imagesetthickness($image, 5);
-    imageline($image, 90, 145, 250, 65, $ink);
-    imageline($image, 250, 65, 420, 150, $ink);
-    imageline($image, 420, 150, 630, 80, $ink);
-    ob_start();
-    imagepng($image);
-    $signature = 'data:image/png;base64,'.base64_encode(ob_get_clean());
-    imagedestroy($image);
-
     $this->actingAs($client)->post(route('profile.verification.store'), [
         'employment_status' => 'employed',
         'company_name' => 'Inkcredible Test Co.',
@@ -72,7 +77,7 @@ it('submits verification documents through database-backed storage', function ()
         'valid_id' => UploadedFile::fake()->image('id.png'),
         'selfie_with_id' => UploadedFile::fake()->image('selfie.png'),
         'payslip' => UploadedFile::fake()->create('payslip.pdf', 120, 'application/pdf'),
-        'digital_signature' => $signature,
+        'digital_signature' => storedFileTestSignature(),
     ])->assertSessionHasNoErrors();
 
     $verification = $client->fresh()->clientVerification;
@@ -83,4 +88,35 @@ it('submits verification documents through database-backed storage', function ()
         ->and(Storage::disk('database-private')->exists($verification->payslip_path))->toBeTrue()
         ->and(Storage::disk('database-public')->exists($client->fresh()->profile_photo_path))->toBeTrue()
         ->and(StoredFile::query()->count())->toBe(4);
+});
+
+it('rejects a combined verification upload that exceeds the serverless request budget', function () {
+    $client = User::factory()->create(['role' => User::ROLE_CLIENT]);
+
+    $this->actingAs($client)->post(route('profile.verification.store'), [
+        'employment_status' => 'employed',
+        'company_name' => 'Inkcredible Test Co.',
+        'job_title' => 'Analyst',
+        'monthly_income' => 30000,
+        'employment_length_months' => 24,
+        'source_of_income' => 'Salary',
+        'valid_id_type' => 'Philippine National ID',
+        'valid_id_number' => 'ID-LARGE-12345',
+        'profile_photo' => UploadedFile::fake()->image('profile.jpg')->size(1300),
+        'valid_id' => UploadedFile::fake()->image('id.jpg')->size(1300),
+        'selfie_with_id' => UploadedFile::fake()->image('selfie.jpg')->size(1300),
+        'digital_signature' => storedFileTestSignature(),
+    ])->assertSessionHasErrors(['valid_id'], null, 'verification');
+
+    expect(StoredFile::query()->count())->toBe(0)
+        ->and($client->fresh()->clientVerification)->toBeNull();
+});
+
+it('renders a helpful response when PHP rejects an oversized verification request', function () {
+    $this->from(route('profile.verification.edit'))
+        ->withServerVariables(['CONTENT_LENGTH' => 20 * 1024 * 1024])
+        ->post(route('profile.verification.store'))
+        ->assertStatus(413)
+        ->assertSee('Please choose smaller files')
+        ->assertSee('Return to verification');
 });

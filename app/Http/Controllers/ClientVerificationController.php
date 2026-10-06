@@ -150,7 +150,7 @@ class ClientVerificationController extends Controller
         }
 
         $validated = $request->validateWithBag('payslip', [
-            'payslip' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:4096'],
+            'payslip' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:3500'],
         ]);
         $previousPath = $verification->payslip_path;
         $path = $validated['payslip']->store('client-verifications/'.$request->user()->id, config('filesystems.private_disk'));

@@ -9,6 +9,9 @@ use App\Http\Middleware\StandardAdminMiddleware;
 use App\Http\Middleware\SuperAdminMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
+use Illuminate\Http\Exceptions\PostTooLargeException;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -32,5 +35,20 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->report(function (\Throwable $exception): void {
+            Log::error('Unhandled application exception.', [
+                'exception' => $exception::class,
+                'message' => $exception->getMessage(),
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+            ]);
+        });
+
+        $exceptions->render(function (PostTooLargeException $exception, Request $request) {
+            if ($request->is('profile/verification*')) {
+                return response()->view('errors.upload-too-large', status: 413);
+            }
+
+            return null;
+        });
     })->create();

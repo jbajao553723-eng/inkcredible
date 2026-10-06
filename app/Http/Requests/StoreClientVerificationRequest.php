@@ -5,9 +5,12 @@ namespace App\Http\Requests;
 use App\Rules\DigitalSignature;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class StoreClientVerificationRequest extends FormRequest
 {
+    private const MAX_COMBINED_UPLOAD_BYTES = 3_750_000;
+
     protected $errorBag = 'verification';
 
     public function authorize(): bool
@@ -54,6 +57,21 @@ class StoreClientVerificationRequest extends FormRequest
 
             return [$field => is_string($value) ? trim($value) : $value];
         })->all());
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            $totalBytes = collect(['profile_photo', 'valid_id', 'selfie_with_id', 'payslip'])
+                ->sum(fn (string $field): int => (int) ($this->file($field)?->getSize() ?? 0));
+
+            if ($totalBytes > self::MAX_COMBINED_UPLOAD_BYTES) {
+                $validator->errors()->add(
+                    'valid_id',
+                    'The selected files are too large together. Keep the combined upload under 3.6 MB.',
+                );
+            }
+        });
     }
 
     public function messages(): array
