@@ -29,3 +29,5 @@ yarn-error.log
 .vercel/
 certs/
 output/
+.vercel
+.env*
