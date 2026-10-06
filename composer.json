@@ -54,6 +54,7 @@
             "@php artisan migrate --graceful --ansi"
         ],
         "vercel": [
+            "@php -r \"array_map('unlink', glob('bootstrap/cache/*.php'));\"",
             "@php artisan package:discover --ansi"
         ],
         "dev": [
