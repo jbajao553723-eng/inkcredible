@@ -56,7 +56,7 @@ class SuperAdminDashboardController extends Controller
             ['name' => 'Server-side sessions', 'enabled' => config('session.driver') === 'database', 'note' => 'Database sessions allow immediate administrator revocation.'],
             ['name' => 'HTTP-only session cookie', 'enabled' => (bool) config('session.http_only'), 'note' => 'Prevents client-side scripts from reading the session cookie.'],
             ['name' => 'Secure cookie in production', 'enabled' => app()->environment('local') || (bool) config('session.secure'), 'note' => app()->environment('local') ? 'Required when this application is deployed over HTTPS.' : 'Session cookies must only travel over HTTPS.'],
-            ['name' => 'Active-account enforcement', 'enabled' => true, 'note' => 'Disabled administrator accounts are blocked before authentication completes.'],
+            ['name' => 'Active-account enforcement', 'enabled' => true, 'note' => 'Disabled administrator and client accounts are blocked before authentication completes.'],
         ];
 
         $recentAdmins = $admins->take(5);
@@ -70,6 +70,8 @@ class SuperAdminDashboardController extends Controller
                 'logout',
                 'admin_access_admins_store',
                 'admin_access_admins_status',
+                'admin_access_users_update',
+                'admin_access_users_status',
             ])
             ->latest('occurred_at')
             ->take(8)

@@ -65,6 +65,8 @@ class AuditUserActions
             'admin.access.admins.store' => 'Created an administrator account',
             'admin.access.admins.update' => 'Updated administrator account information',
             'admin.access.admins.status' => 'Changed administrator account access',
+            'admin.access.users.update' => 'Updated a managed user account',
+            'admin.access.users.status' => 'Changed a managed user account access',
             'admin.settings.profile.update' => 'Updated administrator profile settings',
             'admin.settings.password.update' => 'Changed administrator account password',
             'admin.settings.motion.update' => 'Updated administrator motion preference',

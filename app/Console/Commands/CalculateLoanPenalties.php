@@ -46,7 +46,7 @@ class CalculateLoanPenalties extends Command
                 }
             });
 
-        $this->info("Updated daily penalties for {$updatedCount} active loans at 5% per overdue day.");
+        $this->info("Updated daily penalties for {$updatedCount} active loans at ".Loan::DAILY_PENALTY_RATE.'% per overdue day.');
 
         return self::SUCCESS;
     }

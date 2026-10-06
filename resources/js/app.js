@@ -2,6 +2,7 @@ import './bootstrap';
 import './ui-motion';
 import './file-downloads';
 import './signature-pad';
+import './partial-navigation';
 
 import Alpine from 'alpinejs';
 

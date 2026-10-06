@@ -7,7 +7,9 @@ use App\Models\ClientVerification;
 use App\Rules\DigitalSignature;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Throwable;
 
 class ClientVerificationController extends Controller
 {
@@ -26,37 +28,78 @@ class ClientVerificationController extends Controller
         $validated = $request->validated();
 
         $documentDirectory = 'client-verifications/'.$request->user()->id;
-        $validIdPath = $request->hasFile('valid_id')
-            ? $request->file('valid_id')->store($documentDirectory, config('filesystems.private_disk'))
-            : $verification?->valid_id_path;
-        $selfiePath = $request->hasFile('selfie_with_id')
-            ? $request->file('selfie_with_id')->store($documentDirectory, config('filesystems.private_disk'))
-            : $verification?->selfie_with_id_path;
-        $payslipPath = $request->hasFile('payslip')
-            ? $request->file('payslip')->store($documentDirectory, config('filesystems.private_disk'))
-            : $verification?->payslip_path;
-        $digitalSignature = $validated['digital_signature'] ?? $verification?->digital_signature;
+        $disk = Storage::disk(config('filesystems.private_disk'));
+        $publicDisk = Storage::disk(config('filesystems.public_disk'));
+        $newPaths = [];
+        $newProfilePhotoPath = null;
+        $previousProfilePhotoPath = $request->user()->profile_photo_path;
 
-        ClientVerification::updateOrCreate(
-            ['user_id' => $request->user()->id],
-            [
-                ...collect($validated)->except(['valid_id', 'selfie_with_id', 'payslip', 'digital_signature'])->all(),
-                'valid_id_path' => $validIdPath,
-                'selfie_with_id_path' => $selfiePath,
-                'payslip_path' => $payslipPath,
-                'payslip_uploaded_at' => $request->hasFile('payslip') ? now() : $verification?->payslip_uploaded_at,
-                'payslip_verified_at' => null,
-                'digital_signature' => $digitalSignature,
-                'signature_captured_at' => array_key_exists('digital_signature', $validated)
-                    ? now()
-                    : $verification?->signature_captured_at,
-                'status' => ClientVerification::STATUS_PENDING,
-                'submitted_at' => now(),
-                'reviewed_at' => null,
-                'reviewed_by' => null,
-                'rejection_reason' => null,
-            ],
-        );
+        try {
+            $newProfilePhotoPath = $request->hasFile('profile_photo')
+                ? $request->file('profile_photo')->store('profile-photos', config('filesystems.public_disk'))
+                : $previousProfilePhotoPath;
+            $validIdPath = $request->hasFile('valid_id')
+                ? $request->file('valid_id')->store($documentDirectory, config('filesystems.private_disk'))
+                : $verification?->valid_id_path;
+            $selfiePath = $request->hasFile('selfie_with_id')
+                ? $request->file('selfie_with_id')->store($documentDirectory, config('filesystems.private_disk'))
+                : $verification?->selfie_with_id_path;
+            $payslipPath = $request->hasFile('payslip')
+                ? $request->file('payslip')->store($documentDirectory, config('filesystems.private_disk'))
+                : $verification?->payslip_path;
+
+            foreach ([$validIdPath, $selfiePath, $payslipPath] as $path) {
+                if ($path && ! in_array($path, [$verification?->valid_id_path, $verification?->selfie_with_id_path, $verification?->payslip_path], true)) {
+                    $newPaths[] = $path;
+                }
+            }
+
+            $digitalSignature = $validated['digital_signature'] ?? $verification?->digital_signature;
+
+            DB::transaction(function () use ($request, $validated, $verification, $newProfilePhotoPath, $validIdPath, $selfiePath, $payslipPath, $digitalSignature): void {
+                $request->user()->forceFill([
+                    'profile_photo_path' => $newProfilePhotoPath,
+                ])->save();
+
+                ClientVerification::updateOrCreate(
+                    ['user_id' => $request->user()->id],
+                    [
+                        ...collect($validated)->except(['profile_photo', 'valid_id', 'selfie_with_id', 'payslip', 'digital_signature'])->all(),
+                        'valid_id_path' => $validIdPath,
+                        'selfie_with_id_path' => $selfiePath,
+                        'payslip_path' => $payslipPath,
+                        'payslip_uploaded_at' => $request->hasFile('payslip') ? now() : $verification?->payslip_uploaded_at,
+                        'payslip_verified_at' => null,
+                        'digital_signature' => $digitalSignature,
+                        'signature_captured_at' => array_key_exists('digital_signature', $validated)
+                            ? now()
+                            : $verification?->signature_captured_at,
+                        'status' => ClientVerification::STATUS_PENDING,
+                        'submitted_at' => now(),
+                        'reviewed_at' => null,
+                        'reviewed_by' => null,
+                        'rejection_reason' => null,
+                    ],
+                );
+            });
+        } catch (Throwable $exception) {
+            $disk->delete($newPaths);
+            if ($newProfilePhotoPath && $newProfilePhotoPath !== $previousProfilePhotoPath) {
+                $publicDisk->delete($newProfilePhotoPath);
+            }
+
+            throw $exception;
+        }
+
+        $replacedPaths = collect([
+            $request->hasFile('valid_id') ? $verification?->valid_id_path : null,
+            $request->hasFile('selfie_with_id') ? $verification?->selfie_with_id_path : null,
+            $request->hasFile('payslip') ? $verification?->payslip_path : null,
+        ])->filter()->all();
+        $disk->delete($replacedPaths);
+        if ($request->hasFile('profile_photo') && $previousProfilePhotoPath) {
+            $publicDisk->delete($previousProfilePhotoPath);
+        }
 
         return back()->with('success', 'Verification submitted. An administrator will review your information.');
     }

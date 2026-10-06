@@ -1,4 +1,6 @@
-document.querySelectorAll('[data-signature-pad]').forEach((pad) => {
+const initializeSignaturePads = (root = document) => root.querySelectorAll('[data-signature-pad]').forEach((pad) => {
+    if (pad.dataset.signatureInitialized === 'true') return;
+    pad.dataset.signatureInitialized = 'true';
     const canvas = pad.querySelector('[data-signature-canvas]');
     const input = pad.querySelector('[data-signature-input]');
     const clear = pad.querySelector('[data-signature-clear]');
@@ -69,4 +71,9 @@ document.querySelectorAll('[data-signature-pad]').forEach((pad) => {
             submit.textContent = submit.dataset.busyLabel ?? 'Saving securely...';
         }
     });
+});
+
+initializeSignaturePads();
+document.addEventListener('partial-navigation:loaded', (event) => {
+    initializeSignaturePads(event.detail?.root ?? document);
 });

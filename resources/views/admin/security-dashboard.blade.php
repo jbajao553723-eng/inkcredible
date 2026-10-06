@@ -64,7 +64,7 @@
 <main class="main" id="main-content" tabindex="-1"><div class="page-shell">
     <header class="topbar">
         <div><div class="eyebrow">Security administration</div><h1>Security dashboard</h1><p class="subtitle">Monitor administrator access, sign-in activity, and account protection from one focused workspace.</p></div>
-        <div class="top-actions"><a class="button button-primary" href="{{ route('admin.access.index') }}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 5v14m-7-7h14"/></svg>Manage admins</a></div>
+        <div class="top-actions"><a class="button button-primary" href="{{ route('admin.access.index') }}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 5v14m-7-7h14"/></svg>Manage users</a></div>
     </header>
 
     <x-flash-messages />
@@ -78,7 +78,7 @@
 
     <section class="security-grid">
         <article class="panel"><div class="panel-header"><div><h2 class="panel-title">Security controls</h2><p class="panel-description">Go directly to privileged account and audit tools.</p></div></div><div class="quick-actions">
-            <a class="quick-action" href="{{ route('admin.access.index') }}"><span class="quick-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3.5 19 6v5c0 4.5-2.8 7.8-7 9.5C7.8 18.8 5 15.5 5 11V6zM8.5 12h7M12 8.5v7"/></svg></span><span class="quick-copy"><strong>Administrator access</strong><span>Add, disable, or restore standard administrator accounts.</span></span><svg class="quick-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="m9 5 7 7-7 7"/></svg></a>
+            <a class="quick-action" href="{{ route('admin.access.index') }}"><span class="quick-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3.5 19 6v5c0 4.5-2.8 7.8-7 9.5C7.8 18.8 5 15.5 5 11V6zM8.5 12h7M12 8.5v7"/></svg></span><span class="quick-copy"><strong>User access</strong><span>Edit, disable, or restore administrator and client accounts.</span></span><svg class="quick-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="m9 5 7 7-7 7"/></svg></a>
             <a class="quick-action" href="{{ route('admin.audit-logs.index') }}"><span class="quick-icon audit"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3.5 19 6v5c0 4.5-2.8 7.8-7 9.5C7.8 18.8 5 15.5 5 11V6zM9 11.5l2 2 4-4"/></svg></span><span class="quick-copy"><strong>Audit activity</strong><span>Review sign-ins, access changes, users, and network details.</span></span><svg class="quick-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="m9 5 7 7-7 7"/></svg></a>
         </div></article>
 
@@ -93,7 +93,7 @@
             <div class="signal-card {{ $stats['failed_logins_24h'] ? 'alert' : '' }}"><div class="signal-label">Failed sign-ins</div><div class="signal-value">{{ number_format($stats['failed_logins_24h']) }}</div><div class="signal-note">Across {{ number_format($stats['failure_sources_24h']) }} source {{ Str::plural('IP', $stats['failure_sources_24h']) }} in 24 hours.</div></div>
             <div class="signal-card {{ $stats['repeat_failure_sources'] ? 'alert' : '' }}"><div class="signal-label">Repeated sources</div><div class="signal-value">{{ number_format($stats['repeat_failure_sources']) }}</div><div class="signal-note">Sources with at least three failed sign-ins in 24 hours.</div></div>
             <div class="signal-card {{ $stats['authorization_failures_24h'] ? 'alert' : '' }}"><div class="signal-label">Denied access</div><div class="signal-value">{{ number_format($stats['authorization_failures_24h']) }}</div><div class="signal-note">Protected-route authorization failures in 24 hours.</div></div>
-            <div class="signal-card {{ $stats['privileged_changes_7d'] ? 'warning' : '' }}"><div class="signal-label">Privileged changes</div><div class="signal-value">{{ number_format($stats['privileged_changes_7d']) }}</div><div class="signal-note">Administrator access changes during the last seven days.</div></div>
+            <div class="signal-card {{ $stats['privileged_changes_7d'] ? 'warning' : '' }}"><div class="signal-label">Privileged changes</div><div class="signal-value">{{ number_format($stats['privileged_changes_7d']) }}</div><div class="signal-note">User access changes during the last seven days.</div></div>
             <div class="signal-card"><div class="signal-label">Active admin sessions</div><div class="signal-value">{{ $stats['active_admin_sessions'] === null ? 'N/A' : number_format($stats['active_admin_sessions']) }}</div><div class="signal-note">Server-side sessions currently tied to privileged accounts.</div></div>
         </div></article>
 

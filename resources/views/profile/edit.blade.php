@@ -6,7 +6,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 @vite('resources/js/app.js')
-<style>
+<style data-partial-page-style>
 @include('partials.client-portal-styles')
 @include('partials.settings-styles')
 
@@ -41,7 +41,7 @@
 .verification-link { display:inline-flex; margin-top:18px; color:#4338ca; font-size:11px; font-weight:600; text-decoration:none; }
 .profile-form-panel { border-color:#dfe3ea; box-shadow:0 8px 24px rgba(16,24,40,.045); }
 .profile-form-panel .panel-header { align-items:flex-start; }
-.required-note { color:#98a2b3; font-size:10px; white-space:nowrap; }
+.required-note { white-space:nowrap; }
 .profile-form { padding:0; }
 .profile-form-section { padding:22px 24px 4px; }
 .profile-form-section + .profile-form-section { border-top:1px solid #f2f4f7; }
@@ -71,7 +71,10 @@
         $user->email,
         $user->contact_number,
         $user->age,
-        $user->address,
+        $streetAddress,
+        $barangay,
+        $cityMunicipality,
+        $province,
     ]);
     $completedFields = $profileValues->filter(fn ($value) => filled($value))->count();
     $profileCompletion = (int) round(($completedFields / $profileValues->count()) * 100);
@@ -90,13 +93,15 @@
 @endphp
 
 @include('partials.client-sidebar', ['active' => 'settings'])
-<main class="main" id="main-content" tabindex="-1"><div class="page-shell settings-shell">
+<main class="main" id="main-content" tabindex="-1" data-partial-page><div class="page-shell settings-shell">
     <header class="topbar">
-        <div><div class="eyebrow">Account settings</div><h1>Personal profile</h1><p class="subtitle">Update the same identity and address details used at registration. Saved changes appear across your dashboard and future applications.</p></div>
+        <div><div class="eyebrow">Account settings</div><h1>Settings</h1><p class="subtitle">Manage your profile, verification, security, and accessibility preferences.</p></div>
         <div class="top-actions"><a class="button button-secondary" href="{{ route('dashboard') }}">Back to dashboard</a></div>
     </header>
 
     @include('partials.settings-tabs', ['activeSettings' => 'profile'])
+
+    <div class="settings-tab-content" id="settings-tab-content" role="tabpanel" tabindex="-1" data-partial-content>
 
     @if(session('status') === 'profile-updated')
         <div class="alert alert-success" role="status">Your personal profile was updated successfully.</div>
@@ -114,21 +119,21 @@
                     <label class="photo-upload" for="profile-photo" title="Choose a profile picture" aria-label="Choose a profile picture"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5" stroke-width="1.8"/></svg></label>
                 </div>
                 <input class="profile-photo-input" id="profile-photo" name="profile_photo" type="file" accept="image/jpeg,image/png,image/webp" form="profile-form">
-                <h2 class="profile-name">{{ $user->name }}</h2>
-                <div class="profile-email">{{ $user->email }}</div>
+                <h2 class="profile-name" id="profile-summary-name">{{ $user->name }}</h2>
+                <div class="profile-email" id="profile-summary-email">{{ $user->email }}</div>
                 <div class="profile-status"><span class="badge {{ $verificationClass }}">Verification: {{ $verificationStatus }}</span></div>
-                <div class="photo-help" id="profile-photo-help"><strong>Change profile picture</strong>JPG, PNG, or WebP up to 2 MB.</div>
+                <div class="photo-help" id="profile-photo-help"><strong>Change profile photo</strong>JPG, PNG, or WebP up to 2 MB. A photo is required when you submit verification.</div>
                 @error('profile_photo')<p class="field-error">{{ $message }}</p>@enderror
 
                 <div class="completion-block">
-                    <div class="completion-copy"><span>Profile completeness</span><strong>{{ $profileCompletion }}%</strong></div>
-                    <div class="completion-track"><div class="completion-fill progress-bar" style="width:{{ $profileCompletion }}%"></div></div>
+                    <div class="completion-copy"><span>Profile completeness</span><strong id="profile-completion-value">{{ $profileCompletion }}%</strong></div>
+                    <div class="completion-track"><div class="completion-fill progress-bar" id="profile-completion-fill" style="width:{{ $profileCompletion }}%"></div></div>
                 </div>
 
                 <div class="profile-facts">
                     <div class="profile-fact"><span>Email</span><strong>{{ $user->email_verified_at ? 'Verified' : 'Not verified' }}</strong></div>
                     <div class="profile-fact"><span>Member since</span><strong>{{ $user->created_at?->format('M Y') ?? '—' }}</strong></div>
-                    <div class="profile-fact"><span>Completed fields</span><strong>{{ $completedFields }} of {{ $profileValues->count() }}</strong></div>
+                    <div class="profile-fact"><span>Completed fields</span><strong id="profile-completed-fields">{{ $completedFields }} of {{ $profileValues->count() }}</strong></div>
                 </div>
 
                 <a class="verification-link" href="{{ route('profile.verification.edit') }}">Manage account verification &rarr;</a>
@@ -136,35 +141,35 @@
         </aside>
 
         <section class="panel profile-form-panel">
-            <div class="panel-header"><div><h2 class="panel-title">Profile details</h2><p class="panel-description">Used for your loan applications, account notices, and payment communication.</p></div><span class="required-note">All fields are required</span></div>
+            <div class="panel-header"><div><h2 class="panel-title">Profile details</h2><p class="panel-description">Keep your identity, contact, and address information up to date.</p></div><span class="required-note"><span class="required-asterisk">*</span> Required fields</span></div>
             <form class="profile-form" id="profile-form" method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data" data-address-selects data-selected-city="{{ old('city_municipality', $cityMunicipality) }}" data-selected-barangay="{{ old('barangay', $barangay) }}">
                 @csrf
                 @method('patch')
 
                 <div class="profile-form-section">
-                    <div class="form-section-head"><span class="form-section-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3" stroke-width="1.8"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5 20c.5-4.5 2.8-7 7-7s6.5 2.5 7 7"/></svg></span><div><h3 class="form-section-title">Identity</h3><p class="form-section-note">Enter your name exactly as it appears on your valid identification.</p></div></div>
+                    <div class="form-section-head"><span class="form-section-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3" stroke-width="1.8"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5 20c.5-4.5 2.8-7 7-7s6.5 2.5 7 7"/></svg></span><div><h3 class="form-section-title">Legal identity</h3><p class="form-section-note">Enter your legal name exactly as it appears on your government-issued identification.</p></div></div>
                     <div class="form-grid">
-                        <div class="form-group"><label class="form-label" for="first-name">First name</label><input class="form-control" id="first-name" name="first_name" value="{{ old('first_name', $user->first_name) }}" autocomplete="given-name" maxlength="100" required aria-invalid="{{ $errors->has('first_name') ? 'true' : 'false' }}">@error('first_name')<p class="field-error">{{ $message }}</p>@enderror</div>
-                        <div class="form-group"><label class="form-label" for="last-name">Last name</label><input class="form-control" id="last-name" name="last_name" value="{{ old('last_name', $user->last_name) }}" autocomplete="family-name" maxlength="100" required aria-invalid="{{ $errors->has('last_name') ? 'true' : 'false' }}">@error('last_name')<p class="field-error">{{ $message }}</p>@enderror</div>
-                        <div class="form-group"><label class="form-label" for="age">Age</label><input class="form-control" type="number" id="age" name="age" min="18" max="120" value="{{ old('age', $user->age) }}" inputmode="numeric" required aria-invalid="{{ $errors->has('age') ? 'true' : 'false' }}">@error('age')<p class="field-error">{{ $message }}</p>@enderror</div>
+                        <div class="form-group"><label class="form-label" for="first-name">First name <span class="required-asterisk" aria-hidden="true">*</span></label><input class="form-control" id="first-name" name="first_name" value="{{ old('first_name', $user->first_name) }}" autocomplete="given-name" maxlength="100" required aria-invalid="{{ $errors->has('first_name') ? 'true' : 'false' }}">@error('first_name')<p class="field-error">{{ $message }}</p>@enderror</div>
+                        <div class="form-group"><label class="form-label" for="last-name">Last name <span class="required-asterisk" aria-hidden="true">*</span></label><input class="form-control" id="last-name" name="last_name" value="{{ old('last_name', $user->last_name) }}" autocomplete="family-name" maxlength="100" required aria-invalid="{{ $errors->has('last_name') ? 'true' : 'false' }}">@error('last_name')<p class="field-error">{{ $message }}</p>@enderror</div>
+                        <div class="form-group"><label class="form-label" for="age">Age <span class="required-asterisk" aria-hidden="true">*</span></label><input class="form-control" type="number" id="age" name="age" min="18" max="120" value="{{ old('age', $user->age) }}" inputmode="numeric" required aria-invalid="{{ $errors->has('age') ? 'true' : 'false' }}"><p class="form-help">Clients must be at least 18 years old.</p>@error('age')<p class="field-error">{{ $message }}</p>@enderror</div>
                     </div>
                 </div>
 
                 <div class="profile-form-section">
                     <div class="form-section-head"><span class="form-section-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 6h16v12H4zM4 7l8 6 8-6"/></svg></span><div><h3 class="form-section-title">Contact information</h3><p class="form-section-note">We use these details for important account and repayment notices.</p></div></div>
                     <div class="form-grid">
-                        <div class="form-group"><label class="form-label" for="email">Email address</label><input class="form-control" type="email" id="email" name="email" value="{{ old('email', $user->email) }}" autocomplete="email" required aria-invalid="{{ $errors->has('email') ? 'true' : 'false' }}"><p class="form-help">Changing your email requires verification again.</p>@error('email')<p class="field-error">{{ $message }}</p>@enderror</div>
-                        <div class="form-group"><label class="form-label" for="contact-number">Contact number</label><input class="form-control" type="tel" id="contact-number" name="contact_number" value="{{ old('contact_number', $user->contact_number) }}" autocomplete="tel" maxlength="30" placeholder="09XX XXX XXXX" required aria-invalid="{{ $errors->has('contact_number') ? 'true' : 'false' }}">@error('contact_number')<p class="field-error">{{ $message }}</p>@enderror</div>
+                        <div class="form-group"><label class="form-label" for="email">Email address <span class="required-asterisk" aria-hidden="true">*</span></label><input class="form-control" type="email" id="email" name="email" value="{{ old('email', $user->email) }}" autocomplete="email" required aria-invalid="{{ $errors->has('email') ? 'true' : 'false' }}"><p class="form-help">Changing your email address requires a new one-time verification.</p>@error('email')<p class="field-error">{{ $message }}</p>@enderror</div>
+                        <div class="form-group"><label class="form-label" for="contact-number">Mobile number <span class="required-asterisk" aria-hidden="true">*</span></label><input class="form-control" type="tel" id="contact-number" name="contact_number" value="{{ old('contact_number', $user->contact_number) }}" autocomplete="tel" maxlength="30" placeholder="09XX XXX XXXX" required aria-invalid="{{ $errors->has('contact_number') ? 'true' : 'false' }}"><p class="form-help">Enter a number where account and repayment notices can be received.</p>@error('contact_number')<p class="field-error">{{ $message }}</p>@enderror</div>
                     </div>
                 </div>
 
                 <div class="profile-form-section">
                     <div class="form-section-head"><span class="form-section-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11z"/><circle cx="12" cy="10" r="2" stroke-width="1.8"/></svg></span><div><h3 class="form-section-title">Residential address</h3><p class="form-section-note">Uses the same street and Philippine location structure as account creation.</p></div></div>
                     <div class="form-grid">
-                        <div class="form-group"><label class="form-label" for="street-address">Street / building no.</label><input class="form-control" id="street-address" name="street_address" value="{{ old('street_address', $streetAddress) }}" placeholder="House no., building, or street" maxlength="255" autocomplete="address-line1" required aria-invalid="{{ $errors->has('street_address') ? 'true' : 'false' }}">@error('street_address')<p class="field-error">{{ $message }}</p>@enderror</div>
-                        <div class="form-group"><label class="form-label" for="province">Province</label><select class="form-control" id="province" name="province" autocomplete="address-level1" required aria-invalid="{{ $errors->has('province') ? 'true' : 'false' }}"><option value="">Select province</option>@foreach(config('philippine_locations') as $location)<option value="{{ $location }}" @selected(old('province', $province) === $location)>{{ $location }}</option>@endforeach</select>@error('province')<p class="field-error">{{ $message }}</p>@enderror</div>
-                        <div class="form-group"><label class="form-label" for="city-municipality">City / municipality</label><select class="form-control" id="city-municipality" name="city_municipality" autocomplete="address-level2" required disabled aria-invalid="{{ $errors->has('city_municipality') ? 'true' : 'false' }}"><option value="">Select province first</option></select>@error('city_municipality')<p class="field-error">{{ $message }}</p>@enderror</div>
-                        <div class="form-group"><label class="form-label" for="barangay">Barangay</label><select class="form-control" id="barangay" name="barangay" autocomplete="address-level3" required disabled aria-invalid="{{ $errors->has('barangay') ? 'true' : 'false' }}"><option value="">Select city or municipality first</option></select><p class="form-help" id="address-lookup-status" aria-live="polite">Choose your province to load its cities and municipalities.</p>@error('barangay')<p class="field-error">{{ $message }}</p>@enderror</div>
+                        <div class="form-group"><label class="form-label" for="street-address">Street address <span class="required-asterisk" aria-hidden="true">*</span></label><input class="form-control" id="street-address" name="street_address" value="{{ old('street_address', $streetAddress) }}" placeholder="House number, building, and street" maxlength="255" autocomplete="address-line1" required aria-invalid="{{ $errors->has('street_address') ? 'true' : 'false' }}">@error('street_address')<p class="field-error">{{ $message }}</p>@enderror</div>
+                        <div class="form-group"><label class="form-label" for="province">Province <span class="required-asterisk" aria-hidden="true">*</span></label><select class="form-control" id="province" name="province" autocomplete="address-level1" required aria-invalid="{{ $errors->has('province') ? 'true' : 'false' }}"><option value="">Select province</option>@foreach(config('philippine_locations') as $location)<option value="{{ $location }}" @selected(old('province', $province) === $location)>{{ $location }}</option>@endforeach</select>@error('province')<p class="field-error">{{ $message }}</p>@enderror</div>
+                        <div class="form-group"><label class="form-label" for="city-municipality">City or municipality <span class="required-asterisk" aria-hidden="true">*</span></label><select class="form-control" id="city-municipality" name="city_municipality" autocomplete="address-level2" required disabled aria-invalid="{{ $errors->has('city_municipality') ? 'true' : 'false' }}"><option value="">Select province first</option></select>@error('city_municipality')<p class="field-error">{{ $message }}</p>@enderror</div>
+                        <div class="form-group"><label class="form-label" for="barangay">Barangay <span class="required-asterisk" aria-hidden="true">*</span></label><select class="form-control" id="barangay" name="barangay" autocomplete="address-level3" required disabled aria-invalid="{{ $errors->has('barangay') ? 'true' : 'false' }}"><option value="">Select city or municipality first</option></select><p class="form-help" id="address-lookup-status" aria-live="polite">Choose your province to load its cities and municipalities.</p>@error('barangay')<p class="field-error">{{ $message }}</p>@enderror</div>
                     </div>
                 </div>
 
@@ -172,8 +177,9 @@
             </form>
         </section>
     </div>
+    </div>
 </div></main>
-<script>
+<script data-partial-page-script>
 const addressContainer = document.querySelector('[data-address-selects]');
 const provinceSelect = document.getElementById('province');
 const citySelect = document.getElementById('city-municipality');
@@ -269,7 +275,29 @@ const profilePhotoInput = document.getElementById('profile-photo');
 const profilePhotoPreview = document.getElementById('profile-photo-preview');
 const profilePhotoInitials = document.getElementById('profile-photo-initials');
 const profilePhotoHelp = document.getElementById('profile-photo-help');
+const profileSummaryName = document.getElementById('profile-summary-name');
+const profileSummaryEmail = document.getElementById('profile-summary-email');
+const profileCompletionValue = document.getElementById('profile-completion-value');
+const profileCompletionFill = document.getElementById('profile-completion-fill');
+const profileCompletedFields = document.getElementById('profile-completed-fields');
+const profileCompletionFields = ['first_name', 'last_name', 'email', 'contact_number', 'age', 'street_address', 'province', 'city_municipality', 'barangay'];
 let profilePhotoObjectUrl;
+
+const updateProfilePreview = () => {
+    if (!profileForm) return;
+
+    const firstName = profileForm.elements.namedItem('first_name')?.value.trim() || '';
+    const lastName = profileForm.elements.namedItem('last_name')?.value.trim() || '';
+    const email = profileForm.elements.namedItem('email')?.value.trim() || '';
+    const completed = profileCompletionFields.filter((name) => profileForm.elements.namedItem(name)?.value.trim()).length;
+    const percentage = Math.round((completed / profileCompletionFields.length) * 100);
+
+    if (profileSummaryName) profileSummaryName.textContent = `${firstName} ${lastName}`.trim() || 'Client profile';
+    if (profileSummaryEmail) profileSummaryEmail.textContent = email || 'Email not provided';
+    if (profileCompletionValue) profileCompletionValue.textContent = `${percentage}%`;
+    if (profileCompletionFill) profileCompletionFill.style.width = `${percentage}%`;
+    if (profileCompletedFields) profileCompletedFields.textContent = `${completed} of ${profileCompletionFields.length}`;
+};
 
 profilePhotoInput?.addEventListener('change', () => {
     const file = profilePhotoInput.files?.[0];
@@ -288,7 +316,9 @@ profilePhotoInput?.addEventListener('change', () => {
 profileForm?.addEventListener('input', () => {
     profileSaveState.textContent = 'Unsaved changes';
     profileSaveState.classList.add('is-dirty');
+    updateProfilePreview();
 });
+profileForm?.addEventListener('change', updateProfilePreview);
 profileForm?.addEventListener('submit', () => {
     const label = profileForm.querySelector('.save-button span');
     if (label) label.textContent = 'Saving changes';

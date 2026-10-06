@@ -1,9 +1,11 @@
 @php($signatureError = $errors->signature->first('digital_signature') ?: $errors->verification->first('digital_signature'))
 <section class="signature-capture" data-signature-pad data-signature-required="{{ $signatureRequired ? 'true' : 'false' }}">
-    <div class="signature-heading">
-        <div><h3>Digital signature</h3><p>Draw the signature you will use to sign loan contracts automatically.</p></div>
-        <span class="signature-security">Encrypted at rest</span>
-    </div>
+    @unless($hideSignatureHeading ?? false)
+        <div class="signature-heading">
+            <div><h3>Digital signature @if($signatureRequired)<span class="required-asterisk" aria-hidden="true">*</span>@endif</h3><p>Draw the signature you will use to sign loan contracts automatically.</p></div>
+            <span class="signature-security">Encrypted at rest</span>
+        </div>
+    @endunless
     @if($existingSignature)
         <div class="signature-existing"><img src="{{ $existingSignature }}" alt="Digital signature currently on file"><span>A signature is already stored. Draw below only if you need to replace it while resubmitting verification.</span></div>
     @endif

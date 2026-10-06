@@ -57,7 +57,7 @@
                     <div class="nav-label">Security</div>
                     <a class="nav-link {{ $active === 'access-control' ? 'active' : '' }}" href="{{ route('admin.access.index') }}" @if($active === 'access-control') aria-current="page" @endif>
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3.5 19 6v5c0 4.5-2.8 7.8-7 9.5C7.8 18.8 5 15.5 5 11V6zM8.5 12h7M12 8.5v7"/></svg>
-                        <span>Admin access</span>
+                        <span>User access</span>
                     </a>
                     <a class="nav-link {{ $active === 'audit-logs' ? 'active' : '' }}" href="{{ route('admin.audit-logs.index') }}" @if($active === 'audit-logs') aria-current="page" @endif>
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3.5 19 6v5c0 4.5-2.8 7.8-7 9.5C7.8 18.8 5 15.5 5 11V6zM9 11.5l2 2 4-4"/></svg>
@@ -76,7 +76,7 @@
         </nav>
 
         <div class="sidebar-account">
-            <span class="account-avatar" aria-hidden="true">{{ $sidebarInitials ?: 'A' }}</span>
+            <span class="account-avatar" aria-hidden="true">@if($sidebarUser?->profile_photo_path)<img src="{{ route('profile.photo', ['v' => $sidebarUser->updated_at?->timestamp]) }}" alt="">@else{{ $sidebarInitials ?: 'A' }}@endif</span>
             <span class="account-copy"><strong>{{ $sidebarName }}</strong><small>{{ $isSuperAdmin ? 'Super Administrator' : 'Administrator' }}</small></span>
             <form class="sidebar-logout-form" method="POST" action="{{ route('logout') }}">
                 @csrf

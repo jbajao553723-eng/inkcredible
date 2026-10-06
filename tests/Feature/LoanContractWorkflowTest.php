@@ -170,6 +170,8 @@ it('requires a signed contract before final loan approval', function () {
 });
 
 it('notifies the client when a new overdue penalty is calculated', function () {
+    expect(Loan::DAILY_PENALTY_RATE)->toBe(10.0);
+
     Notification::fake();
     $client = User::factory()->create(['role' => 'client']);
     $loan = contractWorkflowLoan($client);
@@ -267,8 +269,9 @@ it('computes income-based risk and a lower amount suggestion', function () {
     $assessment = app(LoanRiskAssessmentService::class)->assess($loan);
 
     expect($assessment['ratio'])->toBe(55.0)
+        ->and($assessment['isAssessed'])->toBeTrue()
         ->and($assessment['level'])->toBe('High')
-        ->and($assessment['suggestedPrincipal'])->toBe(2700.0);
+        ->and($assessment['suggestedPrincipal'])->toBe(2500.0);
 });
 
 it('improves readiness for a verified payslip and early repayment history', function () {
@@ -313,7 +316,42 @@ it('improves readiness for a verified payslip and early repayment history', func
     expect($assessment['ratio'])->toBe(55.0)
         ->and($assessment['verifiedPayslip'])->toBeTrue()
         ->and($assessment['earlyPayments'])->toBe(1)
+        ->and($assessment['onTimePayments'])->toBe(0)
         ->and($assessment['completedLoans'])->toBe(1)
         ->and($assessment['readinessScore'])->toBeGreaterThan(42)
         ->and($assessment['level'])->toBe('Moderate');
+});
+
+it('does not assign a risk level before client verification is approved', function () {
+    $client = User::factory()->create(['role' => User::ROLE_CLIENT]);
+    ClientVerification::create([
+        'user_id' => $client->id,
+        'status' => ClientVerification::STATUS_PENDING,
+        'employment_status' => 'employed',
+        'monthly_income' => 30000,
+        'employment_length_months' => 12,
+        'source_of_income' => 'Salary',
+        'valid_id_type' => 'National ID',
+        'valid_id_number' => 'PENDING-123',
+        'valid_id_path' => 'test/id.pdf',
+        'selfie_with_id_path' => 'test/selfie.jpg',
+        'submitted_at' => now(),
+    ]);
+
+    $profile = app(LoanRiskAssessmentService::class)->profile($client);
+
+    expect($profile['isAssessed'])->toBeFalse()
+        ->and($profile['readinessScore'])->toBeNull()
+        ->and($profile['income'])->toBe(0.0)
+        ->and($profile['ratio'])->toBeNull()
+        ->and($profile['level'])->toBe('Not assessed')
+        ->and($profile['tone'])->toBe('neutral')
+        ->and($profile['verificationStatus'])->toBe(ClientVerification::STATUS_PENDING);
+
+    $this->actingAs($client)
+        ->get(route('dashboard'))
+        ->assertOk()
+        ->assertSee('Not assessed yet')
+        ->assertSee('Awaiting verification')
+        ->assertDontSee('Very high risk');
 });

@@ -12,6 +12,8 @@ class LoanApplication extends Model
         'requested_amount',
         'purpose',
         'calculated_interest',
+        'finance_fee',
+        'processing_fee',
         'total_payable',
         'installment_count',
         'repayment_period_days',
@@ -27,6 +29,8 @@ class LoanApplication extends Model
     protected $casts = [
         'requested_amount' => 'decimal:2',
         'calculated_interest' => 'decimal:2',
+        'finance_fee' => 'decimal:2',
+        'processing_fee' => 'decimal:2',
         'total_payable' => 'decimal:2',
         'installment_count' => 'integer',
         'repayment_period_days' => 'integer',

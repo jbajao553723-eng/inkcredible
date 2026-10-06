@@ -15,14 +15,19 @@ use Throwable;
 
 class LoanApplicationService
 {
+    public function __construct(private readonly LoanPricingService $pricing) {}
+
     /**
      * @param  array{amount: mixed, purpose_choice: string, purpose_other?: string|null}  $data
      */
     public function submit(User $user, LoanType $loanType, array $data, UploadedFile $governmentId): Loan
     {
-        $amount = round((float) $data['amount'], 2);
-        $interestAmount = round($amount * ((float) $loanType->interest_rate / 100), 2);
-        $totalPayable = round($amount + $interestAmount, 2);
+        $charges = $this->pricing->calculate((float) $data['amount'], $loanType);
+        $amount = $charges['principal'];
+        $interestAmount = $charges['interest'];
+        $financeFee = $charges['finance_fee'];
+        $processingFee = $charges['processing_fee'];
+        $totalPayable = $charges['total_payable'];
         $installmentCount = $loanType->installmentCount();
         $repaymentPeriodDays = $loanType->repaymentPeriodDays();
         $purposeOptions = config("loan_purposes.{$loanType->name}", []);
@@ -32,7 +37,7 @@ class LoanApplicationService
         $filePath = $governmentId->store('ids', config('filesystems.public_disk'));
 
         try {
-            return DB::transaction(function () use ($user, $loanType, $amount, $purpose, $interestAmount, $totalPayable, $installmentCount, $repaymentPeriodDays, $filePath, $governmentId) {
+            return DB::transaction(function () use ($user, $loanType, $amount, $purpose, $interestAmount, $financeFee, $processingFee, $totalPayable, $installmentCount, $repaymentPeriodDays, $filePath, $governmentId) {
                 $terms = [
                     'terms_accepted_at' => now(),
                     'terms_version' => config('legal.loan_terms_version'),
@@ -44,6 +49,8 @@ class LoanApplicationService
                     'requested_amount' => $amount,
                     'purpose' => $purpose,
                     'calculated_interest' => $interestAmount,
+                    'finance_fee' => $financeFee,
+                    'processing_fee' => $processingFee,
                     'total_payable' => $totalPayable,
                     'installment_count' => $installmentCount,
                     'repayment_period_days' => $repaymentPeriodDays,
@@ -57,6 +64,8 @@ class LoanApplicationService
                     'loan_type_id' => $loanType->id,
                     'purpose' => $purpose,
                     'amount' => $amount,
+                    'finance_fee' => $financeFee,
+                    'processing_fee' => $processingFee,
                     'total_payable' => $totalPayable,
                     'installment_count' => $installmentCount,
                     'repayment_period_days' => $repaymentPeriodDays,

@@ -1,5 +1,7 @@
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const transitionDuration = 220;
+const prefersReducedMotion = () => reducedMotion.matches
+    || getComputedStyle(document.documentElement).getPropertyValue('--app-reduce-motion').trim() === '1';
 
 document.documentElement.classList.add('motion-enabled');
 
@@ -123,6 +125,10 @@ const revealPage = () => {
         '.profile-layout > *',
         '.security-grid > *',
         '.settings-tabs > *',
+        '.verification-section',
+        '.readiness-panel',
+        '.readiness-factors > *',
+        '.motion-setting',
         '.page-shell > .panel',
         '.page-shell > .history-panel',
         '.page-shell > .detail-panel',
@@ -165,9 +171,12 @@ const revealOnScroll = () => {
     const selectors = [
         '.payment-section',
         '.profile-form-section',
+        '.verification-section',
         '.form-section',
         '.verification-notice',
         '.document-grid > *',
+        '.readiness-factor',
+        '.settings-tab',
         '.loan-list > *',
         '.method-option',
         '.loan-option',
@@ -200,7 +209,7 @@ const revealOnScroll = () => {
         element.style.setProperty('--motion-child-order', Math.min(siblings.indexOf(element), 6));
     });
 
-    if (reducedMotion.matches || !('IntersectionObserver' in window)) {
+    if (prefersReducedMotion() || !('IntersectionObserver' in window)) {
         elements.forEach((element) => element.classList.add('motion-visible'));
         return;
     }
@@ -221,7 +230,7 @@ const revealOnScroll = () => {
 };
 
 const animateNumber = (element) => {
-    if (reducedMotion.matches || element.dataset.motionCounted === 'true') return;
+    if (prefersReducedMotion() || element.dataset.motionCounted === 'true') return;
 
     const original = element.textContent.trim();
     const match = original.match(/-?[\d,]+(?:\.\d+)?/);
@@ -284,11 +293,34 @@ const animateDashboardData = () => {
             '.loan-balance',
             '[data-motion-count]',
         ].join(', ')).forEach(animateNumber);
-    }, reducedMotion.matches ? 0 : 360);
+
+        document.querySelectorAll('[data-readiness-ring]').forEach((ring) => {
+            if (prefersReducedMotion() || ring.dataset.motionRing === 'true') return;
+
+            const target = Number.parseFloat(ring.style.getPropertyValue('--score'));
+            if (!Number.isFinite(target)) return;
+
+            ring.dataset.motionRing = 'true';
+            ring.style.setProperty('--score', '0');
+            let startTime;
+
+            const update = (time) => {
+                startTime ??= time;
+                const progress = Math.min((time - startTime) / 900, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                ring.style.setProperty('--score', String(target * eased));
+
+                if (progress < 1) requestAnimationFrame(update);
+                else ring.style.setProperty('--score', String(target));
+            };
+
+            requestAnimationFrame(update);
+        });
+    }, prefersReducedMotion() ? 0 : 360);
 };
 
 const addRipple = (event) => {
-    if (reducedMotion.matches || !(event.target instanceof Element)) return;
+    if (prefersReducedMotion() || !(event.target instanceof Element)) return;
 
     const target = event.target.closest(interactiveSelector);
     if (!target || target.matches(':disabled, [aria-disabled="true"]')) return;
@@ -337,7 +369,7 @@ const enablePageTransitions = () => {
 
         if (!['http:', 'https:'].includes(destination.protocol)) return;
         if (destination.origin !== window.location.origin || destination.href === window.location.href || destination.hash) return;
-        if (reducedMotion.matches) return;
+        if (prefersReducedMotion()) return;
 
         event.preventDefault();
         beginPageExit();
@@ -351,7 +383,7 @@ const enablePageTransitions = () => {
 
         if (!(form instanceof HTMLFormElement)
             || event.defaultPrevented
-            || reducedMotion.matches
+            || prefersReducedMotion()
             || transitioningForms.has(form)
             || form.hasAttribute('data-no-transition')
             || (form.target && form.target !== '_self')
@@ -386,7 +418,7 @@ const enablePageTransitions = () => {
         transitionBar.classList.remove('is-active');
         document.documentElement.classList.remove('motion-out');
 
-        if (event.persisted && !reducedMotion.matches) {
+        if (event.persisted && !prefersReducedMotion()) {
             document.documentElement.classList.remove('motion-in');
             document.querySelectorAll('.motion-scroll').forEach((element) => element.classList.remove('motion-visible'));
             requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -451,7 +483,7 @@ const enableFieldFeedback = () => {
 
 const enableBrandParallax = () => {
     const panel = document.querySelector('.brand-panel');
-    if (!panel || reducedMotion.matches) return;
+    if (!panel || prefersReducedMotion()) return;
 
     panel.addEventListener('pointermove', (event) => {
         const rect = panel.getBoundingClientRect();
@@ -466,7 +498,7 @@ const enableBrandParallax = () => {
 };
 
 const enableScrollProgress = () => {
-    if (reducedMotion.matches) return;
+    if (prefersReducedMotion()) return;
 
     const indicator = document.createElement('div');
     indicator.className = 'motion-scroll-progress';
@@ -495,7 +527,7 @@ const enableDynamicMotion = () => {
     if (!('MutationObserver' in window)) return;
 
     const animate = (element) => {
-        if (!(element instanceof Element) || reducedMotion.matches) return;
+        if (!(element instanceof Element) || prefersReducedMotion()) return;
         if (!element.matches('.alert, .toast, .dropdown-menu, .empty-state, tbody tr, [role="status"]')) return;
         if (element.hidden) return;
 
@@ -534,4 +566,9 @@ onReady(() => {
     enableScrollProgress();
     enableDynamicMotion();
     document.addEventListener('pointerdown', addRipple);
+});
+
+document.addEventListener('partial-navigation:loaded', () => {
+    revealOnScroll();
+    animateDashboardData();
 });

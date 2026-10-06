@@ -15,8 +15,7 @@ class EnsureClientIsVerified
         }
 
         if (! $request->user()->isClientVerified()) {
-            return redirect()->route('profile.verification.edit')
-                ->with('error', 'Complete account verification and wait for admin approval before requesting a loan.');
+            return redirect()->route('profile.verification.edit');
         }
 
         return $next($request);

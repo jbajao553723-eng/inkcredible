@@ -52,6 +52,132 @@ document.querySelectorAll('[data-admin-table]').forEach((panel) => {
     update();
 });
 
+const accessTabs = [...document.querySelectorAll('[data-access-tab]')];
+const accessPanels = [...document.querySelectorAll('[data-access-panel]')];
+if (accessTabs.length && accessPanels.length) {
+    const activateAccessTab = (section, { updateHistory = true, moveFocus = false } = {}) => {
+        const activeTab = accessTabs.find((tab) => tab.dataset.accessTab === section) ?? accessTabs[0];
+        const activeSection = activeTab.dataset.accessTab;
+
+        accessTabs.forEach((tab) => {
+            const isActive = tab === activeTab;
+            tab.classList.toggle('active', isActive);
+            tab.setAttribute('aria-selected', String(isActive));
+            tab.tabIndex = isActive ? 0 : -1;
+        });
+
+        accessPanels.forEach((panel) => {
+            const isActive = panel.dataset.accessPanel === activeSection;
+            panel.hidden = !isActive;
+            if (isActive) {
+                panel.classList.remove('is-switching');
+                void panel.offsetWidth;
+                panel.classList.add('is-switching');
+            }
+        });
+
+        document.querySelectorAll('[data-admin-only-action]').forEach((action) => {
+            action.hidden = activeSection !== 'admins';
+        });
+
+        if (updateHistory) {
+            const url = new URL(activeTab.href, window.location.href);
+            window.history.pushState({ accessSection: activeSection }, '', url);
+        }
+
+        if (moveFocus) activeTab.focus();
+    };
+
+    accessTabs.forEach((tab, index) => {
+        tab.addEventListener('click', (event) => {
+            event.preventDefault();
+            activateAccessTab(tab.dataset.accessTab);
+        });
+
+        tab.addEventListener('keydown', (event) => {
+            if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+            event.preventDefault();
+            let nextIndex = index;
+            if (event.key === 'ArrowLeft') nextIndex = (index - 1 + accessTabs.length) % accessTabs.length;
+            if (event.key === 'ArrowRight') nextIndex = (index + 1) % accessTabs.length;
+            if (event.key === 'Home') nextIndex = 0;
+            if (event.key === 'End') nextIndex = accessTabs.length - 1;
+            activateAccessTab(accessTabs[nextIndex].dataset.accessTab, { moveFocus: true });
+        });
+    });
+
+    window.addEventListener('popstate', () => {
+        const section = new URL(window.location.href).searchParams.get('section');
+        activateAccessTab(section === 'clients' ? 'clients' : 'admins', { updateHistory: false });
+    });
+}
+
+const adminSettingsTabs = [...document.querySelectorAll('[data-admin-settings-tab]')];
+const adminSettingsPanels = [...document.querySelectorAll('[data-settings-panel]')];
+if (adminSettingsTabs.length && adminSettingsPanels.length) {
+    const activateSettingsTab = (section, { updateHistory = true, moveFocus = false } = {}) => {
+        const activePanel = adminSettingsPanels.find((panel) => !panel.hidden);
+        if (activePanel?.dataset.settingsPanel === section) return true;
+        if (activePanel?.querySelector('.settings-save-state.is-dirty')
+            && !window.confirm('You have unsaved changes. Leave this settings tab?')) return false;
+
+        const activeTab = adminSettingsTabs.find((tab) => tab.dataset.adminSettingsTab === section) ?? adminSettingsTabs[0];
+        const activeSection = activeTab.dataset.adminSettingsTab;
+
+        adminSettingsTabs.forEach((tab) => {
+            const isActive = tab === activeTab;
+            tab.classList.toggle('active', isActive);
+            tab.setAttribute('aria-selected', String(isActive));
+            tab.tabIndex = isActive ? 0 : -1;
+        });
+
+        adminSettingsPanels.forEach((panel) => {
+            const isActive = panel.dataset.settingsPanel === activeSection;
+            panel.hidden = !isActive;
+            if (isActive) {
+                panel.classList.remove('is-opening');
+                void panel.offsetWidth;
+                panel.classList.add('is-opening');
+            }
+        });
+
+        document.querySelectorAll('[data-settings-summary]').forEach((summary) => {
+            summary.hidden = summary.dataset.settingsSummary !== activeSection;
+        });
+
+        if (updateHistory) {
+            const url = new URL(activeTab.href, window.location.href);
+            window.history.pushState({ adminSettingsSection: activeSection }, '', url);
+        }
+
+        if (moveFocus) activeTab.focus();
+        return true;
+    };
+
+    adminSettingsTabs.forEach((tab, index) => {
+        tab.addEventListener('click', (event) => {
+            event.preventDefault();
+            activateSettingsTab(tab.dataset.adminSettingsTab);
+        });
+
+        tab.addEventListener('keydown', (event) => {
+            if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+            event.preventDefault();
+            let nextIndex = index;
+            if (event.key === 'ArrowLeft') nextIndex = (index - 1 + adminSettingsTabs.length) % adminSettingsTabs.length;
+            if (event.key === 'ArrowRight') nextIndex = (index + 1) % adminSettingsTabs.length;
+            if (event.key === 'Home') nextIndex = 0;
+            if (event.key === 'End') nextIndex = adminSettingsTabs.length - 1;
+            activateSettingsTab(adminSettingsTabs[nextIndex].dataset.adminSettingsTab, { moveFocus: true });
+        });
+    });
+
+    window.addEventListener('popstate', () => {
+        const section = new URL(window.location.href).searchParams.get('section');
+        activateSettingsTab(['profile', 'security', 'motion'].includes(section) ? section : 'profile', { updateHistory: false });
+    });
+}
+
 document.addEventListener('keydown', (event) => {
     if (event.key !== '/' || event.ctrlKey || event.metaKey || event.altKey) return;
     if (event.target.closest('input, textarea, select, [contenteditable]')) return;
@@ -272,25 +398,52 @@ if (createAdminElement) {
 const editAdminElement = document.getElementById('edit-admin-modal');
 if (editAdminElement) {
     const editAdminModal = Modal.getOrCreateInstance(editAdminElement);
-    const editAdminForm = editAdminElement.querySelector('[data-edit-admin-form]');
+    const editAdminForm = editAdminElement.querySelector('[data-edit-user-form]');
     const fields = {
-        id: editAdminElement.querySelector('[data-edit-admin-id]'),
+        id: editAdminElement.querySelector('[data-edit-user-id]'),
+        role: editAdminElement.querySelector('[data-edit-user-role]'),
         firstName: editAdminElement.querySelector('[data-edit-first-name]'),
         lastName: editAdminElement.querySelector('[data-edit-last-name]'),
         email: editAdminElement.querySelector('[data-edit-email]'),
         contact: editAdminElement.querySelector('[data-edit-contact]'),
+        age: editAdminElement.querySelector('[data-edit-age]'),
+        streetAddress: editAdminElement.querySelector('[data-edit-street-address]'),
+        barangay: editAdminElement.querySelector('[data-edit-barangay]'),
+        city: editAdminElement.querySelector('[data-edit-city]'),
+        province: editAdminElement.querySelector('[data-edit-province]'),
         password: editAdminElement.querySelector('[data-edit-password]'),
         passwordConfirmation: editAdminElement.querySelector('[data-edit-password-confirmation]'),
     };
 
-    document.querySelectorAll('[data-edit-admin]').forEach((trigger) => {
+    const setEditRole = (role) => {
+        const isClient = role === 'client';
+        fields.role.value = role;
+        fields.contact.required = isClient;
+        editAdminElement.querySelector('[data-contact-required]').hidden = !isClient;
+        editAdminElement.querySelector('[data-contact-optional]').hidden = isClient;
+        editAdminElement.querySelector('[data-edit-user-eyebrow]').textContent = isClient ? 'Client account' : 'Administrator profile';
+        editAdminElement.querySelector('#edit-user-title').textContent = isClient ? 'Edit client' : 'Edit administrator';
+
+        editAdminElement.querySelectorAll('[data-client-fields]').forEach((element) => {
+            element.hidden = !isClient;
+            element.querySelectorAll('input, select').forEach((input) => { input.required = isClient; });
+        });
+    };
+
+    document.querySelectorAll('[data-edit-user]').forEach((trigger) => {
         trigger.addEventListener('click', () => {
-            editAdminForm.action = trigger.dataset.adminUpdateUrl;
-            fields.id.value = trigger.dataset.adminId;
-            fields.firstName.value = trigger.dataset.adminFirstName;
-            fields.lastName.value = trigger.dataset.adminLastName;
-            fields.email.value = trigger.dataset.adminEmail;
-            fields.contact.value = trigger.dataset.adminContact;
+            editAdminForm.action = trigger.dataset.userUpdateUrl;
+            fields.id.value = trigger.dataset.userId;
+            setEditRole(trigger.dataset.userRole);
+            fields.firstName.value = trigger.dataset.userFirstName;
+            fields.lastName.value = trigger.dataset.userLastName;
+            fields.email.value = trigger.dataset.userEmail;
+            fields.contact.value = trigger.dataset.userContact;
+            fields.age.value = trigger.dataset.userAge;
+            fields.streetAddress.value = trigger.dataset.userStreetAddress;
+            fields.barangay.value = trigger.dataset.userBarangay;
+            fields.city.value = trigger.dataset.userCity;
+            fields.province.value = trigger.dataset.userProvince;
             fields.password.value = '';
             fields.passwordConfirmation.value = '';
             editAdminModal.show();
@@ -299,7 +452,10 @@ if (editAdminElement) {
 
     if (editAdminElement.dataset.autoOpen === 'true') {
         editAdminForm.action = editAdminElement.dataset.editAction;
+        setEditRole(editAdminElement.dataset.editRole);
         editAdminModal.show();
+    } else {
+        setEditRole('admin');
     }
 }
 

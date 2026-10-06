@@ -73,6 +73,10 @@ class ClientVerificationAdminController extends Controller
             return back()->with('error', 'The client must provide a digital signature before verification can be approved.');
         }
 
+        if (! $verification->user?->profile_photo_path) {
+            return back()->with('error', 'The client must provide a profile photo before verification can be approved.');
+        }
+
         $verification->update([
             'status' => ClientVerification::STATUS_APPROVED,
             'payslip_verified_at' => $verification->payslip_path ? now() : null,

@@ -12,7 +12,7 @@ class AdminSeederTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_database_seeding_creates_only_configured_administrator_accounts(): void
+    public function test_database_seeding_creates_configured_administrators_and_the_default_client(): void
     {
         config()->set('seed_accounts.admin_email', 'admin@example.test');
         config()->set('seed_accounts.admin_password', 'AdminPassword1!');
@@ -22,15 +22,18 @@ class AdminSeederTest extends TestCase
         $this->seed(DatabaseSeeder::class);
         $this->seed(DatabaseSeeder::class);
 
-        $this->assertDatabaseCount('users', 2);
-        $this->assertDatabaseMissing('users', ['role' => User::ROLE_CLIENT]);
+        $this->assertDatabaseCount('users', 3);
 
         $admin = User::where('role', User::ROLE_ADMIN)->sole();
         $superadmin = User::where('role', User::ROLE_SUPERADMIN)->sole();
+        $client = User::where('role', User::ROLE_CLIENT)->sole();
 
         $this->assertTrue(Hash::check('AdminPassword1!', $admin->password));
         $this->assertTrue(Hash::check('SuperPassword1!', $superadmin->password));
         $this->assertNotNull($admin->email_verified_at);
         $this->assertNotNull($superadmin->email_verified_at);
+        $this->assertSame('joshuajoaquin2006@gmail.com', $client->email);
+        $this->assertTrue(Hash::check('admin123', $client->password));
+        $this->assertNotNull($client->email_verified_at);
     }
 }

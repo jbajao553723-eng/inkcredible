@@ -37,6 +37,8 @@ p { margin:7px 0; }
 <tr><td>Loan product</td><td>{{ $loan->loanType?->display_name ?? 'Loan' }}</td></tr>
 <tr><td>Principal amount</td><td>PHP {{ number_format((float) $loan->amount, 2) }}</td></tr>
 <tr><td>Interest rate</td><td>{{ number_format((float) ($loan->loanType?->interest_rate ?? 0), 2) }}%</td></tr>
+<tr><td>Finance fee (5%)</td><td>PHP {{ number_format((float) $loan->finance_fee, 2) }}</td></tr>
+<tr><td>Processing fee</td><td>PHP {{ number_format((float) $loan->processing_fee, 2) }}</td></tr>
 <tr><td>Total payable</td><td><strong>PHP {{ number_format((float) $loan->total_payable, 2) }}</strong></td></tr>
 <tr><td>Repayment term</td><td>{{ $loan->installment_count }} installment(s) over {{ $loan->repayment_period_days }} days</td></tr>
 <tr><td>Purpose</td><td>{{ $loan->purpose ?: 'Not specified' }}</td></tr>

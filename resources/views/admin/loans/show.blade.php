@@ -128,6 +128,8 @@
                     <div class="detail-item"><div class="detail-label">Loan product</div><div class="detail-value">{{ $loan->loanType?->display_name ?? $loan->loanType?->name ?? 'Loan' }}</div></div>
                     <div class="detail-item"><div class="detail-label">Loan purpose</div><div class="detail-value">{{ $loan->purpose ?: 'Not provided' }}</div></div>
                     <div class="detail-item"><div class="detail-label">Interest rate</div><div class="detail-value">{{ number_format((float) ($loan->loanType?->interest_rate ?? 0), 2) }}%</div></div>
+                    <div class="detail-item"><div class="detail-label">Finance fee</div><div class="detail-value">₱{{ number_format((float) $loan->finance_fee, 2) }}</div></div>
+                    <div class="detail-item"><div class="detail-label">Processing fee</div><div class="detail-value">₱{{ number_format((float) $loan->processing_fee, 2) }}</div></div>
                     <div class="detail-item"><div class="detail-label">Submitted</div><div class="detail-value">{{ $submitted?->format('M d, Y · h:i A') }} PHT</div></div>
                     <div class="detail-item"><div class="detail-label">Approved</div><div class="detail-value">{{ $loan->approved_at ? $loan->approved_at->copy()->timezone('Asia/Manila')->format('M d, Y · h:i A').' PHT' : 'Not approved' }}</div></div>
                 </div>
@@ -149,7 +151,7 @@
             <section class="panel">
                 <div class="panel-header"><div><h2 class="panel-title">Affordability risk</h2><p class="panel-description">Income-based decision support; administrators retain final judgment.</p></div></div>
                 <div class="panel-body">
-                    <div class="risk-score"><div><div class="detail-label">Behavior-adjusted readiness</div><div class="detail-value">{{ $riskAssessment['readinessScore'] }} / 100</div></div><span class="risk-level {{ $riskAssessment['tone'] }}">{{ $riskAssessment['level'] }} risk</span></div>
+                    <div class="risk-score"><div><div class="detail-label">Behavior-adjusted readiness</div><div class="detail-value">{{ $riskAssessment['isAssessed'] ? $riskAssessment['readinessScore'].' / 100' : 'Not assessed' }}</div></div><span class="risk-level {{ $riskAssessment['tone'] }}">{{ $riskAssessment['isAssessed'] ? $riskAssessment['level'].' risk' : $riskAssessment['level'] }}</span></div>
                     <div class="risk-detail"><div><strong>Commitment-to-income:</strong> {{ $riskAssessment['ratio'] === null ? 'Unavailable' : number_format($riskAssessment['ratio'], 1).'%' }}</div><div><strong>Verified payslip:</strong> {{ $riskAssessment['verifiedPayslip'] ? 'Yes' : 'No' }}</div><div><strong>Repayment history:</strong> {{ $riskAssessment['earlyPayments'] }} early, {{ $riskAssessment['onTimePayments'] }} on time, {{ $riskAssessment['latePayments'] }} late/overdue</div><div><strong>Completed loans:</strong> {{ $riskAssessment['completedLoans'] }}</div><div><strong>Assessment:</strong> {{ $riskAssessment['suggestion'] }}</div></div>
                 </div>
             </section>

@@ -164,6 +164,10 @@ Route::middleware(['auth', 'admin'])
                 ->name('access.admins.update');
             Route::patch('/access-control/admins/{admin}/status', [AdminAccessController::class, 'updateStatus'])
                 ->name('access.admins.status');
+            Route::patch('/access-control/users/{user}', [AdminAccessController::class, 'updateUser'])
+                ->name('access.users.update');
+            Route::patch('/access-control/users/{user}/status', [AdminAccessController::class, 'updateUserStatus'])
+                ->name('access.users.status');
         });
 
         Route::middleware('standard.admin')->group(function () {

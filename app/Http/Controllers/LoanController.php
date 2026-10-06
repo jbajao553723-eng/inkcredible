@@ -6,6 +6,7 @@ use App\Http\Requests\StoreLoanRequest;
 use App\Models\Loan;
 use App\Models\LoanType;
 use App\Services\LoanApplicationService;
+use App\Services\LoanPricingService;
 use App\Services\LoanRiskAssessmentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -45,7 +46,13 @@ class LoanController extends Controller
             ...$riskAssessments->profile(auth()->user()),
         ];
 
-        return view('client.loans.create', compact('loanTypes', 'purposeOptions', 'affordability'));
+        $pricing = [
+            'financeFeeRate' => LoanPricingService::FINANCE_FEE_RATE,
+            'processingFeePerBlock' => LoanPricingService::PROCESSING_FEE_PER_BLOCK,
+            'processingFeeBlockSize' => LoanPricingService::PROCESSING_FEE_BLOCK_SIZE,
+        ];
+
+        return view('client.loans.create', compact('loanTypes', 'purposeOptions', 'affordability', 'pricing'));
     }
 
     /*

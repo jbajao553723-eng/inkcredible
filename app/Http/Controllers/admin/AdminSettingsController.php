@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -35,13 +36,25 @@ class AdminSettingsController extends Controller
             'last_name' => ['required', 'string', 'max:100'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user->id)],
             'contact_number' => ['required', 'string', 'max:30'],
+            'profile_photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'current_password' => [$emailChanged ? 'required' : 'nullable', 'current_password'],
         ]);
 
         unset($validated['current_password']);
+        unset($validated['profile_photo']);
         $validated['name'] = trim($validated['first_name'].' '.$validated['last_name']);
 
+        $previousPhoto = $user->profile_photo_path;
+        if ($request->hasFile('profile_photo')) {
+            $validated['profile_photo_path'] = $request->file('profile_photo')
+                ->store('profile-photos', config('filesystems.public_disk'));
+        }
+
         $user->fill($validated)->save();
+
+        if (isset($validated['profile_photo_path']) && $previousPhoto) {
+            Storage::disk(config('filesystems.public_disk'))->delete($previousPhoto);
+        }
 
         return redirect()->route('admin.settings.edit', ['section' => 'profile'])
             ->with('status', 'profile-updated');

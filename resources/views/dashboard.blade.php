@@ -86,15 +86,17 @@
 .notification-modal-actions { display:flex; justify-content:flex-end; margin-top:22px; }.notification-modal-actions .button { min-width:100px; }
 .contract-link { display:inline-block; margin-top:7px; color:var(--primary); font-size:10px; font-weight:700; text-decoration:none; }
 .readiness-panel { display:grid; grid-template-columns:190px minmax(0,1fr); gap:24px; align-items:center; margin-bottom:22px; overflow:hidden; border-color:#d9d6fe; box-shadow:0 10px 28px rgba(79,70,229,.07); }
-.readiness-score { display:grid; justify-items:center; padding:24px; background:linear-gradient(145deg,#312e81,#4f46e5); color:#fff; align-self:stretch; align-content:center; }
+.readiness-score { display:grid; justify-items:center; padding:24px; background:linear-gradient(145deg,#312e81,#4f46e5); color:#fff; align-self:stretch; align-content:center; transition:background .3s ease; }
+.readiness-score.is-pending { background:linear-gradient(145deg,#344054,#667085); }
 .score-ring { display:grid; place-items:center; width:106px; height:106px; background:conic-gradient(#a5f3fc calc(var(--score) * 1%),rgba(255,255,255,.16) 0); border-radius:50%; }
+.score-ring.is-pending { background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.22); }
 .score-ring-inner { display:grid; place-items:center; width:82px; height:82px; background:#3730a3; border-radius:50%; }
 .score-ring strong { font-size:27px; line-height:1; }.score-ring span { margin-top:3px; color:#c7d2fe; font-size:9px; }
 .readiness-score > strong { margin-top:11px; font-size:12px; }.readiness-score > span { margin-top:4px; color:#c7d2fe; font-size:9px; }
 .readiness-content { padding:22px 22px 22px 0; }
 .readiness-title { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }.readiness-title h2 { margin:0; font-size:16px; }.readiness-title p { margin:6px 0 0; color:#667085; font-size:10px; line-height:1.5; }
 .readiness-factors { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:9px; margin-top:16px; }
-.readiness-factor { padding:11px; background:#f8fafc; border:1px solid #eaecf0; border-radius:10px; }.readiness-factor strong { display:block; color:#344054; font-size:10px; }.readiness-factor span { display:block; margin-top:4px; color:#667085; font-size:9px; line-height:1.4; }.readiness-factor.positive { background:#f6fef9; border-color:#abefc6; }.readiness-factor.negative { background:#fef3f2; border-color:#fecdca; }
+.readiness-factor { padding:11px; background:#f8fafc; border:1px solid #eaecf0; border-radius:10px; transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease; }.readiness-factor:hover { transform:translateY(-2px); border-color:#c7d2fe; box-shadow:0 6px 16px rgba(16,24,40,.06); }.readiness-factor strong { display:block; color:#344054; font-size:10px; }.readiness-factor span { display:block; margin-top:4px; color:#667085; font-size:9px; line-height:1.4; }.readiness-factor.positive { background:#f6fef9; border-color:#abefc6; }.readiness-factor.negative { background:#fef3f2; border-color:#fecdca; }.readiness-factor.current { background:#fffaeb; border-color:#fedf89; }
 .readiness-actions { display:flex; gap:10px; margin-top:15px; }.readiness-actions .button { min-height:36px; }
 .dashboard-section-head { display:flex; align-items:flex-end; justify-content:space-between; gap:18px; margin:28px 0 12px; }
 .dashboard-section-head:first-of-type { margin-top:0; }
@@ -282,17 +284,44 @@
             </article>
         </section>
 
-        <div class="dashboard-section-head"><div><h2>Credit profile</h2><p>See which verified behaviors improve your approval readiness.</p></div><span class="dashboard-section-tag">Behavior based</span></div>
+        @php
+            $verificationStatusLabel = match ($riskProfile['verificationStatus']) {
+                'approved' => 'Verified',
+                'pending' => 'Under review',
+                'rejected' => 'Needs update',
+                default => 'Not submitted',
+            };
+            $verificationFactorTone = match ($riskProfile['verificationStatus']) {
+                'approved' => 'positive',
+                'pending', 'rejected' => 'current',
+                default => '',
+            };
+            $paymentHistoryCount = $riskProfile['earlyPayments'] + $riskProfile['onTimePayments'] + $riskProfile['latePayments'];
+        @endphp
+        <div class="dashboard-section-head"><div><h2>Credit profile</h2><p>{{ $riskProfile['isAssessed'] ? 'See which verified behaviors improve your approval readiness.' : 'Complete verification before your approval readiness is assessed.' }}</p></div><span class="dashboard-section-tag">Behavior based</span></div>
         <section class="panel readiness-panel" aria-labelledby="readiness-title">
-            <div class="readiness-score"><div class="score-ring" style="--score:{{ $riskProfile['readinessScore'] }}"><div class="score-ring-inner"><strong>{{ $riskProfile['readinessScore'] }}</strong><span>out of 100</span></div></div><strong>{{ $riskProfile['level'] }} risk</strong><span>{{ $riskProfile['approvalOutlook'] }} review outlook</span></div>
-            <div class="readiness-content"><div class="readiness-title"><div><h2 id="readiness-title">Approval readiness</h2><p>A transparent guide based on affordability, verified income evidence, and repayment behavior. It helps review but never guarantees approval.</p></div><span class="badge {{ $riskProfile['tone'] === 'success' ? 'badge-success' : ($riskProfile['tone'] === 'warning' ? 'badge-warning' : 'badge-danger') }}">Live assessment</span></div>
+            <div class="readiness-score {{ $riskProfile['isAssessed'] ? '' : 'is-pending' }}">
+                @if($riskProfile['isAssessed'])
+                    <div class="score-ring" style="--score:{{ $riskProfile['readinessScore'] }}" data-readiness-ring><div class="score-ring-inner"><strong data-motion-count>{{ $riskProfile['readinessScore'] }}</strong><span>out of 100</span></div></div><strong>{{ $riskProfile['level'] }} risk</strong><span>{{ $riskProfile['approvalOutlook'] }} review outlook</span>
+                @else
+                    <div class="score-ring is-pending"><div class="score-ring-inner"><strong>&mdash;</strong><span>not scored</span></div></div><strong>Not assessed yet</strong><span>Verification is required first</span>
+                @endif
+            </div>
+            <div class="readiness-content"><div class="readiness-title"><div><h2 id="readiness-title">Approval readiness</h2><p>{{ $riskProfile['isAssessed'] ? 'A transparent guide based on affordability, verified income evidence, and repayment behavior. It supports review but never guarantees approval.' : 'No risk level is assigned while your identity and income information are incomplete or under review.' }}</p></div><span class="badge {{ $riskProfile['tone'] === 'success' ? 'badge-success' : ($riskProfile['tone'] === 'warning' ? 'badge-warning' : ($riskProfile['tone'] === 'danger' ? 'badge-danger' : 'badge-neutral')) }}">{{ $riskProfile['isAssessed'] ? 'Live assessment' : 'Awaiting verification' }}</span></div>
                 <div class="readiness-factors">
-                    <div class="readiness-factor {{ $riskProfile['verifiedPayslip'] ? 'positive' : '' }}"><strong>Income evidence</strong><span>{{ $riskProfile['verifiedPayslip'] ? 'Verified payslip on file' : 'Add a payslip for review' }}</span></div>
-                    <div class="readiness-factor {{ $riskProfile['earlyPayments'] > 0 ? 'positive' : '' }}"><strong>Early payments</strong><span>{{ $riskProfile['earlyPayments'] }} installment(s) paid early</span></div>
-                    <div class="readiness-factor {{ $riskProfile['onTimePayments'] > 0 ? 'positive' : '' }}"><strong>On-time record</strong><span>{{ $riskProfile['onTimePayments'] }} installment(s) on time</span></div>
-                    <div class="readiness-factor {{ $riskProfile['latePayments'] > 0 ? 'negative' : 'positive' }}"><strong>Late / overdue</strong><span>{{ $riskProfile['latePayments'] }} recorded issue(s)</span></div>
+                    @if($riskProfile['isAssessed'])
+                        <div class="readiness-factor {{ $riskProfile['verifiedPayslip'] ? 'positive' : '' }}"><strong>Income evidence</strong><span>{{ $riskProfile['verifiedPayslip'] ? 'Verified payslip on file' : 'Add a payslip for review' }}</span></div>
+                        <div class="readiness-factor {{ $riskProfile['earlyPayments'] > 0 ? 'positive' : '' }}"><strong>Early payments</strong><span>{{ $riskProfile['earlyPayments'] }} installment(s) paid early</span></div>
+                        <div class="readiness-factor {{ $riskProfile['onTimePayments'] > 0 ? 'positive' : '' }}"><strong>On-time record</strong><span>{{ $riskProfile['onTimePayments'] }} installment(s) paid on the due date</span></div>
+                        <div class="readiness-factor {{ $riskProfile['latePayments'] > 0 ? 'negative' : 'positive' }}"><strong>Late / overdue</strong><span>{{ $riskProfile['latePayments'] }} recorded issue(s)</span></div>
+                    @else
+                        <div class="readiness-factor {{ $verificationFactorTone }}"><strong>Account verification</strong><span>{{ $verificationStatusLabel }}</span></div>
+                        <div class="readiness-factor"><strong>Income evidence</strong><span>Used only after administrator approval</span></div>
+                        <div class="readiness-factor {{ $paymentHistoryCount > 0 ? 'positive' : '' }}"><strong>Payment history</strong><span>{{ $paymentHistoryCount > 0 ? $paymentHistoryCount.' recorded installment(s)' : 'No history required for new accounts' }}</span></div>
+                        <div class="readiness-factor {{ $riskProfile['latePayments'] > 0 ? 'negative' : '' }}"><strong>Late / overdue</strong><span>{{ $riskProfile['latePayments'] }} recorded issue(s)</span></div>
+                    @endif
                 </div>
-                <div class="readiness-actions"><a class="button button-primary" href="{{ route('profile.verification.edit') }}">Manage income evidence</a><a class="button button-secondary" href="{{ route('profile.edit') }}">Update dashboard profile</a></div>
+                <div class="readiness-actions"><a class="button button-primary" href="{{ route('profile.verification.edit') }}">{{ $riskProfile['isAssessed'] ? 'Manage income evidence' : ($riskProfile['verificationStatus'] === 'pending' ? 'View verification status' : 'Complete verification') }}</a><a class="button button-secondary" href="{{ route('profile.edit') }}">Update profile</a></div>
             </div>
         </section>
 

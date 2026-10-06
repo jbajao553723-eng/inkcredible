@@ -11,7 +11,7 @@ class Loan extends Model
 {
     use HasFactory;
 
-    public const DAILY_PENALTY_RATE = 5.00;
+    public const DAILY_PENALTY_RATE = 10.00;
 
     const STATUS_PENDING = 'pending';
 
@@ -26,6 +26,8 @@ class Loan extends Model
         'loan_type_id',
         'purpose',
         'amount',
+        'finance_fee',
+        'processing_fee',
         'total_payable',
         'installment_count',
         'repayment_period_days',
@@ -51,6 +53,8 @@ class Loan extends Model
 
     protected $casts = [
         'amount' => 'decimal:2',
+        'finance_fee' => 'decimal:2',
+        'processing_fee' => 'decimal:2',
         'total_payable' => 'decimal:2',
         'installment_count' => 'integer',
         'repayment_period_days' => 'integer',

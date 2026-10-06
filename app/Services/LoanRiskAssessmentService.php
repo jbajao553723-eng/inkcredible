@@ -10,6 +10,8 @@ use App\Models\User;
 
 class LoanRiskAssessmentService
 {
+    public function __construct(private readonly LoanPricingService $pricing) {}
+
     /** @return array<string, mixed> */
     public function assess(Loan $loan): array
     {
@@ -22,10 +24,10 @@ class LoanRiskAssessmentService
         $behavior = $this->paymentBehavior($loan->user, $loan->id);
         $score = $this->score($ratio, $loan->user->clientVerification, $behavior);
 
-        $rate = (float) ($loan->loanType?->interest_rate ?? 0);
         $availablePayment = $baseline['availablePayment'];
-        $suggestedPrincipal = $rate >= 0 ? $availablePayment / (1 + ($rate / 100)) : $availablePayment;
-        $suggestedPrincipal = max(0, floor($suggestedPrincipal / 100) * 100);
+        $suggestedPrincipal = $loan->loanType
+            ? $this->pricing->affordablePrincipal($availablePayment, $loan->loanType)
+            : 0;
 
         $alternative = LoanType::active()
             ->whereKeyNot($loan->loan_type_id)
@@ -70,7 +72,9 @@ class LoanRiskAssessmentService
     public function clientBaseline(User $user, ?int $excludedLoanId = null): array
     {
         $user->loadMissing('clientVerification');
-        $income = (float) ($user->clientVerification?->monthly_income ?? 0);
+        $income = $user->clientVerification?->status === ClientVerification::STATUS_APPROVED
+            ? (float) $user->clientVerification->monthly_income
+            : 0.0;
         $existingCommitments = (float) Loan::query()
             ->where('user_id', $user->id)
             ->where('status', Loan::STATUS_APPROVED)
@@ -94,7 +98,7 @@ class LoanRiskAssessmentService
 
         $paidSchedules = $schedules->filter(fn (PaymentSchedule $schedule) => $schedule->paid_date !== null);
         $earlyPayments = $paidSchedules->filter(fn (PaymentSchedule $schedule) => $schedule->paid_date->lt($schedule->due_date))->count();
-        $onTimePayments = $paidSchedules->filter(fn (PaymentSchedule $schedule) => $schedule->paid_date->lte($schedule->due_date))->count();
+        $onTimePayments = $paidSchedules->filter(fn (PaymentSchedule $schedule) => $schedule->paid_date->isSameDay($schedule->due_date))->count();
         $latePayments = $paidSchedules->filter(fn (PaymentSchedule $schedule) => $schedule->paid_date->gt($schedule->due_date))->count()
             + $schedules->where('status', PaymentSchedule::STATUS_OVERDUE)->count();
         $completedLoans = Loan::query()
@@ -109,15 +113,34 @@ class LoanRiskAssessmentService
     /** @param array{earlyPayments: int, onTimePayments: int, latePayments: int, completedLoans: int} $behavior */
     private function score(?float $ratio, ?ClientVerification $verification, array $behavior): array
     {
+        $verificationStatus = $verification?->status ?? 'not-submitted';
+        $isAssessed = $verificationStatus === ClientVerification::STATUS_APPROVED;
+        $verifiedPayslip = $isAssessed && $verification->payslip_verified_at !== null;
+
+        if (! $isAssessed) {
+            return [
+                'isAssessed' => false,
+                'readinessScore' => null,
+                'scoreAdjustment' => 0,
+                'level' => 'Not assessed',
+                'tone' => 'neutral',
+                'approvalOutlook' => 'Pending verification',
+                'verifiedPayslip' => false,
+                'verificationStatus' => $verificationStatus,
+                'scoreFactors' => [
+                    ['label' => 'Verification', 'impact' => 0, 'tone' => 'neutral', 'detail' => 'Approval readiness starts after identity and income verification is approved.'],
+                    ['label' => 'Repayment history', 'impact' => 0, 'tone' => 'neutral', 'detail' => 'Payment behavior will be included without penalizing a new account.'],
+                ],
+            ];
+        }
+
         $baseScore = match (true) {
-            $ratio === null => 30,
+            $ratio === null => 45,
             $ratio <= 30 => 72,
             $ratio <= 50 => 57,
             $ratio <= 70 => 42,
             default => 25,
         };
-        $verifiedPayslip = $verification?->status === ClientVerification::STATUS_APPROVED
-            && $verification->payslip_verified_at !== null;
         $payslipImpact = $verifiedPayslip ? 10 : 0;
         $earlyImpact = min(12, $behavior['earlyPayments'] * 3);
         $onTimeImpact = min(8, $behavior['onTimePayments']);
@@ -140,12 +163,16 @@ class LoanRiskAssessmentService
             ['label' => 'Late or overdue', 'impact' => -$lateImpact, 'tone' => $lateImpact > 0 ? 'negative' : 'positive', 'detail' => $behavior['latePayments'].' late or currently overdue installment(s).'],
         ];
 
-        return compact('readinessScore', 'scoreAdjustment', 'level', 'tone', 'approvalOutlook', 'verifiedPayslip', 'scoreFactors');
+        return compact('isAssessed', 'readinessScore', 'scoreAdjustment', 'level', 'tone', 'approvalOutlook', 'verifiedPayslip', 'verificationStatus', 'scoreFactors');
     }
 
     /** @param array<string, mixed> $score @param array<string, int> $behavior */
     private function suggestion(?float $ratio, float $suggestedPrincipal, Loan $loan, ?LoanType $alternative, array $score, array $behavior): string
     {
+        if (! $score['isAssessed']) {
+            return 'Risk assessment is unavailable until the client verification is approved.';
+        }
+
         if ($ratio === null) {
             return 'Monthly income is unavailable. Complete income verification and provide a recent payslip before a decision.';
         }

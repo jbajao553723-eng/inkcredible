@@ -9,6 +9,7 @@ use App\Models\Payment;
 use App\Models\PaymentSchedule;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class AdminDashboardController extends Controller
@@ -38,6 +39,27 @@ class AdminDashboardController extends Controller
         $contractInterest = max(0, (float) $loanStats->scheduled_receivables - (float) $loanStats->total_released);
         $projectedProfit = $contractInterest + $penaltyCharges;
         $portfolioReceivable = (float) $loanStats->scheduled_receivables + $penaltyCharges;
+        $monthStart = now('Asia/Manila')->startOfMonth()->utc();
+        $nextMonthStart = now('Asia/Manila')->addMonthNoOverflow()->startOfMonth()->utc();
+        $previousMonthStart = now('Asia/Manila')->subMonthNoOverflow()->startOfMonth()->utc();
+        $releasedAt = DB::raw('COALESCE(disbursed_at, approved_at, created_at)');
+        $collectedAt = DB::raw('COALESCE(paid_at, updated_at, created_at)');
+        $releasedThisMonth = (float) Loan::whereIn('status', [Loan::STATUS_APPROVED, Loan::STATUS_PAID])
+            ->where($releasedAt, '>=', $monthStart)
+            ->where($releasedAt, '<', $nextMonthStart)
+            ->sum('amount');
+        $releasedLastMonth = (float) Loan::whereIn('status', [Loan::STATUS_APPROVED, Loan::STATUS_PAID])
+            ->where($releasedAt, '>=', $previousMonthStart)
+            ->where($releasedAt, '<', $monthStart)
+            ->sum('amount');
+        $collectedThisMonth = (float) Payment::where('status', Payment::STATUS_APPROVED)
+            ->where($collectedAt, '>=', $monthStart)
+            ->where($collectedAt, '<', $nextMonthStart)
+            ->sum('amount');
+        $collectedLastMonth = (float) Payment::where('status', Payment::STATUS_APPROVED)
+            ->where($collectedAt, '>=', $previousMonthStart)
+            ->where($collectedAt, '<', $monthStart)
+            ->sum('amount');
 
         $stats = [
             'total_loans' => (int) $loanStats->total_loans,
@@ -48,6 +70,10 @@ class AdminDashboardController extends Controller
             'total_released' => (float) $loanStats->total_released,
             'scheduled_receivables' => (float) $loanStats->scheduled_receivables,
             'total_collected' => (float) $paymentStats->total_collected,
+            'released_this_month' => $releasedThisMonth,
+            'released_last_month' => $releasedLastMonth,
+            'collected_this_month' => $collectedThisMonth,
+            'collected_last_month' => $collectedLastMonth,
             'contract_interest' => $contractInterest,
             'penalty_charges' => $penaltyCharges,
             'projected_profit' => $projectedProfit,

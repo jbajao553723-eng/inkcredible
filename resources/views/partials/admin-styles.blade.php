@@ -39,7 +39,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .nav-link.active { color: #fff; background: linear-gradient(90deg, rgba(var(--primary-rgb),.25), rgba(var(--primary-rgb),.10)); border-color: rgba(var(--primary-rgb),.24); box-shadow: inset 3px 0 var(--primary); }
 .nav-link svg { width: 19px; height: 19px; }
 .sidebar-account { display: grid; grid-template-columns: 34px minmax(0,1fr) auto; align-items: center; gap: 10px; padding: 14px 6px 4px; border-top: 1px solid rgba(255,255,255,.07); }
-.account-avatar { display: grid; place-items: center; width: 34px; height: 34px; flex: 0 0 34px; color: #fff; background: #344054; border: 1px solid rgba(255,255,255,.12); border-radius: 10px; font-size: 12px; font-weight: 700; }
+.account-avatar { display: grid; place-items: center; width: 34px; height: 34px; flex: 0 0 34px; overflow:hidden; color: #fff; background: #344054; border: 1px solid rgba(255,255,255,.12); border-radius: 10px; font-size: 12px; font-weight: 700; }.account-avatar img { width:100%; height:100%; object-fit:cover; }
 .account-copy { flex: 1; }
 .account-copy strong { overflow: hidden; color: #f2f4f7; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 .account-copy small { margin-top: 3px; color: #667085; font-size: 9px; }
@@ -193,6 +193,7 @@ tbody tr:hover { background: #fcfcfd; }
 @media (max-width: 470px) { .stats-grid { grid-template-columns: 1fr; } .top-actions > a, .top-actions > form { flex-basis: 100%; } .panel-header { align-items: flex-start; flex-direction: column; } .confirmation-card { padding:24px 20px 20px; } .confirmation-actions { grid-template-columns:1fr; } }
 
 @if($reduceAdminMotion)
+:root { --app-reduce-motion:1; }
 *, *::before, *::after { scroll-behavior:auto !important; transition-duration:.01ms !important; animation-duration:.01ms !important; animation-iteration-count:1 !important; }
 @endif
 

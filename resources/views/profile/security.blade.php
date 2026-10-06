@@ -6,7 +6,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 @vite('resources/js/app.js')
-<style>
+<style data-partial-page-style>
 @include('partials.client-portal-styles')
 @include('partials.settings-styles')
 .email-verification-card { border-color:#c7d2fe; box-shadow:0 10px 28px rgba(79,70,229,.07); }
@@ -21,9 +21,10 @@
 </head>
 <body>
 @include('partials.client-sidebar', ['active' => 'settings'])
-<main class="main" id="main-content" tabindex="-1"><div class="page-shell settings-shell">
-    <header class="topbar"><div><div class="eyebrow">Account settings</div><h1>Security</h1><p class="subtitle">Manage your password and account access.</p></div></header>
+<main class="main" id="main-content" tabindex="-1" data-partial-page><div class="page-shell settings-shell">
+    <header class="topbar"><div><div class="eyebrow">Account settings</div><h1>Settings</h1><p class="subtitle">Manage your profile, verification, security, and accessibility preferences.</p></div><div class="top-actions"><a class="button button-secondary" href="{{ route('dashboard') }}">Back to dashboard</a></div></header>
     @include('partials.settings-tabs', ['activeSettings' => 'security'])
+    <div class="settings-tab-content" id="settings-tab-content" role="tabpanel" tabindex="-1" data-partial-content>
     @if(session('status') === 'password-updated')<div class="alert alert-success" role="status">Password updated successfully.</div>@endif
     <div class="security-grid">
         <section class="panel email-verification-card"><div class="panel-header"><div><h2 class="panel-title">Email verification</h2><p class="panel-description">Your email is confirmed once when your account is created or whenever you change it.</p></div><span class="badge {{ auth()->user()->hasVerifiedEmail() ? 'badge-success' : 'badge-warning' }}">{{ auth()->user()->hasVerifiedEmail() ? 'Verified' : 'Pending' }}</span></div><div class="panel-body email-verification-body">
@@ -31,14 +32,15 @@
             <span class="email-verification-copy"><strong>{{ auth()->user()->email }}</strong><span>This verification is not requested again during normal sign-in. A new code is required only if you change your email address.</span></span>
             <span class="email-verification-meta">One-time check</span>
         </div></section>
-        <section class="panel"><div class="panel-header"><div><h2 class="panel-title">Update password</h2><p class="panel-description">Use a strong password that you do not use elsewhere.</p></div></div><div class="panel-body">
+        <section class="panel"><div class="panel-header"><div><h2 class="panel-title">Update password</h2><p class="panel-description">Use a strong password that you do not use elsewhere.</p></div><span class="required-note"><span class="required-asterisk">*</span> Required fields</span></div><div class="panel-body">
             <form method="POST" action="{{ route('password.update') }}">@csrf @method('put')
-                <div class="form-group"><label class="form-label" for="current-password">Current password</label><input class="form-control" type="password" name="current_password" id="current-password" autocomplete="current-password" required>@foreach($errors->updatePassword->get('current_password') as $message)<p class="field-error">{{ $message }}</p>@endforeach</div>
-                <div class="form-group"><label class="form-label" for="new-password">New password</label><input class="form-control" type="password" name="password" id="new-password" autocomplete="new-password" required>@foreach($errors->updatePassword->get('password') as $message)<p class="field-error">{{ $message }}</p>@endforeach</div>
-                <div class="form-group"><label class="form-label" for="confirm-password">Confirm new password</label><input class="form-control" type="password" name="password_confirmation" id="confirm-password" autocomplete="new-password" required></div>
+                <div class="form-group"><label class="form-label" for="current-password">Current password <span class="required-asterisk" aria-hidden="true">*</span></label><input class="form-control" type="password" name="current_password" id="current-password" autocomplete="current-password" required>@foreach($errors->updatePassword->get('current_password') as $message)<p class="field-error">{{ $message }}</p>@endforeach</div>
+                <div class="form-group"><label class="form-label" for="new-password">New password <span class="required-asterisk" aria-hidden="true">*</span></label><input class="form-control" type="password" name="password" id="new-password" autocomplete="new-password" required>@foreach($errors->updatePassword->get('password') as $message)<p class="field-error">{{ $message }}</p>@endforeach</div>
+                <div class="form-group"><label class="form-label" for="confirm-password">Confirm new password <span class="required-asterisk" aria-hidden="true">*</span></label><input class="form-control" type="password" name="password_confirmation" id="confirm-password" autocomplete="new-password" required></div>
                 <button class="save-button" type="submit">Update password</button>
             </form>
         </div></section>
+    </div>
     </div>
 </div></main>
 </body></html>

@@ -5,6 +5,7 @@ use App\Models\Loan;
 use App\Models\LoanApplication;
 use App\Models\LoanType;
 use App\Models\User;
+use App\Services\LoanPricingService;
 use Database\Seeders\LoanTypesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -59,6 +60,19 @@ it('uses the current Arawan and Weekly product limits and rates', function () {
         ->and((float) $weekly->interest_rate)->toBe(20.0);
 });
 
+it('charges a processing fee for every started five-thousand-peso block', function () {
+    $loanType = activeDailyLoanType();
+    $pricing = app(LoanPricingService::class);
+
+    $fiveThousand = $pricing->calculate(5_000, $loanType);
+    $fiveThousandAndOne = $pricing->calculate(5_001, $loanType);
+
+    expect($fiveThousand['finance_fee'])->toBe(250.0)
+        ->and($fiveThousand['processing_fee'])->toBe(100.0)
+        ->and($fiveThousandAndOne['finance_fee'])->toBe(250.05)
+        ->and($fiveThousandAndOne['processing_fee'])->toBe(200.0);
+});
+
 it('shows the client the same affordability calculation used during review', function () {
     $client = verifiedLoanApplicant();
     $loanType = activeDailyLoanType();
@@ -81,6 +95,14 @@ it('shows the client the same affordability calculation used during review', fun
         ->assertSee('Verified payslip');
 });
 
+it('redirects an unverified client to verification without showing the removed warning', function () {
+    $client = User::factory()->create(['role' => User::ROLE_CLIENT]);
+
+    $this->actingAs($client)->get(route('loan.create'))
+        ->assertRedirect(route('profile.verification.edit'))
+        ->assertSessionMissing('error');
+});
+
 it('submits the application, loan, and supporting document together', function () {
     Storage::fake('public');
     $client = verifiedLoanApplicant();
@@ -101,9 +123,16 @@ it('submits the application, loan, and supporting document together', function (
 
     expect(LoanApplication::count())->toBe(1)
         ->and($loan->user_id)->toBe($client->id)
-        ->and((float) $loan->total_payable)->toBe(6_000.0)
+        ->and((float) $loan->finance_fee)->toBe(250.0)
+        ->and((float) $loan->processing_fee)->toBe(100.0)
+        ->and((float) $loan->total_payable)->toBe(6_350.0)
         ->and($loan->installment_count)->toBe(30)
         ->and($loan->loanDocuments)->toHaveCount(1);
+
+    $application = LoanApplication::firstOrFail();
+    expect((float) $application->finance_fee)->toBe(250.0)
+        ->and((float) $application->processing_fee)->toBe(100.0)
+        ->and((float) $application->total_payable)->toBe(6_350.0);
 
     Storage::disk('public')->assertExists($loan->loanDocuments->first()->file_path);
 });

@@ -281,10 +281,12 @@ textarea.form-control { min-height: 105px; resize: vertical; }
                     <div class="estimate-lines">
                         <div class="estimate-line"><span>Principal</span><strong id="estimated-principal">—</strong></div>
                         <div class="estimate-line"><span>Interest</span><strong id="estimated-interest">—</strong></div>
+                        <div class="estimate-line"><span>Finance fee (5%)</span><strong id="estimated-finance-fee">—</strong></div>
+                        <div class="estimate-line"><span>Processing fee</span><strong id="estimated-processing-fee">—</strong></div>
                         <div class="estimate-line"><span>Term</span><strong id="estimated-term">—</strong></div>
                         <div class="estimate-line"><span>Approx. payment amount</span><strong id="estimated-installment">—</strong></div>
                     </div>
-                    <p class="form-help">This estimate excludes late charges. An unpaid installment incurs a simple penalty equal to 5% of its unpaid amount for each day overdue.</p>
+                    <p class="form-help">The processing fee is ₱100 per started ₱5,000 of principal. This estimate excludes late charges. An unpaid installment incurs a simple penalty equal to 10% of its unpaid amount for each day overdue.</p>
                 </section>
 
                 <section class="panel assessment-card" id="affordability-assessment" aria-live="polite">
@@ -336,6 +338,8 @@ const amountHint = document.getElementById('amount-hint');
 const totalOutput = document.getElementById('estimated-total');
 const principalOutput = document.getElementById('estimated-principal');
 const interestOutput = document.getElementById('estimated-interest');
+const financeFeeOutput = document.getElementById('estimated-finance-fee');
+const processingFeeOutput = document.getElementById('estimated-processing-fee');
 const termOutput = document.getElementById('estimated-term');
 const installmentOutput = document.getElementById('estimated-installment');
 const purposeGroups = document.querySelectorAll('[data-purpose-group]');
@@ -353,6 +357,7 @@ const openTermsButton = document.getElementById('open-loan-terms');
 const closeTermsButton = document.getElementById('close-loan-terms');
 const acceptTermsButton = document.getElementById('accept-loan-terms');
 const affordabilityBaseline = @json($affordability);
+const pricing = @json($pricing);
 const assessmentCard = document.getElementById('affordability-assessment');
 const assessmentLevel = document.getElementById('assessment-level');
 const assessmentRatio = document.getElementById('assessment-ratio');
@@ -393,7 +398,13 @@ function updateAffordability(selected, proposedCommitment = 0) {
     const ratio = ((existing + proposedCommitment) / income) * 100;
     const rate = Number(selected.dataset.rate || 0);
     const availablePayment = Math.max(0, (income * 0.30) - existing);
-    const suggestedPrincipal = Math.floor((availablePayment / (1 + (rate / 100))) / 100) * 100;
+    let suggestedPrincipal = Math.floor(Math.min(availablePayment, Number(selected.dataset.max)) / 100) * 100;
+    while (suggestedPrincipal > 0) {
+        const suggestedProcessingFee = Math.ceil(suggestedPrincipal / pricing.processingFeeBlockSize) * pricing.processingFeePerBlock;
+        const suggestedTotal = suggestedPrincipal * (1 + (rate / 100) + (pricing.financeFeeRate / 100)) + suggestedProcessingFee;
+        if (suggestedTotal <= availablePayment) break;
+        suggestedPrincipal -= 100;
+    }
     const baseScore = ratio <= 30 ? 72 : ratio <= 50 ? 57 : ratio <= 70 ? 42 : 25;
     const readinessScore = Math.max(0, Math.min(100, baseScore + Number(affordabilityBaseline.scoreAdjustment || 0)));
     const level = readinessScore >= 75 ? 'Low' : readinessScore >= 55 ? 'Moderate' : readinessScore >= 35 ? 'High' : 'Very high';
@@ -466,18 +477,24 @@ function updateEstimate() {
 
     if (amount > 0) {
         const interest = amount * (rate / 100);
-        const total = amount + interest;
+        const financeFee = amount * (pricing.financeFeeRate / 100);
+        const processingFee = Math.ceil(amount / pricing.processingFeeBlockSize) * pricing.processingFeePerBlock;
+        const total = amount + interest + financeFee + processingFee;
         totalOutput.textContent = peso(total);
         totalOutput.classList.remove('estimate-placeholder');
         principalOutput.textContent = peso(amount);
         interestOutput.textContent = peso(interest);
-        installmentOutput.textContent = `${peso((amount + interest) / installments)} x ${installments}`;
+        financeFeeOutput.textContent = peso(financeFee);
+        processingFeeOutput.textContent = peso(processingFee);
+        installmentOutput.textContent = `${peso(total / installments)} x ${installments}`;
         updateAffordability(selected, total);
     } else {
         totalOutput.textContent = 'Enter an amount';
         totalOutput.classList.add('estimate-placeholder');
         principalOutput.textContent = '—';
         interestOutput.textContent = `${rate}%`;
+        financeFeeOutput.textContent = `${pricing.financeFeeRate}%`;
+        processingFeeOutput.textContent = `₱${pricing.processingFeePerBlock} / ₱${pricing.processingFeeBlockSize}`;
         installmentOutput.textContent = '—';
         updateAffordability(selected);
     }

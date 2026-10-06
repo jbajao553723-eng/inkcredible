@@ -149,5 +149,6 @@ tbody tr:hover { background: #fcfcfd; }
 @include('partials.motion-styles')
 
 @if((bool) data_get(auth()->user()?->ui_preferences, 'reduce_motion', false))
+:root { --app-reduce-motion:1; }
 *, *::before, *::after { scroll-behavior:auto !important; transition-duration:.01ms !important; transition-delay:0ms !important; animation-duration:.01ms !important; animation-iteration-count:1 !important; }
 @endif
