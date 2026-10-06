@@ -14,6 +14,7 @@ foreach ([
     $storagePath.'/framework/cache',
     $storagePath.'/framework/sessions',
     $storagePath.'/framework/views',
+    $storagePath.'/fonts',
     $storagePath.'/logs',
 ] as $directory) {
     if (! is_dir($directory)) {

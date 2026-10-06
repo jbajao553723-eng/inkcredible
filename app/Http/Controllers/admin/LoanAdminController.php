@@ -8,6 +8,7 @@ use App\Notifications\LoanApprovedNotification;
 use App\Rules\DigitalSignature;
 use App\Services\LoanApprovalService;
 use App\Services\LoanRiskAssessmentService;
+use App\Services\PdfSignatureImage;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -72,8 +73,12 @@ class LoanAdminController extends Controller
     | APPROVE LOAN
     |--------------------------------------------------------------------------
     */
-    public function approve(Request $request, Loan $loan, LoanApprovalService $approvals): RedirectResponse
-    {
+    public function approve(
+        Request $request,
+        Loan $loan,
+        LoanApprovalService $approvals,
+        PdfSignatureImage $signatureImages,
+    ): RedirectResponse {
         if ($loan->status !== Loan::STATUS_PENDING) {
             return back()->with('error', 'Only pending loan requests can be approved.');
         }
@@ -94,10 +99,19 @@ class LoanAdminController extends Controller
         ]);
 
         $loan->load(['user.clientVerification', 'loanType']);
-        $clientSignature = $loan->user?->clientVerification?->digital_signature;
+        $storedClientSignature = $loan->user?->clientVerification?->digital_signature;
 
-        if (! $clientSignature) {
+        if (! $storedClientSignature) {
             return back()->with('error', 'The verified client signature is unavailable. The contract cannot be finalized.');
+        }
+
+        $clientSignature = $signatureImages->prepare($storedClientSignature);
+        $adminSignature = $signatureImages->prepare($validated['admin_signature']);
+
+        if (! $clientSignature || ! $adminSignature) {
+            return back()->withErrors([
+                'admin_signature' => 'A stored signature could not be prepared for the final PDF. Please redraw the administrator signature and try again.',
+            ]);
         }
 
         $adminSignedAt = now();
@@ -106,7 +120,7 @@ class LoanAdminController extends Controller
             'loan' => $loan,
             'clientSignature' => $clientSignature,
             'signedAt' => $loan->contract_signed_at,
-            'adminSignature' => $validated['admin_signature'],
+            'adminSignature' => $adminSignature,
             'adminSignatureName' => $adminName,
             'adminSignedAt' => $adminSignedAt,
         ])->setPaper('a4');

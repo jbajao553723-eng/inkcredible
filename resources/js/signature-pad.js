@@ -55,7 +55,8 @@ const initializeSignaturePads = (root = document) => root.querySelectorAll('[dat
 
     const form = pad.closest('form');
     form?.addEventListener('submit', (event) => {
-        if (hasInk) input.value = canvas.toDataURL('image/png');
+        // JPEG can be embedded by DomPDF on Vercel without the unavailable GD extension.
+        if (hasInk) input.value = canvas.toDataURL('image/jpeg', 0.9);
 
         if (pad.dataset.signatureRequired === 'true' && !hasInk) {
             event.preventDefault();

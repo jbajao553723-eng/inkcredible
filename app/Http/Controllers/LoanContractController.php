@@ -6,6 +6,7 @@ use App\Models\ClientVerification;
 use App\Models\Loan;
 use App\Notifications\ContractReadyNotification;
 use App\Services\LoanRiskAssessmentService;
+use App\Services\PdfSignatureImage;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -83,7 +84,7 @@ class LoanContractController extends Controller
         );
     }
 
-    public function sign(Request $request, Loan $loan): RedirectResponse
+    public function sign(Request $request, Loan $loan, PdfSignatureImage $signatureImages): RedirectResponse
     {
         abort_unless($loan->user_id === $request->user()?->id, 403);
 
@@ -105,10 +106,18 @@ class LoanContractController extends Controller
                 ->with('error', 'Add your digital signature to verification before signing a contract.');
         }
 
+        $clientSignature = $signatureImages->prepare($verification->digital_signature);
+
+        if (! $clientSignature) {
+            return back()->withErrors([
+                'contract' => 'Your stored signature could not be prepared for the PDF. Please update your signature and try again.',
+            ]);
+        }
+
         $signedAt = now();
         $pdf = Pdf::loadView('contracts.loan', [
             'loan' => $loan,
-            'clientSignature' => $verification->digital_signature,
+            'clientSignature' => $clientSignature,
             'signedAt' => $signedAt,
         ])->setPaper('a4');
         $path = 'loan-contracts/'.$loan->id.'/'.Str::uuid().'-signed-contract.pdf';

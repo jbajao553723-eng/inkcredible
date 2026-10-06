@@ -9,13 +9,14 @@ class DigitalSignature implements ValidationRule
 {
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (! is_string($value) || ! str_starts_with($value, 'data:image/png;base64,')) {
+        if (! is_string($value)
+            || preg_match('#^data:image/(png|jpeg);base64,#', $value, $matches) !== 1) {
             $fail('Please draw a valid digital signature.');
 
             return;
         }
 
-        $imageData = base64_decode(substr($value, strlen('data:image/png;base64,')), true);
+        $imageData = base64_decode(substr($value, strpos($value, ',') + 1), true);
 
         if ($imageData === false || strlen($imageData) > 350_000) {
             $fail('The digital signature is invalid or too large.');
@@ -25,8 +26,10 @@ class DigitalSignature implements ValidationRule
 
         $imageInfo = @getimagesizefromstring($imageData);
 
-        if ($imageInfo === false || ($imageInfo['mime'] ?? null) !== 'image/png') {
-            $fail('The digital signature must be a valid PNG image.');
+        $expectedMime = $matches[1] === 'jpeg' ? 'image/jpeg' : 'image/png';
+
+        if ($imageInfo === false || ($imageInfo['mime'] ?? null) !== $expectedMime) {
+            $fail('The digital signature must be a valid image.');
 
             return;
         }
@@ -49,7 +52,7 @@ class DigitalSignature implements ValidationRule
         $image = @imagecreatefromstring($imageData);
 
         if ($image === false) {
-            $fail('The digital signature must be a valid PNG image.');
+            $fail('The digital signature must be a valid image.');
 
             return;
         }
