@@ -20,7 +20,7 @@ class AdminPaymentIndexRequest extends FormRequest
         return [
             'q' => ['nullable', 'string', 'max:100'],
             'status' => ['nullable', Rule::in(['pending', 'approved', 'rejected'])],
-            'method' => ['nullable', Rule::in(['gcash', 'paymaya', 'bank_transfer', 'cash'])],
+            'method' => ['nullable', Rule::in(['qrph', 'cash'])],
             'date_from' => ['nullable', 'date_format:Y-m-d'],
             'date_to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:date_from'],
             'per_page' => ['nullable', 'integer', Rule::in([25, 50, 100])],

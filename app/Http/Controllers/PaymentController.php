@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\PayMongoCapabilityException;
 use App\Http\Requests\AdminPaymentIndexRequest;
 use App\Http\Requests\StorePaymentRequest;
 use App\Models\Loan;
@@ -104,6 +105,16 @@ class PaymentController extends Controller
                 }
 
                 return redirect()->away($checkoutUrl);
+            } catch (PayMongoCapabilityException $exception) {
+                $payment->delete();
+                Log::warning('PayMongo QR Ph capability is unavailable.', [
+                    'payment_id' => $payment->id,
+                    'error' => $exception->getMessage(),
+                ]);
+
+                throw ValidationException::withMessages([
+                    'method' => $exception->getMessage(),
+                ]);
             } catch (\Throwable $exception) {
                 $payment->delete();
                 Log::error('Unable to create PayMongo checkout session.', [
@@ -310,8 +321,6 @@ class PaymentController extends Controller
             ? Carbon::createFromFormat('Y-m-d', $validated['date_to'], 'Asia/Manila')->endOfDay()->utc()
             : null;
         $methodValues = match ($method) {
-            'gcash' => ['gcash', 'qrph'],
-            'bank_transfer' => ['bank_transfer', 'dob', 'brankas'],
             null => [],
             default => [$method],
         };

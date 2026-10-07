@@ -25,7 +25,7 @@ class StorePaymentRequest extends FormRequest
         return [
             'loan_id' => ['required', 'integer', Rule::exists('loans', 'id')],
             'amount' => ['required', 'numeric', 'min:0.01', 'max:100000000'],
-            'method' => ['required', Rule::in(['gcash', 'cash'])],
+            'method' => ['required', Rule::in(['qrph', 'cash'])],
             'proof' => ['required_if:method,cash', 'nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],
         ];
     }

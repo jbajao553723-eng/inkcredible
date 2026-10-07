@@ -7,7 +7,7 @@ Inkcredible is a Laravel 12 lending-management application for client onboarding
 - Client registration, email verification, profile management, and identity verification
 - Configurable Arawan, weekly, and emergency loan products
 - Loan review with automatic installment schedule creation
-- Cash payment review and PayMongo-hosted GCash, Maya, and bank-transfer checkout
+- Cash payment review and PayMongo-hosted QR Ph checkout
 - Signed, idempotent PayMongo webhook processing and payment reconciliation
 - Client and business PDF reports
 - Responsive client and administrator workspaces

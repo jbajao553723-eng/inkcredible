@@ -30,19 +30,20 @@ function paymentMethodsLoan(User $client): Loan
     ]);
 }
 
-it('offers only GCash or QR Ph and cash on the client payment page', function () {
+it('offers only QR Ph and cash on the client payment page', function () {
     $client = User::factory()->create(['role' => 'client']);
     paymentMethodsLoan($client);
 
     $this->actingAs($client)->get(route('payments.index'))
         ->assertOk()
-        ->assertSee('GCash / QR Ph')
+        ->assertSee('QR Ph')
         ->assertSee('Cash payment')
+        ->assertDontSee('GCash')
         ->assertDontSee('Maya')
         ->assertDontSee('Bank transfer');
 });
 
-it('requests both GCash and QR Ph from PayMongo checkout', function () {
+it('requests only QR Ph from PayMongo checkout', function () {
     config(['paymongo.secret_key' => 'sk_test_example']);
 
     $client = User::factory()->create(['role' => 'client']);
@@ -51,26 +52,50 @@ it('requests both GCash and QR Ph from PayMongo checkout', function () {
         'loan_id' => $loan->id,
         'user_id' => $client->id,
         'amount' => 500,
-        'reference' => 'LOANPAY-GCASH-QRPH',
+        'reference' => 'LOANPAY-QRPH',
         'currency' => 'PHP',
-        'method' => 'gcash',
+        'method' => 'qrph',
         'status' => Payment::STATUS_PENDING,
     ]);
 
     Http::fake([
+        'api.paymongo.com/v1/merchants/capabilities/payment_methods' => Http::response(['qrph']),
         'api.paymongo.com/v2/checkout_sessions' => Http::response([
             'data' => [
-                'id' => 'cs_test_gcash_qrph',
+                'id' => 'cs_test_qrph',
                 'attributes' => [
-                    'checkout_url' => 'https://checkout.paymongo.com/cs_test_gcash_qrph',
+                    'checkout_url' => 'https://checkout.paymongo.com/cs_test_qrph',
                 ],
             ],
         ]),
     ]);
 
     expect(app(PayMongoService::class)->createCheckoutSession($payment))
-        ->toBe('https://checkout.paymongo.com/cs_test_gcash_qrph');
+        ->toBe('https://checkout.paymongo.com/cs_test_qrph');
 
     Http::assertSent(fn ($request) => $request->url() === 'https://api.paymongo.com/v2/checkout_sessions'
-        && $request['data']['attributes']['payment_method_types'] === ['gcash', 'qrph']);
+        && $request['data']['attributes']['payment_method_types'] === ['qrph']);
+});
+
+it('does not create an unusable checkout when QR Ph is inactive', function () {
+    config(['paymongo.secret_key' => 'sk_test_example']);
+
+    $client = User::factory()->create(['role' => 'client']);
+    $loan = paymentMethodsLoan($client);
+
+    Http::fake([
+        'api.paymongo.com/v1/merchants/capabilities/payment_methods' => Http::response([]),
+    ]);
+
+    $this->actingAs($client)->post(route('payments.store'), [
+        'loan_id' => $loan->id,
+        'amount' => 500,
+        'method' => 'qrph',
+    ])->assertSessionHasErrors([
+        'method' => 'QR Ph is not active for this PayMongo account. Enable it in the PayMongo Dashboard under Live mode → Settings → Payment Methods, then try again.',
+    ]);
+
+    expect(Payment::count())->toBe(0);
+
+    Http::assertNotSent(fn ($request) => $request->url() === 'https://api.paymongo.com/v2/checkout_sessions');
 });

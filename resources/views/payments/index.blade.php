@@ -251,8 +251,8 @@
                                 <div class="payment-step"><span class="payment-step-number">2</span><span class="payment-step-title">Payment method</span></div>
                                 <div class="method-grid">
                                     <label class="method-option">
-                                        <input type="radio" name="method" value="gcash" @checked(old('method', 'gcash') === 'gcash')>
-                                        <span class="method-card"><span class="method-logo">G</span><span><span class="method-name">GCash / QR Ph</span><span class="method-note">Secure PayMongo checkout</span></span></span>
+                                        <input type="radio" name="method" value="qrph" @checked(old('method', 'qrph') === 'qrph')>
+                                        <span class="method-card"><span class="method-logo">QR</span><span><span class="method-name">QR Ph</span><span class="method-note">Scan with a supported bank or e-wallet</span></span></span>
                                     </label>
                                     <label class="method-option">
                                         <input type="radio" name="method" value="cash" @checked(old('method') === 'cash')>
@@ -401,12 +401,12 @@ function peso(value) {
 }
 
 function selectedMethod() {
-    return document.querySelector('input[name="method"]:checked')?.value || 'gcash';
+    return document.querySelector('input[name="method"]:checked')?.value || 'qrph';
 }
 
 function selectedMethodLabel() {
     return {
-        gcash: 'GCash / QR Ph'
+        qrph: 'QR Ph'
     }[selectedMethod()] || 'secure checkout';
 }
 

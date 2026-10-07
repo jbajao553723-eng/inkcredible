@@ -63,7 +63,8 @@ class Payment extends Model
     public function getMethodLabelAttribute(): string
     {
         return match ($this->method) {
-            'gcash', 'qrph' => 'GCash / QR Ph',
+            'qrph' => 'QR Ph',
+            'gcash' => 'GCash',
             'paymaya' => 'Maya',
             'bank_transfer', 'dob', 'brankas' => 'Bank transfer',
             'cash' => 'Cash',
@@ -74,7 +75,6 @@ class Payment extends Model
     public function getMethodGroupAttribute(): string
     {
         return match ($this->method) {
-            'qrph' => 'gcash',
             'dob', 'brankas' => 'bank_transfer',
             default => $this->method,
         };

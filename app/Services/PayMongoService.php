@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\PayMongoCapabilityException;
 use App\Models\Payment;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
@@ -14,7 +15,7 @@ class PayMongoService
     {
         $secretKey = config('paymongo.secret_key');
         $checkoutMethods = match ($payment->method) {
-            'gcash' => ['gcash', 'qrph'],
+            'qrph' => ['qrph'],
             default => [],
         };
 
@@ -22,10 +23,16 @@ class PayMongoService
             throw new RuntimeException('PayMongo is not configured. Set PAYMONGO_SECRET_KEY first.');
         }
 
-        $allowedCheckoutMethods = ['gcash', 'qrph'];
+        $allowedCheckoutMethods = ['qrph'];
 
         if ($checkoutMethods === [] || array_diff($checkoutMethods, $allowedCheckoutMethods) !== []) {
             throw new RuntimeException('The configured PayMongo checkout method is invalid.');
+        }
+
+        if (! in_array('qrph', $this->activePaymentMethods($secretKey), true)) {
+            throw new PayMongoCapabilityException(
+                'QR Ph is not active for this PayMongo account. Enable it in the PayMongo Dashboard under Live mode → Settings → Payment Methods, then try again.'
+            );
         }
 
         $response = Http::withBasicAuth($secretKey, '')
@@ -80,6 +87,24 @@ class PayMongoService
         ]);
 
         return $checkoutUrl;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function activePaymentMethods(string $secretKey): array
+    {
+        $methods = Http::withBasicAuth($secretKey, '')
+            ->acceptJson()
+            ->connectTimeout(5)
+            ->timeout(15)
+            ->get(self::API_URL.'/v1/merchants/capabilities/payment_methods')
+            ->throw()
+            ->json();
+
+        return is_array($methods)
+            ? array_values(array_filter($methods, 'is_string'))
+            : [];
     }
 
     public function retrieveCheckoutSession(string $sessionId): array
