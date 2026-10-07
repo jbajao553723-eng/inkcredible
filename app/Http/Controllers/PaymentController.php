@@ -8,8 +8,9 @@ use App\Http\Requests\StorePaymentRequest;
 use App\Models\Loan;
 use App\Models\Payment;
 use App\Services\PaymentLedgerService;
-use App\Services\PaymentReceiptImage;
 use App\Services\PayMongoService;
+use App\Services\PdfBranding;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -20,6 +21,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PaymentController extends Controller
 {
@@ -196,9 +198,9 @@ class PaymentController extends Controller
         ]);
     }
 
-    public function receipt(int $payment, PaymentReceiptImage $receiptImage): Response
+    public function receipt(int $payment, PdfBranding $branding): Response
     {
-        return $this->downloadReceipt($this->findUserPayment($payment), $receiptImage);
+        return $this->downloadReceipt($this->findUserPayment($payment), $branding);
     }
 
     public function webhook(Request $request, PayMongoService $payMongo): JsonResponse
@@ -401,12 +403,12 @@ class PaymentController extends Controller
         return view('admin.payments.show', compact('payment'));
     }
 
-    public function adminReceipt(int $id, PaymentReceiptImage $receiptImage): Response
+    public function adminReceipt(int $id, PdfBranding $branding): Response
     {
-        return $this->downloadReceipt(Payment::findOrFail($id), $receiptImage);
+        return $this->downloadReceipt(Payment::findOrFail($id), $branding);
     }
 
-    public function adminProof(int $id): \Symfony\Component\HttpFoundation\StreamedResponse
+    public function adminProof(int $id): StreamedResponse
     {
         $payment = Payment::findOrFail($id);
         $disk = Storage::disk(config('filesystems.public_disk'));
@@ -513,16 +515,15 @@ class PaymentController extends Controller
             ->firstOrFail();
     }
 
-    private function downloadReceipt(Payment $payment, PaymentReceiptImage $receiptImage): Response
+    private function downloadReceipt(Payment $payment, PdfBranding $branding): Response
     {
         $payment->loadMissing(['loan.user', 'loan.loanType']);
 
-        $filename = 'payment-receipt-'.$payment->id.'.png';
+        $filename = 'payment-receipt-'.$payment->id.'.pdf';
 
-        return response($receiptImage->render($payment), 200, [
-            'Content-Type' => 'image/png',
-            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
-            'Cache-Control' => 'private, no-store, max-age=0',
-        ]);
+        return Pdf::loadView('payments.receipt', [
+            'payment' => $payment,
+            'logoDataUri' => $branding->logoDataUri(),
+        ])->setPaper('a4')->download($filename);
     }
 }

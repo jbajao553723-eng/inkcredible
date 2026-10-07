@@ -276,7 +276,7 @@
 
                         <div class="actions" aria-label="Next steps">
                             @if($isApproved)
-                                <a class="button button-primary" href="{{ route('payments.receipt', $payment) }}" download="payment-receipt-{{ $payment->id }}.png" data-no-transition>
+                                <a class="button button-primary" href="{{ route('payments.receipt', $payment) }}" download="payment-receipt-{{ $payment->id }}.pdf" data-no-transition>
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/></svg>
                                     Download PNG receipt
                                 </a>

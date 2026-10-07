@@ -8,6 +8,7 @@ use App\Notifications\LoanApprovedNotification;
 use App\Rules\DigitalSignature;
 use App\Services\LoanApprovalService;
 use App\Services\LoanRiskAssessmentService;
+use App\Services\PdfBranding;
 use App\Services\PdfSignatureImage;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
@@ -78,6 +79,7 @@ class LoanAdminController extends Controller
         Loan $loan,
         LoanApprovalService $approvals,
         PdfSignatureImage $signatureImages,
+        PdfBranding $branding,
     ): RedirectResponse {
         if ($loan->status !== Loan::STATUS_PENDING) {
             return back()->with('error', 'Only pending loan requests can be approved.');
@@ -123,6 +125,7 @@ class LoanAdminController extends Controller
             'adminSignature' => $adminSignature,
             'adminSignatureName' => $adminName,
             'adminSignedAt' => $adminSignedAt,
+            'logoDataUri' => $branding->logoDataUri(),
         ])->setPaper('a4');
         $finalPath = 'loan-contracts/'.$loan->id.'/'.Str::uuid().'-final-contract.pdf';
 

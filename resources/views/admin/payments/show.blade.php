@@ -58,7 +58,7 @@
 <main class="main" id="main-content" tabindex="-1"><div class="page-shell">
     <header class="topbar">
         <div><div class="eyebrow">Payment review</div><h1>Transaction #{{ $payment->id }}</h1><p class="subtitle">Everything needed to verify and process this payment.</p></div>
-        <div class="top-actions"><a class="button button-primary" href="{{ route('admin.payment.receipt', $payment->id) }}" download="payment-receipt-{{ $payment->id }}.png" data-no-transition>Download PNG receipt</a><a class="button button-secondary" href="{{ route('admin.payments.index') }}">Back to payments</a></div>
+        <div class="top-actions"><a class="button button-primary" href="{{ route('admin.payment.receipt', $payment->id) }}" download="payment-receipt-{{ $payment->id }}.pdf" data-no-transition>Download PDF receipt</a><a class="button button-secondary" href="{{ route('admin.payments.index') }}">Back to payments</a></div>
     </header>
     <x-flash-messages />
 

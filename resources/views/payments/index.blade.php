@@ -340,7 +340,7 @@
                                     <td>{{ $payment->method_label }}</td>
                                     <td><span class="badge {{ $statusClass }}">{{ ucfirst($payment->status) }}</span></td>
                                     <td class="amount">&#8369;{{ number_format($payment->amount, 2) }}</td>
-                                    <td><a class="receipt-link" href="{{ route('payments.receipt', $payment) }}" download="payment-receipt-{{ $payment->id }}.png" data-no-transition>Download PNG</a></td>
+                                    <td><a class="receipt-link" href="{{ route('payments.receipt', $payment) }}" download="payment-receipt-{{ $payment->id }}.pdf" data-no-transition>Download PDF</a></td>
                                 </tr>
                             @endforeach
                         </tbody>

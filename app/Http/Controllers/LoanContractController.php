@@ -6,6 +6,7 @@ use App\Models\ClientVerification;
 use App\Models\Loan;
 use App\Notifications\ContractReadyNotification;
 use App\Services\LoanRiskAssessmentService;
+use App\Services\PdfBranding;
 use App\Services\PdfSignatureImage;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
@@ -56,13 +57,16 @@ class LoanContractController extends Controller
         return view('client.loans.contract', compact('loan', 'riskAssessment'));
     }
 
-    public function download(Request $request, Loan $loan): Response
+    public function download(Request $request, Loan $loan, PdfBranding $branding): Response
     {
         $this->authorizeAccess($request, $loan);
         abort_unless($loan->contract_sent_at, 404);
         $loan->load(['user', 'loanType']);
 
-        return Pdf::loadView('contracts.loan', ['loan' => $loan])
+        return Pdf::loadView('contracts.loan', [
+            'loan' => $loan,
+            'logoDataUri' => $branding->logoDataUri(),
+        ])
             ->setPaper('a4')
             ->download(($loan->loan_code ?: 'loan-'.$loan->id).'-contract.pdf');
     }
@@ -84,8 +88,12 @@ class LoanContractController extends Controller
         );
     }
 
-    public function sign(Request $request, Loan $loan, PdfSignatureImage $signatureImages): RedirectResponse
-    {
+    public function sign(
+        Request $request,
+        Loan $loan,
+        PdfSignatureImage $signatureImages,
+        PdfBranding $branding,
+    ): RedirectResponse {
         abort_unless($loan->user_id === $request->user()?->id, 403);
 
         if ($loan->status !== Loan::STATUS_PENDING || ! $loan->contract_sent_at) {
@@ -119,6 +127,7 @@ class LoanContractController extends Controller
             'loan' => $loan,
             'clientSignature' => $clientSignature,
             'signedAt' => $signedAt,
+            'logoDataUri' => $branding->logoDataUri(),
         ])->setPaper('a4');
         $path = 'loan-contracts/'.$loan->id.'/'.Str::uuid().'-signed-contract.pdf';
 
