@@ -69,9 +69,6 @@
 .method-option input:checked + .method-card { border-color: var(--primary); background: #f5f3ff; box-shadow: 0 0 0 1px var(--primary); }
 .method-option input:focus + .method-card { box-shadow: 0 0 0 4px rgba(99, 102, 241, .1); }
 .method-logo { display: grid; place-items: center; width: 36px; height: 36px; flex: 0 0 36px; color: #fff; background: var(--primary); border-radius: 9px; font-size: 12px; font-weight: 700; }
-.method-logo.maya { background: #00a86b; }
-.method-logo.bank { color: #175cd3; background: #dbeafe; }
-.method-logo.bank svg { width: 19px; height: 19px; }
 .method-logo.cash { color: #067647; background: #d1fadf; }
 .method-name { display: block; font-size: 13px; font-weight: 600; }
 .method-note { display: block; margin-top: 2px; color: var(--muted); font-size: 11px; }
