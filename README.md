@@ -57,8 +57,6 @@ Set the following values in `.env`:
 APP_URL=https://your-domain.example
 PAYMONGO_SECRET_KEY=sk_test_your_key
 PAYMONGO_WEBHOOK_SECRET=your_webhook_secret
-PAYMONGO_GCASH_METHOD=gcash
-PAYMONGO_BANK_TRANSFER_METHODS=dob,brankas
 ```
 
 Register this webhook URL in the PayMongo dashboard and subscribe to `checkout_session.payment.paid`:

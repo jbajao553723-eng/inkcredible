@@ -14,16 +14,15 @@ class PayMongoService
     {
         $secretKey = config('paymongo.secret_key');
         $checkoutMethods = match ($payment->method) {
-            'gcash' => [config('paymongo.gcash_checkout_method', 'gcash')],
-            'bank_transfer' => config('paymongo.bank_transfer_checkout_methods', ['dob', 'brankas']),
-            default => [$payment->method],
+            'gcash' => ['gcash', 'qrph'],
+            default => [],
         };
 
         if (! $secretKey) {
             throw new RuntimeException('PayMongo is not configured. Set PAYMONGO_SECRET_KEY first.');
         }
 
-        $allowedCheckoutMethods = ['gcash', 'qrph', 'paymaya', 'dob', 'brankas'];
+        $allowedCheckoutMethods = ['gcash', 'qrph'];
 
         if ($checkoutMethods === [] || array_diff($checkoutMethods, $allowedCheckoutMethods) !== []) {
             throw new RuntimeException('The configured PayMongo checkout method is invalid.');
@@ -43,8 +42,7 @@ class PayMongoService
                             'name' => 'Loan payment #'.$payment->id,
                             'quantity' => 1,
                         ]],
-                        // Keep checkout on the method selected by the borrower.
-                        // PayMongo displays a scannable GCash QR on desktop.
+                        // Offer only the supported wallet/QR methods for online checkout.
                         'payment_method_types' => $checkoutMethods,
                         'reference_number' => $payment->reference,
                         'success_url' => route('payments.success', ['payment' => $payment->id]),

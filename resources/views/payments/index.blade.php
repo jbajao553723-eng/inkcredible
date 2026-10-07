@@ -252,15 +252,7 @@
                                 <div class="method-grid">
                                     <label class="method-option">
                                         <input type="radio" name="method" value="gcash" @checked(old('method', 'gcash') === 'gcash')>
-                                        <span class="method-card"><span class="method-logo">G</span><span><span class="method-name">GCash</span><span class="method-note">PayMongo checkout</span></span></span>
-                                    </label>
-                                    <label class="method-option">
-                                        <input type="radio" name="method" value="paymaya" @checked(old('method') === 'paymaya')>
-                                        <span class="method-card"><span class="method-logo maya">M</span><span><span class="method-name">Maya</span><span class="method-note">PayMongo checkout</span></span></span>
-                                    </label>
-                                    <label class="method-option">
-                                        <input type="radio" name="method" value="bank_transfer" @checked(old('method') === 'bank_transfer')>
-                                        <span class="method-card"><span class="method-logo bank"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3.5 9 12 4l8.5 5M5 10.5h14M6.5 10.5v7m3.5-7v7m4-7v7m3.5-7v7M4 20h16"/></svg></span><span><span class="method-name">Bank transfer</span><span class="method-note">BPI, UBP, BDO &amp; more</span></span></span>
+                                        <span class="method-card"><span class="method-logo">G</span><span><span class="method-name">GCash / QR Ph</span><span class="method-note">Secure PayMongo checkout</span></span></span>
                                     </label>
                                     <label class="method-option">
                                         <input type="radio" name="method" value="cash" @checked(old('method') === 'cash')>
@@ -414,9 +406,7 @@ function selectedMethod() {
 
 function selectedMethodLabel() {
     return {
-        gcash: 'GCash',
-        paymaya: 'Maya',
-        bank_transfer: 'Bank transfer'
+        gcash: 'GCash / QR Ph'
     }[selectedMethod()] || 'secure checkout';
 }
 
