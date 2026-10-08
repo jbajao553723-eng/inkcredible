@@ -2,8 +2,8 @@
 body { color:#243247; font-family:DejaVu Sans,sans-serif; line-height:1.5; }
 .document-header { width:100%; margin-bottom:18px; padding-bottom:14px; border-bottom:3px solid #b91c1c; border-collapse:collapse; }
 .document-header td { padding:0; border:0; vertical-align:middle; background:transparent; }
-.document-header .logo-cell { width:66px; }
-.document-logo { width:54px; height:54px; }
+.document-header .logo-cell { width:82px; }
+.document-logo { width:70px; height:70px; object-fit:cover; }
 .document-company { color:#172033; font-size:15px; font-weight:bold; }
 .document-address { margin-top:4px; color:#667085; font-size:8px; }
 .document-header .document-meta { width:29%; color:#667085; font-size:8px; line-height:1.6; text-align:right; }

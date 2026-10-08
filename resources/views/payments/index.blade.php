@@ -94,11 +94,8 @@
 .payment-progress h2 { margin:0; font-size:22px; letter-spacing:-.025em; }
 .payment-progress-copy { margin:10px auto 0; color:var(--muted); font-size:13px; line-height:1.6; }
 .payment-progress-state { margin:18px 0; padding:12px 14px; color:#344054; background:#f8fafc; border:1px solid #eaecf0; border-radius:10px; font-size:12px; line-height:1.5; }
-.payment-progress-actions { display:grid; gap:9px; }
-.payment-progress-open,.payment-progress-cancel { display:flex; align-items:center; justify-content:center; min-height:43px; border-radius:9px; font-size:12px; font-weight:700; text-decoration:none; cursor:pointer; }
-.payment-progress-open { color:#fff; background:var(--primary); border:1px solid var(--primary); }
-.payment-progress-open:hover { background:var(--primary-dark); }
-.payment-progress-cancel { color:#475467; background:#fff; border:1px solid #d0d5dd; }
+.payment-progress-route { display:flex; align-items:center; justify-content:center; gap:7px; margin-top:16px; color:#667085; font-size:11px; font-weight:600; }
+.payment-progress-route svg { width:15px; height:15px; color:var(--primary); }
 @keyframes payment-progress-spin { to { transform:rotate(360deg); } }
 
 .history-panel { margin-top: 22px; }
@@ -290,7 +287,7 @@
                                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5 12h14m-5-5 5 5-5 5"/></svg>
                                 <span>Continue to secure payment</span>
                             </button>
-                            <p class="payment-guidance" id="payment-guidance">QR Ph opens a secure PayMongo window. Your balance updates once the payment is confirmed.</p>
+                            <p class="payment-guidance" id="payment-guidance">QR Ph continues to secure PayMongo checkout in this tab, then returns here automatically.</p>
                         </form>
                     @endif
                 </div>
@@ -379,13 +376,10 @@
 <dialog class="payment-progress" id="payment-progress" aria-labelledby="payment-progress-title">
     <div class="payment-progress-card">
         <div class="payment-progress-spinner" aria-hidden="true"></div>
-        <h2 id="payment-progress-title">Complete your payment</h2>
-        <p class="payment-progress-copy">Finish authorization in the secure PayMongo window. This page will detect the result and redirect automatically.</p>
+        <h2 id="payment-progress-title">Connecting to PayMongo</h2>
+        <p class="payment-progress-copy">Secure checkout will continue in this tab. After payment, PayMongo returns you to Inkcredible automatically.</p>
         <div class="payment-progress-state" id="payment-progress-state" role="status" aria-live="polite">Creating a secure checkout session&hellip;</div>
-        <div class="payment-progress-actions">
-            <button class="payment-progress-open" id="payment-progress-open" type="button" hidden>Open secure payment window</button>
-            <a class="payment-progress-cancel" id="payment-progress-cancel" href="{{ route('payments.index') }}">Cancel and return to payments</a>
-        </div>
+        <div class="payment-progress-route"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/></svg>Inkcredible &rarr; PayMongo &rarr; Inkcredible</div>
     </div>
 </dialog>
 
@@ -409,17 +403,11 @@ const accountPreviewInstallment = document.getElementById('account-preview-insta
 const accountPreviewBalance = document.getElementById('account-preview-balance');
 const paymentProgress = document.getElementById('payment-progress');
 const paymentProgressState = document.getElementById('payment-progress-state');
-const paymentProgressOpen = document.getElementById('payment-progress-open');
-const paymentProgressCancel = document.getElementById('payment-progress-cancel');
 const paymentError = document.getElementById('payment-error');
 const reviewAmount = document.getElementById('review-payment-amount');
 const reviewAccount = document.getElementById('review-payment-account');
 const reviewMethod = document.getElementById('review-payment-method');
 const paymentGuidance = document.getElementById('payment-guidance');
-let checkoutWindow = null;
-let activeCheckoutUrl = null;
-let activeStatusUrl = null;
-let statusPollTimer = null;
 
 function peso(value) {
     return `₱${Number(value).toLocaleString('en-PH', {
@@ -496,7 +484,7 @@ function syncPaymentReview() {
     reviewMethod.textContent = selectedMethod() === 'cash' ? 'Cash' : 'QR Ph';
     paymentGuidance.textContent = selectedMethod() === 'cash'
         ? 'Only submit a cash payment you have already made. Upload the receipt; your balance updates after administrator confirmation.'
-        : 'QR Ph opens a secure PayMongo window. Your balance updates once the payment is confirmed.';
+        : 'QR Ph continues to secure PayMongo checkout in this tab, then returns here automatically.';
 }
 amountInput.addEventListener('input', syncPaymentReview);
 
@@ -531,56 +519,7 @@ fullBalanceButton.addEventListener('click', () => {
 proofInput.addEventListener('change', () => {
     proofFileName.textContent = proofInput.files[0]?.name || 'Choose a JPG or PNG image up to 2 MB';
 });
-function openCheckoutWindow() {
-    if (!activeCheckoutUrl) return null;
-
-    checkoutWindow = window.open(
-        activeCheckoutUrl,
-        'inkcredible-paymongo-checkout',
-        'popup=yes,width=520,height=760,resizable=yes,scrollbars=yes'
-    );
-
-    return checkoutWindow;
-}
-
-async function pollPaymentStatus() {
-    if (!activeStatusUrl) return;
-
-    try {
-        const response = await fetch(activeStatusUrl, {
-            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-            cache: 'no-store'
-        });
-
-        if (!response.ok) throw new Error('Unable to check the payment status.');
-
-        const result = await response.json();
-
-        if (result.redirect_url) {
-            paymentProgressState.textContent = result.status === 'approved'
-                ? 'Payment authorized. Opening your completed payment receipt…'
-                : 'Payment was not completed. Returning to the payment result…';
-
-            if (checkoutWindow && !checkoutWindow.closed) checkoutWindow.close();
-            window.clearTimeout(statusPollTimer);
-            window.location.replace(result.redirect_url);
-            return;
-        }
-
-        paymentProgressState.textContent = 'Waiting for PayMongo authorization. You may safely return to this window after completing payment.';
-    } catch (error) {
-        paymentProgressState.textContent = 'Still checking the payment securely. Please keep this window open.';
-    }
-
-    statusPollTimer = window.setTimeout(pollPaymentStatus, 2000);
-}
-
-paymentProgressOpen.addEventListener('click', () => openCheckoutWindow());
 paymentProgress.addEventListener('cancel', (event) => event.preventDefault());
-paymentProgressCancel.addEventListener('click', () => {
-    window.clearTimeout(statusPollTimer);
-    if (checkoutWindow && !checkoutWindow.closed) checkoutWindow.close();
-});
 
 paymentForm.addEventListener('submit', async function (event) {
     paymentError.hidden = true;
@@ -600,17 +539,6 @@ paymentForm.addEventListener('submit', async function (event) {
     paymentProgressState.textContent = 'Creating a secure checkout session…';
     paymentProgress.showModal();
 
-    checkoutWindow = window.open(
-        '',
-        'inkcredible-paymongo-checkout',
-        'popup=yes,width=520,height=760,resizable=yes,scrollbars=yes'
-    );
-
-    if (checkoutWindow) {
-        checkoutWindow.document.title = 'Opening secure payment';
-        checkoutWindow.document.body.textContent = 'Opening PayMongo secure checkout…';
-    }
-
     try {
         const response = await fetch(paymentForm.action, {
             method: 'POST',
@@ -624,18 +552,9 @@ paymentForm.addEventListener('submit', async function (event) {
             throw new Error(firstError || result.message || 'Unable to start the secure payment.');
         }
 
-        activeCheckoutUrl = result.checkout_url;
-        activeStatusUrl = result.status_url;
-        paymentProgressCancel.href = result.cancel_url;
-        paymentProgressOpen.hidden = false;
-        paymentProgressState.textContent = checkoutWindow
-            ? 'Secure checkout opened. Complete authorization there while this page checks the result.'
-            : 'Your browser blocked the secure window. Select “Open secure payment window” below.';
-
-        if (checkoutWindow) checkoutWindow.location.replace(activeCheckoutUrl);
-        pollPaymentStatus();
+        paymentProgressState.textContent = 'Secure checkout is ready. Redirecting in this tab…';
+        window.location.assign(result.checkout_url);
     } catch (error) {
-        if (checkoutWindow && !checkoutWindow.closed) checkoutWindow.close();
         paymentProgress.close();
         submitButton.disabled = false;
         submitButton.querySelector('span').textContent = `Continue with ${selectedMethodLabel()}`;

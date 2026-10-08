@@ -13,17 +13,20 @@ class PdfBranding
         }
 
         // Dompdf needs PHP GD to decode PNG files. The Vercel PHP runtime does
-        // not provide GD, so PDF documents use this small vector brand mark.
-        // SVG remains sharp in print and can be embedded without temporary
-        // files or image-processing extensions.
-        $svg = <<<'SVG'
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#b91c1c"/>
-  <circle cx="32" cy="32" r="21" fill="#ffffff"/>
-  <path fill="#b91c1c" d="M22 19h20v6h-6v14h6v6H22v-6h6V25h-6z"/>
-</svg>
-SVG;
+        // not provide GD, so the supplied company logo is stored as JPEG and
+        // embedded directly without image-processing extensions.
+        $path = public_path('images/inkcredible-pdf-logo.jpg');
 
-        return $this->logoDataUri = 'data:image/svg+xml;base64,'.base64_encode($svg);
+        if (! is_file($path) || ! is_readable($path)) {
+            return null;
+        }
+
+        $contents = file_get_contents($path);
+
+        if ($contents === false || ! str_starts_with($contents, "\xFF\xD8\xFF")) {
+            return null;
+        }
+
+        return $this->logoDataUri = 'data:image/jpeg;base64,'.base64_encode($contents);
     }
 }
