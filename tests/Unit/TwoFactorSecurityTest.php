@@ -90,7 +90,7 @@ class TwoFactorSecurityTest extends TestCase
         $this->actingAs($client)->get(route('profile.security.edit'))->assertOk()->assertSee('role="switch"', false)->assertDontSee('enable-two-factor-password');
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
         $this->actingAs($admin)->get(route('admin.settings.edit', ['section' => 'security']))->assertOk()->assertSee('role="switch"', false)->assertDontSee('admin-enable-two-factor-password');
-        $this->get(route('admin.dashboard'))->assertOk()->assertSee('Pending work')->assertSee('Portfolio balance')->assertSee('Projected earnings');
+        $this->get(route('admin.dashboard'))->assertOk()->assertSee('Pending work')->assertSee('Collections &amp; income', false)->assertSee('Projected earnings')->assertDontSee('Portfolio balance');
     }
 
     public function test_expired_and_wrong_codes_do_not_authenticate(): void
