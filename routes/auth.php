@@ -10,6 +10,7 @@ use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordRecoveryOtpController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\TwoFactorAuthenticationController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
@@ -23,6 +24,15 @@ Route::middleware('guest')->group(function () {
         ->name('login');
 
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
+
+    Route::get('login/two-factor', [TwoFactorAuthenticationController::class, 'showLogin'])
+        ->name('two-factor.login.show');
+    Route::post('login/two-factor', [TwoFactorAuthenticationController::class, 'verifyLogin'])
+        ->middleware('throttle:10,1')
+        ->name('two-factor.login.verify');
+    Route::post('login/two-factor/resend', [TwoFactorAuthenticationController::class, 'resendLogin'])
+        ->middleware('throttle:3,5')
+        ->name('two-factor.login.resend');
 
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
         ->name('password.request');
@@ -48,6 +58,21 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
+    Route::post('two-factor/enable', [TwoFactorAuthenticationController::class, 'enable'])
+        ->middleware('throttle:3,5')
+        ->name('two-factor.enable');
+    Route::get('two-factor/setup', [TwoFactorAuthenticationController::class, 'showSetup'])
+        ->name('two-factor.setup.show');
+    Route::post('two-factor/setup', [TwoFactorAuthenticationController::class, 'verifySetup'])
+        ->middleware('throttle:10,1')
+        ->name('two-factor.setup.verify');
+    Route::post('two-factor/setup/resend', [TwoFactorAuthenticationController::class, 'resendSetup'])
+        ->middleware('throttle:3,5')
+        ->name('two-factor.setup.resend');
+    Route::delete('two-factor', [TwoFactorAuthenticationController::class, 'disable'])
+        ->middleware('throttle:3,5')
+        ->name('two-factor.disable');
+
     Route::get('verify-email', EmailVerificationPromptController::class)
         ->name('verification.notice');
 

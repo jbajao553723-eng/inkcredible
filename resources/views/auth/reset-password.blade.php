@@ -34,7 +34,7 @@
                 <li><span class="feature-check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 12 4 4 8-9"/></svg></span>Confirmed before saving</li>
             </ul>
         </div>
-        <div class="brand-footer">Inkcredible Lending Management System</div>
+        <div class="brand-footer">Inkcredible</div>
     </section>
 
     <section class="form-panel">

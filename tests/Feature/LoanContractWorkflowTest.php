@@ -104,7 +104,7 @@ it('requires a signed contract before final loan approval', function () {
         ContractReadyNotification::class,
         fn (ContractReadyNotification $notification) => in_array('mail', $notification->via($client), true)
             && $notification->toMail($client)->subject === 'Your loan contract is ready to sign'
-            && $notification->toMail($client)->salutation === 'Regards, Inkcredible Lending Company'
+            && $notification->toMail($client)->salutation === 'Regards, Inkcredible'
     );
 
     $this->actingAs($client)->get(route('loan.contract.download', $loan))
@@ -165,7 +165,7 @@ it('requires a signed contract before final loan approval', function () {
         LoanApprovedNotification::class,
         fn (LoanApprovedNotification $notification) => in_array('mail', $notification->via($client), true)
             && $notification->toMail($client)->subject === 'Your loan has been approved'
-            && $notification->toMail($client)->salutation === 'Regards, Inkcredible Lending Company'
+            && $notification->toMail($client)->salutation === 'Regards, Inkcredible'
     );
 });
 
@@ -192,7 +192,7 @@ it('notifies the client when a new overdue penalty is calculated', function () {
         PenaltyAppliedNotification::class,
         fn (PenaltyAppliedNotification $notification) => in_array('mail', $notification->via($client), true)
             && $notification->toMail($client)->subject === 'Overdue loan payment notice'
-            && $notification->toMail($client)->salutation === 'Regards, Inkcredible Lending Company'
+            && $notification->toMail($client)->salutation === 'Regards, Inkcredible'
     );
     expect((float) $loan->fresh()->penalty_amount)->toBeGreaterThan(0);
 });

@@ -13,7 +13,7 @@
     <div class="sidebar-inner">
         <a class="sidebar-brand" href="{{ route('dashboard') }}" aria-label="Inkcredible client dashboard">
             <x-brand-mark />
-            <span class="brand-copy"><strong>Inkcredible Lending</strong><small>Client workspace</small></span>
+            <span class="brand-copy"><strong>Inkcredible</strong><small>Client workspace</small></span>
         </a>
 
         <nav class="sidebar-nav" aria-label="Client navigation">

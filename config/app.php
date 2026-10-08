@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Inkcredible Lending Company'),
+    'name' => env('APP_NAME', 'Inkcredible'),
 
     /*
     |--------------------------------------------------------------------------

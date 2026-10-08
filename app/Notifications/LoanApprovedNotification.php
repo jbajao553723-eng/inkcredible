@@ -29,7 +29,7 @@ class LoanApprovedNotification extends Notification
             ->line('Your repayment schedule and final signed contract are available in your dashboard.')
             ->action('View loan dashboard', route('dashboard'))
             ->line('Please review the due dates in your repayment schedule.')
-            ->salutation('Regards, Inkcredible Lending Company');
+            ->salutation('Regards, Inkcredible');
     }
 
     public function toArray(object $notifiable): array

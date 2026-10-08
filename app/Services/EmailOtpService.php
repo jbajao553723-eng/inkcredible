@@ -13,6 +13,10 @@ class EmailOtpService
 
     public const EMAIL_VERIFICATION_SESSION_KEY = 'security.email_verification_otp';
 
+    public const TWO_FACTOR_LOGIN_SESSION_KEY = 'security.two_factor_login_otp';
+
+    public const TWO_FACTOR_SETUP_SESSION_KEY = 'security.two_factor_setup_otp';
+
     public const EXPIRES_IN_MINUTES = 10;
 
     public const MAX_ATTEMPTS = 5;

@@ -135,6 +135,6 @@
     </div></div></section>
 </main>
 
-<footer><div class="shell footer-inner"><span>&copy; {{ now()->year }} Inkcredible Lending Management System</span><div class="footer-links"><a href="{{ route('terms') }}">Terms &amp; conditions</a><a href="{{ route('loan.terms') }}">Loan terms</a></div></div></footer>
+<footer><div class="shell footer-inner"><span>&copy; {{ now()->year }} Inkcredible</span><div class="footer-links"><a href="{{ route('terms') }}">Terms &amp; conditions</a><a href="{{ route('loan.terms') }}">Loan terms</a></div></div></footer>
 </body>
 </html>

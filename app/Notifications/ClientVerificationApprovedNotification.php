@@ -24,7 +24,7 @@ class ClientVerificationApprovedNotification extends Notification
             ->line('Your Inkcredible account is now fully verified, and you may submit a loan request from your dashboard.')
             ->action('Open your dashboard', route('dashboard'))
             ->line('Thank you for completing the verification process.')
-            ->salutation('Regards, Inkcredible Lending Company');
+            ->salutation('Regards, Inkcredible');
     }
 
     public function toArray(object $notifiable): array

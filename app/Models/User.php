@@ -35,6 +35,7 @@ class User extends Authenticatable
         'last_name',
         'email',
         'email_verified_at',
+        'two_factor_enabled_at',
         'password',
         'contact_number',
         'age',
@@ -73,6 +74,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'two_factor_enabled_at' => 'datetime',
             'password' => 'hashed',
             'terms_accepted_at' => 'datetime',
             'is_active' => 'boolean',
@@ -124,5 +126,10 @@ class User extends Authenticatable
     public function isClientVerified(): bool
     {
         return $this->clientVerification?->status === ClientVerification::STATUS_APPROVED;
+    }
+
+    public function hasTwoFactorAuthenticationEnabled(): bool
+    {
+        return $this->two_factor_enabled_at !== null;
     }
 }

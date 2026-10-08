@@ -29,7 +29,7 @@ class ContractReadyNotification extends Notification
             ->line('Please review and digitally sign it so the administrator can complete the final approval.')
             ->action('Review and sign contract', route('loan.contract.show', $this->loan))
             ->line('If you did not submit this loan request, please contact Inkcredible support.')
-            ->salutation('Regards, Inkcredible Lending Company');
+            ->salutation('Regards, Inkcredible');
     }
 
     public function toArray(object $notifiable): array

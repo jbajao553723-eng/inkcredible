@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Inkcredible Lending System</title>
+    <title>Inkcredible</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>@include('partials.motion-styles')</style>
 </head>
@@ -12,7 +12,7 @@
 
         <!-- HEADER -->
         <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold">Inkcredible Lending System</h1>
+            <h1 class="text-3xl font-bold">Inkcredible</h1>
             <p class="text-gray-600">Simple Loan Management System</p>
         </div>
 

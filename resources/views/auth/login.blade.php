@@ -27,7 +27,7 @@
             </ul>
         </div>
 
-        <div class="brand-footer">Inkcredible Lending Management System</div>
+        <div class="brand-footer">Inkcredible</div>
     </section>
 
     <section class="form-panel">

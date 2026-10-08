@@ -73,7 +73,7 @@ body { font-size:9px; line-height:1.4; }
 <div class="section"><h2 class="section-title">Parties and loan account</h2><table class="details">
 <tr><td>Borrower</td><td>{{ $loan->user->full_name }}</td><td>Loan product</td><td>{{ $loan->loanType?->display_name ?? 'Loan' }}</td></tr>
 <tr><td>Address</td><td>{{ $loan->user->address ?: 'Not provided' }}</td><td>Loan reference</td><td>{{ $loan->loan_code ?: '#'.$loan->id }}</td></tr>
-<tr><td>Lender</td><td>Inkcredible Lending</td><td>Purpose</td><td>{{ $loan->purpose ?: 'Not specified' }}</td></tr>
+<tr><td>Lender</td><td>Inkcredible</td><td>Purpose</td><td>{{ $loan->purpose ?: 'Not specified' }}</td></tr>
 </table></div>
 
 <div class="section"><h2 class="section-title">Financial disclosure</h2><table class="financials">
@@ -90,12 +90,12 @@ body { font-size:9px; line-height:1.4; }
 <li>I confirm that the personal, employment, income, and identity information supplied with my application is complete and accurate.</li>
 <li>I agree to repay the total amount payable according to the repayment schedule issued following final approval.</li>
 <li>I understand that overdue unpaid installments may incur the penalty disclosed in the loan terms accepted with my application.</li>
-<li>I authorize Inkcredible Lending to retain this agreement, the related application, identity records, signatures, and payment records for lawful servicing and audit purposes.</li>
+<li>I authorize Inkcredible to retain this agreement, the related application, identity records, signatures, and payment records for lawful servicing and audit purposes.</li>
 <li>I understand that my signature confirms acceptance of this agreement but does not itself disburse funds. Final approval remains subject to the lender's review.</li>
 <li>I confirm that I received the opportunity to review the principal, charges, repayment period, total payable amount, and all terms before signing.</li>
 </ol></div>
 
-<div class="notice"><strong>Important:</strong> The approved repayment schedule, due dates, and recorded payments form part of this loan account. The borrower should promptly report any discrepancy to Inkcredible Lending.</div>
+<div class="notice"><strong>Important:</strong> The approved repayment schedule, due dates, and recorded payments form part of this loan account. The borrower should promptly report any discrepancy to Inkcredible.</div>
 
 <div class="signature-section"><h2 class="section-title">Electronic signatures</h2><table class="signature-grid"><tr>
 <td style="width:4%"></td><td class="signature-cell">

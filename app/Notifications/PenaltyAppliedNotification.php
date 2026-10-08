@@ -29,7 +29,7 @@ class PenaltyAppliedNotification extends Notification
             ->line('An additional penalty of PHP '.number_format($this->increase, 2).' has been applied based on the current overdue balance.')
             ->action('Review payment details', route('payments.index'))
             ->line('Please make or arrange payment as soon as possible to prevent additional penalties.')
-            ->salutation('Regards, Inkcredible Lending Company');
+            ->salutation('Regards, Inkcredible');
     }
 
     public function toArray(object $notifiable): array

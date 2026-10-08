@@ -7,7 +7,7 @@ services:
     healthCheckPath: /
     envVars:
       - key: APP_NAME
-        value: Inkcredible Lending Company
+        value: Inkcredible
       - key: APP_ENV
         value: production
       - key: APP_DEBUG

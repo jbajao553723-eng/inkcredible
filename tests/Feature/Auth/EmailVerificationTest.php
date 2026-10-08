@@ -32,7 +32,7 @@ test('email can be verified with an emailed one time code', function () {
         $code = $notification->code;
 
         return $notification->purpose === 'email-verification'
-            && $notification->toMail($user)->salutation === 'Regards, Inkcredible Lending Company';
+            && $notification->toMail($user)->salutation === 'Regards, Inkcredible';
     });
 
     $this->post(route('verification.otp.verify'), ['code' => $code])
