@@ -76,7 +76,10 @@ class TwoFactorAuthenticationController extends Controller
             return back()->withErrors(['code' => $this->errorMessage($result)])->withInput();
         }
 
-        $request->user()->forceFill(['two_factor_enabled_at' => now()])->save();
+        $user = $request->user();
+        $preferences = $user->ui_preferences ?? [];
+        data_set($preferences, 'security.two_factor_enabled_at', now()->toIso8601String());
+        $user->forceFill(['ui_preferences' => $preferences])->save();
         $otp->clear($request, EmailOtpService::TWO_FACTOR_SETUP_SESSION_KEY);
 
         return $this->settingsRedirect($request->user())->with('status', 'two-factor-enabled');
@@ -104,8 +107,10 @@ class TwoFactorAuthenticationController extends Controller
         ]);
 
         $user = $request->user();
+        $preferences = $user->ui_preferences ?? [];
+        data_forget($preferences, 'security.two_factor_enabled_at');
         $user->forceFill([
-            'two_factor_enabled_at' => null,
+            'ui_preferences' => $preferences,
             'remember_token' => Str::random(60),
         ])->save();
 

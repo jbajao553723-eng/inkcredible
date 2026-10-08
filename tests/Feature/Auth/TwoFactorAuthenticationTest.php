@@ -30,7 +30,7 @@ test('two factor enabled accounts need an email code after their password', func
     Notification::fake();
     $user = User::factory()->create([
         'password' => 'Password1!',
-        'two_factor_enabled_at' => now(),
+        'ui_preferences' => ['security' => ['two_factor_enabled_at' => now()->toIso8601String()]],
     ]);
 
     $this->post(route('login'), [
