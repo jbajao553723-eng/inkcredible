@@ -133,7 +133,7 @@
         </div>
         <div class="toolbar queue-toolbar">
             <label class="search-field" for="loan-search"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" stroke-width="1.8"/><path stroke-linecap="round" stroke-width="1.8" d="m16 16 4 4"/></svg><input class="search-input" id="loan-search" type="search" placeholder="Search client, email, loan code, or purpose…" aria-label="Search loans"></label>
-            <select class="filter-select" id="loan-status" aria-label="Filter loan status"><option value="">All statuses</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="paid">Paid</option><option value="rejected">Rejected</option></select>
+            <select class="filter-select" id="loan-status" aria-label="Filter loan status"><option value="">All statuses</option><option value="pending" @selected(request('status') === 'pending')>Pending</option><option value="approved" @selected(request('status') === 'approved')>Approved</option><option value="paid" @selected(request('status') === 'paid')>Paid</option><option value="rejected" @selected(request('status') === 'rejected')>Rejected</option></select>
             <span class="keyboard-hint">Press / to search</span>
         </div>
 
@@ -169,6 +169,7 @@
 <script>
 const loanStatusFilter = document.getElementById('loan-status');
 const statusTabs = document.querySelectorAll('[data-status-filter]');
+statusTabs.forEach((tab) => tab.classList.toggle('active', tab.dataset.statusFilter === loanStatusFilter.value));
 
 statusTabs.forEach((tab) => tab.addEventListener('click', () => {
     loanStatusFilter.value = tab.dataset.statusFilter;

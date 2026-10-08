@@ -9,7 +9,7 @@ test('a client can enable email two factor authentication', function () {
     $user = User::factory()->create(['password' => 'Password1!']);
 
     $this->actingAs($user)
-        ->post(route('two-factor.enable'), ['current_password' => 'Password1!'])
+        ->post(route('two-factor.enable'))
         ->assertRedirect(route('two-factor.setup.show'));
 
     $code = null;

@@ -70,6 +70,7 @@ class ProfileController extends Controller
 
         $request->user()->forceFill([
             'ui_preferences' => [
+                ...($request->user()->ui_preferences ?? []),
                 'reduce_motion' => $request->boolean('reduce_motion'),
             ],
         ])->save();

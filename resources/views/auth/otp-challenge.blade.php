@@ -21,6 +21,7 @@
 .resend-form { margin:0; }
 .resend-button { padding:0; color:#4f46e5; background:transparent; border:0; font-size:11px; font-weight:700; cursor:pointer; }
 .resend-button:hover { color:#4338ca; text-decoration:underline; }
+.resend-button:disabled { color:#98a2b3; cursor:wait; text-decoration:none; }.resend-row { flex-wrap:wrap; }.resend-help { margin:10px 0 0; color:#667085; font-size:11px; line-height:1.5; text-align:center; }
 .back-link { display:flex; align-items:center; justify-content:center; gap:7px; margin-top:20px; color:#475467; font-size:12px; font-weight:600; text-decoration:none; }
 .back-link:hover { color:#4338ca; }
 .back-link svg { width:15px; height:15px; }
@@ -76,7 +77,8 @@
                 <button class="submit-button" type="submit" id="verify-code"><span>Verify code</span></button>
             </form>
 
-            <div class="resend-row">Did not receive the email?<form class="resend-form" method="POST" action="{{ $resendRoute }}">@csrf<button class="resend-button" type="submit">Send a new code</button></form></div>
+            <div class="resend-row">Did not receive the email?<form class="resend-form" method="POST" action="{{ $resendRoute }}">@csrf<button class="resend-button" id="resend-code" data-available-at="{{ $resendAvailableAt ?? 0 }}" type="submit" @disabled(($resendAvailableAt ?? 0) > now()->timestamp)>Resend code</button></form></div>
+            <p class="resend-help">Check your spam folder. @if(isset($resendAvailableAt))You can request another code every five minutes.@endif</p>
             <a class="back-link" href="{{ $backRoute }}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="m15 18-6-6 6-6"/></svg>{{ $backLabel }}</a>
         </div>
     </section>
@@ -84,6 +86,17 @@
 
 <script>
 const codeInput = document.getElementById('code');
+const resendButton = document.getElementById('resend-code');
+const remainingAtLoad = Math.max(0, Number(resendButton.dataset.availableAt) - {{ now()->timestamp }});
+const countdownStartedAt = Date.now();
+const updateResend = () => {
+    const remaining = Math.max(0, remainingAtLoad - Math.floor((Date.now() - countdownStartedAt) / 1000));
+    resendButton.disabled = remaining > 0;
+    resendButton.textContent = remaining > 0 ? `Resend in ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')}` : 'Resend code';
+};
+updateResend();
+setInterval(updateResend, 1000);
+resendButton.form.addEventListener('submit', () => { resendButton.disabled = true; resendButton.textContent = 'Sending code…'; });
 codeInput.addEventListener('input', function () {
     this.value = this.value.replace(/\D/g, '').slice(0, 6);
 });

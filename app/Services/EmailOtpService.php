@@ -5,7 +5,10 @@ namespace App\Services;
 use App\Models\User;
 use App\Notifications\EmailOtpNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class EmailOtpService
 {
@@ -21,6 +24,8 @@ class EmailOtpService
 
     public const MAX_ATTEMPTS = 5;
 
+    public const RESEND_SECONDS = 300;
+
     /**
      * Create and email a new one-time code while storing only its hash.
      *
@@ -28,7 +33,30 @@ class EmailOtpService
      */
     public function issue(Request $request, string $sessionKey, ?User $user, string $purpose, string $email, array $context = []): void
     {
+        $isTwoFactor = str_starts_with($purpose, 'two-factor-');
+        $cooldownKey = $this->cooldownKey($purpose, $email);
+
+        if ($isTwoFactor && ! Cache::add($cooldownKey, now()->addSeconds(self::RESEND_SECONDS)->timestamp, self::RESEND_SECONDS)) {
+            throw ValidationException::withMessages(['code' => 'Please wait '.$this->resendSeconds($purpose, $email).' seconds before requesting another code.']);
+        }
+
         $code = (string) random_int(100000, 999999);
+
+        try {
+            if ($user) {
+                if (app()->environment('production') && in_array(config('mail.default'), ['log', 'array'], true)) {
+                    throw new \RuntimeException('A delivery mailer must be configured.');
+                }
+
+                $user->notifyNow(new EmailOtpNotification($code, $purpose));
+            }
+        } catch (\Throwable $exception) {
+            if ($isTwoFactor) {
+                Cache::forget($cooldownKey);
+            }
+            Log::error('Security code email delivery failed.', ['purpose' => $purpose, 'exception' => get_class($exception)]);
+            throw ValidationException::withMessages(['code' => 'We could not send the email code. Please try again shortly.']);
+        }
 
         $request->session()->put($sessionKey, [
             'user_id' => $user?->getKey(),
@@ -36,13 +64,20 @@ class EmailOtpService
             'code_hash' => Hash::make($code),
             'purpose' => $purpose,
             'expires_at' => now()->addMinutes(self::EXPIRES_IN_MINUTES)->timestamp,
+            'resend_available_at' => now()->addSeconds($isTwoFactor ? self::RESEND_SECONDS : 0)->timestamp,
             'attempts' => 0,
             'context' => $context,
         ]);
+    }
 
-        if ($user) {
-            $user->notify(new EmailOtpNotification($code, $purpose));
-        }
+    public function resendSeconds(string $purpose, string $email): int
+    {
+        return max(0, (int) Cache::get($this->cooldownKey($purpose, $email), 0) - now()->timestamp);
+    }
+
+    private function cooldownKey(string $purpose, string $email): string
+    {
+        return 'email-otp:'.$purpose.':'.hash('sha256', mb_strtolower($email));
     }
 
     /**
@@ -64,8 +99,6 @@ class EmailOtpService
         }
 
         if (($challenge['expires_at'] ?? 0) < now()->timestamp) {
-            $request->session()->forget($sessionKey);
-
             return 'expired';
         }
 

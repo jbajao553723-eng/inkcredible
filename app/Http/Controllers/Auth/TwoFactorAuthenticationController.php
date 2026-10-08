@@ -11,29 +11,35 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class TwoFactorAuthenticationController extends Controller
 {
     public function enable(Request $request, EmailOtpService $otp): RedirectResponse
     {
-        $request->validateWithBag('twoFactor', [
-            'current_password' => ['required', 'current_password'],
-        ]);
-
         $user = $request->user();
 
         if ($user->hasTwoFactorAuthenticationEnabled()) {
             return $this->settingsRedirect($user)->with('status', 'two-factor-already-enabled');
         }
 
-        $otp->issue(
-            $request,
-            EmailOtpService::TWO_FACTOR_SETUP_SESSION_KEY,
-            $user,
-            'two-factor-setup',
-            $user->email
-        );
+        $challenge = $otp->challenge($request, EmailOtpService::TWO_FACTOR_SETUP_SESSION_KEY);
+        if ($challenge && (int) ($challenge['user_id'] ?? 0) === (int) $user->id && ($challenge['email'] ?? '') === $user->email && ($challenge['expires_at'] ?? 0) > now()->timestamp && $otp->resendSeconds('two-factor-setup', $user->email) > 0) {
+            return redirect()->route('two-factor.setup.show');
+        }
+
+        try {
+            $otp->issue(
+                $request,
+                EmailOtpService::TWO_FACTOR_SETUP_SESSION_KEY,
+                $user,
+                'two-factor-setup',
+                $user->email
+            );
+        } catch (ValidationException $exception) {
+            return $this->settingsRedirect($user)->withErrors(['two_factor' => $exception->errors()['code'][0]]);
+        }
 
         return redirect()->route('two-factor.setup.show');
     }
@@ -55,6 +61,7 @@ class TwoFactorAuthenticationController extends Controller
             'resendRoute' => route('two-factor.setup.resend'),
             'backRoute' => $this->settingsUrl($request->user()),
             'backLabel' => 'Back to security settings',
+            'resendAvailableAt' => $challenge['resend_available_at'] ?? 0,
         ]);
     }
 
@@ -70,6 +77,12 @@ class TwoFactorAuthenticationController extends Controller
                 ->withErrors(['two_factor' => 'This two-factor setup request is no longer valid.']);
         }
 
+        if (($challenge['email'] ?? '') !== $request->user()->email) {
+            $otp->clear($request, EmailOtpService::TWO_FACTOR_SETUP_SESSION_KEY);
+
+            return $this->settingsRedirect($request->user())->withErrors(['two_factor' => 'Your email changed. Start setup again.']);
+        }
+
         $result = $otp->verify($request, EmailOtpService::TWO_FACTOR_SETUP_SESSION_KEY, $validated['code']);
 
         if ($result !== 'valid') {
@@ -79,7 +92,8 @@ class TwoFactorAuthenticationController extends Controller
         $user = $request->user();
         $preferences = $user->ui_preferences ?? [];
         data_set($preferences, 'security.two_factor_enabled_at', now()->toIso8601String());
-        $user->forceFill(['ui_preferences' => $preferences])->save();
+        $user->forceFill(['ui_preferences' => $preferences, 'remember_token' => Str::random(60)])->save();
+        $this->deleteOtherSessions($request, $user);
         $otp->clear($request, EmailOtpService::TWO_FACTOR_SETUP_SESSION_KEY);
 
         return $this->settingsRedirect($request->user())->with('status', 'two-factor-enabled');
@@ -102,10 +116,6 @@ class TwoFactorAuthenticationController extends Controller
 
     public function disable(Request $request, EmailOtpService $otp): RedirectResponse
     {
-        $request->validateWithBag('twoFactor', [
-            'current_password' => ['required', 'current_password'],
-        ]);
-
         $user = $request->user();
         $preferences = $user->ui_preferences ?? [];
         data_forget($preferences, 'security.two_factor_enabled_at');
@@ -136,6 +146,7 @@ class TwoFactorAuthenticationController extends Controller
             'resendRoute' => route('two-factor.login.resend'),
             'backRoute' => route('login'),
             'backLabel' => 'Back to sign in',
+            'resendAvailableAt' => $challenge['resend_available_at'] ?? 0,
         ]);
     }
 
@@ -152,7 +163,7 @@ class TwoFactorAuthenticationController extends Controller
 
         $user = User::query()->whereKey($challenge['user_id'] ?? null)->where('is_active', true)->first();
 
-        if (! $user || ! $user->hasTwoFactorAuthenticationEnabled()) {
+        if (! $user || ! $user->hasTwoFactorAuthenticationEnabled() || $user->email !== ($challenge['email'] ?? '') || ! hash_equals(hash('sha256', $user->password), (string) data_get($challenge, 'context.password_version', ''))) {
             $otp->clear($request, EmailOtpService::TWO_FACTOR_LOGIN_SESSION_KEY);
 
             return redirect()->route('login')->withErrors(['email' => 'This sign-in verification request is no longer valid.']);
@@ -182,7 +193,7 @@ class TwoFactorAuthenticationController extends Controller
 
         $user = User::query()->whereKey($challenge['user_id'] ?? null)->where('is_active', true)->first();
 
-        if (! $user || ! $user->hasTwoFactorAuthenticationEnabled()) {
+        if (! $user || ! $user->hasTwoFactorAuthenticationEnabled() || $user->email !== ($challenge['email'] ?? '') || ! hash_equals(hash('sha256', $user->password), (string) data_get($challenge, 'context.password_version', ''))) {
             $otp->clear($request, EmailOtpService::TWO_FACTOR_LOGIN_SESSION_KEY);
 
             return redirect()->route('login');
@@ -194,7 +205,7 @@ class TwoFactorAuthenticationController extends Controller
             $user,
             'two-factor-login',
             $user->email,
-            ['remember' => (bool) data_get($challenge, 'context.remember', false)]
+            ['remember' => (bool) data_get($challenge, 'context.remember', false), 'password_version' => hash('sha256', $user->password)]
         );
 
         return back()->with('status', 'A new sign-in code has been sent.');
