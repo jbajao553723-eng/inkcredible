@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\BusinessReportService;
+use App\Services\PdfBranding;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
@@ -38,9 +39,10 @@ class ClientReportController extends Controller
         return view('admin.reports.index', compact('clients', 'stats', 'business'));
     }
 
-    public function downloadBusiness(BusinessReportService $businessReport): Response
+    public function downloadBusiness(BusinessReportService $businessReport, PdfBranding $branding): Response
     {
         $report = $businessReport->generate();
+        $report['logoDataUri'] = $branding->logoDataUri();
         $preparedAt = $report['preparedAt'];
         $filename = 'business-report-'.$preparedAt->format('Ymd').'.pdf';
 
@@ -49,7 +51,7 @@ class ClientReportController extends Controller
             ->download($filename);
     }
 
-    public function download(User $client): Response
+    public function download(User $client, PdfBranding $branding): Response
     {
         abort_unless($client->role === 'client', 404);
 
@@ -90,7 +92,9 @@ class ClientReportController extends Controller
         $safeName = Str::slug($client->name) ?: 'client-'.$client->getKey();
         $filename = 'client-report-'.$safeName.'-'.$preparedAt->format('Ymd').'.pdf';
 
-        return Pdf::loadView('admin.clients.report', compact('client', 'loans', 'summary', 'preparedAt'))
+        $logoDataUri = $branding->logoDataUri();
+
+        return Pdf::loadView('admin.clients.report', compact('client', 'loans', 'summary', 'preparedAt', 'logoDataUri'))
             ->setPaper('a4')
             ->download($filename);
     }

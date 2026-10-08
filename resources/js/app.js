@@ -1,6 +1,7 @@
 import './bootstrap';
 import './ui-motion';
 import './file-downloads';
+import './client-records';
 import './signature-pad';
 import './verification-uploads';
 import './partial-navigation';

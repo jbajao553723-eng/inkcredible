@@ -89,6 +89,23 @@
         .page-footer .center { text-align: center; }
         .page-footer .right { text-align: right; }
         .page-number:before { content: counter(page); }
+        @include('partials.pdf-styles')
+        .metrics,.briefing { width:100%; margin:0; border-spacing:5px; }
+        .metric-value { color:#172033; font-size:12px; }
+        .metrics td { padding:10px; }
+        .section-heading { color:#172033; font-size:11px; }
+        .profit-band { background:#172033; }
+        .profit-main { border-right-color:#475467!important; }
+        .profit-main .label,.profit-note,.profit-stat span { color:#d0d5dd; }
+        .data th { font-size:7px; padding:6px; background:#f0f3f7; }
+        .data td { padding:7px 6px; }
+        .data .amount { white-space:normal; }
+        .methodology { background:#f8fafc; border-color:#b91c1c; }
+        .document-header { margin-bottom:12px; }
+        .document-title { font-size:23px; }
+        .document-subtitle { margin-bottom:12px; }
+        .table-caption { margin:8px 0 5px; color:#667085; font-size:7px; font-weight:bold; text-transform:uppercase; }
+        .two-column { page-break-before:always; }
     </style>
 </head>
 <body>
@@ -104,20 +121,14 @@
     $collectionGap = max(0, $projectedRevenue - (float) $summary['collections']);
     $riskLabel = $summary['overdue_share'] >= 25 ? 'High attention' : ($summary['overdue_share'] > 0 ? 'Watch closely' : 'No overdue exposure');
 @endphp
-<table class="masthead"><tr>
-    <td>
-        <div class="brand">Inkcredible Lending</div>
-        <h1>Business Performance Report</h1>
-        <div class="subtitle">Portfolio, collections, risk, product performance, and operational control summary</div>
-    </td>
-    <td class="report-meta">
-        <span class="confidential">CONFIDENTIAL - MANAGEMENT USE</span><br>
-        Report ID: BR-{{ $preparedAt->format('Ymd-Hi') }}<br>
-        As of: {{ $preparedAt->format('M d, Y - h:i A') }} PHT<br>
-        Reporting scope: All recorded activity<br>
-        Currency: Philippine Peso (PHP)
-    </td>
-</tr></table>
+@include('partials.pdf-header', [
+    'documentReference' => 'BR-'.$preparedAt->format('Ymd-Hi'),
+    'documentDate' => $preparedAt->format('M d, Y - h:i A'),
+    'documentClassification' => 'Confidential - management use',
+    'documentCategory' => 'Management reporting',
+    'documentTitle' => 'Business performance report',
+    'documentSubtitle' => 'Portfolio, collections, credit risk, and operational controls. All recorded activity; amounts in PHP.',
+])
 
 <div class="scope"><strong>Reporting basis:</strong> This report uses approved payment records as the collection ledger, approved and paid loans as the originated portfolio, and installment schedules for penalty and overdue exposure. Pending and rejected transactions are excluded from recognized collections.</div>
 
@@ -182,18 +193,25 @@
     @if(empty($products))
         <div class="empty">No loan product activity is available.</div>
     @else
-        <table class="data"><thead><tr><th>Product</th><th class="count">Applications</th><th class="count">Originated</th><th class="count">Active</th><th class="count">Completed</th><th class="amount">Principal</th><th class="amount">Scheduled</th><th class="amount">Collected</th><th class="amount">Outstanding</th><th class="count">Overdue loans</th><th class="rate">Collection rate</th></tr></thead><tbody>
+        <div class="table-caption">Product activity</div>
+        <table class="data"><thead><tr><th style="width:28%">Product</th><th class="count">Applications</th><th class="count">Originated</th><th class="count">Active</th><th class="count">Completed</th><th class="count">Overdue loans</th></tr></thead><tbody>
         @foreach($products as $product)
             <tr>
                 <td><strong>{{ $product['name'] }}</strong></td><td class="count">{{ $product['applications'] }}</td><td class="count">{{ $product['originated'] }}</td><td class="count">{{ $product['active'] }}</td><td class="count">{{ $product['completed'] }}</td>
-                <td class="amount">PHP {{ number_format($product['principal'], 2) }}</td><td class="amount">PHP {{ number_format($product['scheduled'], 2) }}</td><td class="amount">PHP {{ number_format($product['collected'], 2) }}</td><td class="amount">PHP {{ number_format($product['outstanding'], 2) }}</td><td class="count">{{ $product['overdue_loans'] }}</td><td class="rate">{{ number_format($product['collection_rate'], 2) }}%</td>
+                <td class="count">{{ $product['overdue_loans'] }}</td>
             </tr>
+        @endforeach
+        </tbody></table>
+        <div class="table-caption">Product finances (PHP)</div>
+        <table class="data"><thead><tr><th style="width:28%">Product</th><th class="amount">Principal</th><th class="amount">Scheduled</th><th class="amount">Collected</th><th class="amount">Outstanding</th><th class="rate">Collection rate</th></tr></thead><tbody>
+        @foreach($products as $product)
+            <tr><td><strong>{{ $product['name'] }}</strong></td><td class="amount">{{ number_format($product['principal'], 2) }}</td><td class="amount">{{ number_format($product['scheduled'], 2) }}</td><td class="amount">{{ number_format($product['collected'], 2) }}</td><td class="amount">{{ number_format($product['outstanding'], 2) }}</td><td class="rate">{{ number_format($product['collection_rate'], 2) }}%</td></tr>
         @endforeach
         </tbody></table>
     @endif
 </div>
 
-<div class="section">
+<div class="section break">
     <h2 class="section-heading">6. Monthly financial activity</h2>
     <div class="section-note">Six-month comparison of principal released and approved cash collections. Bar lengths share one PHP scale.</div>
     <div class="chart-card">
@@ -251,6 +269,6 @@
 </div>
 </div>
 
-<table class="page-footer"><tr><td>Inkcredible Lending | Business performance report</td><td class="center">Page <span class="page-number"></span></td><td class="right">Generated {{ $preparedAt->format('Y-m-d') }}</td></tr></table>
+@include('partials.pdf-footer', ['documentFooter' => 'Business performance report | '.$preparedAt->format('Y-m-d')])
 </body>
 </html>

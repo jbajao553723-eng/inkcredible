@@ -124,12 +124,21 @@
     .full-balance-button { min-height: 42px; }
 }
 
+@include('partials.client-workspace-styles')
+.workspace-grid { grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr); }
+.payment-summary-grid .stat-card { box-shadow:none; }
+.loan-card.active { background:#f5f7ff; }
+.balances-panel .loan-meta { line-height:1.5; }
+.history-header { padding:20px 22px; }
+.method-card { background:#fff; }
+@media(max-width:1080px) { .workspace-grid { grid-template-columns:1fr; } }
 </style>
 </head>
 
 <body>
 @php
     $payments = $payments ?? collect();
+    $loans = $loans->filter(fn ($loan) => $loan->status === 'approved' && $loan->getRemainingBalance() > 0)->values();
     $totalOutstanding = $loans->sum(fn ($loan) => $loan->getRemainingBalance());
     $totalPaid = $payments->where('status', 'approved')->sum('amount');
     $pendingCount = $payments->where('status', 'pending')->count();
@@ -147,6 +156,13 @@
             </div>
         </header>
 
+        <nav class="workspace-nav" aria-label="Payment sections">
+            <a class="nav-current" href="#make-payment" data-no-transition>Make a payment</a>
+            <a href="#active-balances" data-no-transition>Loan balances <span>{{ $loans->count() }}</span></a>
+            <a href="#payment-history" data-no-transition>History &amp; receipts <span>{{ $payments->count() }}</span></a>
+            <a href="{{ route('dashboard') }}">Back to overview &rarr;</a>
+        </nav>
+
         @if(session('success'))
             <div class="alert alert-success" role="status">{{ session('success') }}</div>
         @endif
@@ -161,7 +177,7 @@
             </div>
         @endif
 
-        <section class="stats-grid" aria-label="Payment summary">
+        <section class="stats-grid payment-summary-grid" aria-label="Payment summary">
             <article class="stat-card">
                 <div class="stat-head"><span class="stat-label">Outstanding balance</span><span class="stat-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 7h16v11H4zM4 10h16M8 15h3"/></svg></span></div>
                 <div class="stat-value">&#8369;{{ number_format($totalOutstanding, 2) }}</div>
@@ -185,7 +201,7 @@
         </section>
 
         <section class="workspace-grid">
-            <article class="panel">
+            <article class="panel" id="make-payment" style="scroll-margin-top:20px">
                 <div class="panel-header">
                     <div><h2 class="panel-title">Make a payment</h2><p class="panel-description">Choose an account, enter an amount, and select how you want to pay.</p></div>
                     <span class="badge badge-purple">Secure payment</span>
@@ -209,7 +225,7 @@
                                         @foreach($loans as $loan)
                                             @php
                                                 $loanName = $loan->loanType->display_name ?? $loan->loanType->name ?? 'Loan';
-                                                $nextSchedule = $loan->paymentSchedules->first(fn ($schedule) => $schedule->status !== 'paid');
+                                                $nextSchedule = $loan->paymentSchedules->sortBy('due_date')->first(fn ($schedule) => $schedule->status !== 'paid' && (float) $schedule->scheduled_amount + (float) $schedule->penalty_amount > (float) $schedule->paid_amount);
                                                 $nextAmount = $nextSchedule
                                                     ? max(0, (float) $nextSchedule->scheduled_amount + (float) $nextSchedule->penalty_amount - (float) $nextSchedule->paid_amount)
                                                     : $loan->getRemainingBalance();
@@ -219,7 +235,7 @@
                                                             data-installment="{{ number_format(min($nextAmount, $loan->getRemainingBalance()), 2, '.', '') }}"
                                                             data-code="{{ $loan->loan_code ?: 'Loan #'.$loan->id }}"
                                                             data-due="{{ $nextSchedule?->due_date?->format('M d, Y') ?? 'Not scheduled' }}"
-                                                            @selected((string) old('loan_id') === (string) $loan->id)>
+                                    @selected((string) old('loan_id', request()->query('loan')) === (string) $loan->id)>
                                                         {{ $loanName }} — &#8369;{{ number_format($loan->getRemainingBalance(), 2) }} remaining
                                                     </option>
                                         @endforeach
@@ -239,7 +255,7 @@
                                     <label class="form-label" for="payment-amount">Payment amount</label>
                                     <div class="amount-control">
                                         <div class="amount-input"><span>&#8369;</span><input type="number" step="0.01" min="0.01" name="amount" class="form-control" id="payment-amount" value="{{ old('amount') }}" placeholder="0.00" required></div>
-                                        <button class="full-balance-button" type="button" id="full-balance-button">Pay maximum</button>
+                                        <button class="full-balance-button" type="button" id="full-balance-button">Full balance</button>
                                     </div>
                                     <p class="form-help" id="amount-help">Select a loan to load its current outstanding balance.</p>
                                 </div>
@@ -250,11 +266,11 @@
                                 <div class="method-grid">
                                     <label class="method-option">
                                         <input type="radio" name="method" value="qrph" @checked(old('method', 'qrph') === 'qrph')>
-                                        <span class="method-card"><span class="method-logo">QR</span><span><span class="method-name">QR Ph</span><span class="method-note">Scan with a supported bank or e-wallet</span></span></span>
+                                        <span class="method-card"><span class="method-logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 3h6v6H3zM15 3h6v6h-6zM3 15h6v6H3zM15 15h3v3h3v3h-6zM12 3v9H3M12 15v6M18 12h3"/></svg></span><span><span class="method-name">QR Ph</span><span class="method-note">Scan in your bank or e-wallet app. Confirmation is automatic.</span></span></span>
                                     </label>
                                     <label class="method-option">
                                         <input type="radio" name="method" value="cash" @checked(old('method') === 'cash')>
-                                        <span class="method-card"><span class="method-logo cash">&#8369;</span><span><span class="method-name">Cash payment</span><span class="method-note">Requires payment proof</span></span></span>
+                                        <span class="method-card"><span class="method-logo cash">&#8369;</span><span><span class="method-name">Cash payment</span><span class="method-note">Upload your receipt. An administrator confirms the payment.</span></span></span>
                                     </label>
                                 </div>
                             </section>
@@ -268,16 +284,19 @@
                                 <input type="file" name="proof" class="proof-input" id="proof" accept="image/jpeg,image/png">
                             </section>
 
+                            <div class="payment-review" aria-live="polite"><div><div class="payment-review-label">You are submitting</div><strong id="review-payment-amount">&#8369;0.00</strong><small id="review-payment-account">Select a loan account</small></div><div><div class="payment-review-label">Payment method</div><strong id="review-payment-method">QR Ph</strong></div></div>
+                            <div class="payment-error" id="payment-error" role="alert" hidden></div>
                             <button type="submit" class="submit-button" id="submit-payment">
                                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5 12h14m-5-5 5 5-5 5"/></svg>
                                 <span>Continue to secure payment</span>
                             </button>
+                            <p class="payment-guidance" id="payment-guidance">QR Ph opens a secure PayMongo window. Your balance updates once the payment is confirmed.</p>
                         </form>
                     @endif
                 </div>
             </article>
 
-            <aside class="panel balances-panel">
+            <aside class="panel balances-panel" id="active-balances" style="scroll-margin-top:20px">
                 <div class="panel-header"><div><h2 class="panel-title">Active balances</h2><p class="panel-description">Select a balance to load it into the payment form.</p></div><span class="history-count">{{ $loans->count() }} active</span></div>
                 <div class="panel-body">
                     <div class="loan-list">
@@ -286,7 +305,7 @@
                                 $loanTotal = (float) $loan->getTotalWithPenalty();
                                 $loanRemaining = (float) $loan->getRemainingBalance();
                                 $loanProgress = $loanTotal > 0 ? min(100, max(0, ((float) $loan->paid_amount / $loanTotal) * 100)) : 100;
-                                $nextSchedule = $loan->paymentSchedules->first(fn ($schedule) => $schedule->status !== 'paid');
+                                $nextSchedule = $loan->paymentSchedules->sortBy('due_date')->first(fn ($schedule) => $schedule->status !== 'paid' && (float) $schedule->scheduled_amount + (float) $schedule->penalty_amount > (float) $schedule->paid_amount);
                                 $isOverdue = $loan->paymentSchedules->contains(fn ($schedule) => $schedule->status === 'overdue');
                             @endphp
                             <button class="loan-card" type="button" data-loan-choice="{{ $loan->id }}" aria-label="Select {{ $loan->loanType->display_name ?? $loan->loanType->name ?? 'loan' }} for payment">
@@ -310,7 +329,7 @@
             </aside>
         </section>
 
-        <section class="panel history-panel">
+        <section class="panel history-panel payment-history" id="payment-history" data-record-list>
             <div class="history-header">
                 <div><h2 class="panel-title">Payment history</h2><p class="panel-description">Newest transactions appear first. Times are shown in Philippine Time.</p></div>
                 <span class="history-count">{{ $payments->count() }} {{ Str::plural('record', $payments->count()) }}</span>
@@ -319,6 +338,11 @@
             @if($payments->isEmpty())
                 <div class="empty-state"><strong>No payment history yet</strong>Your submitted payments will appear here with their date and time.</div>
             @else
+                <div class="record-toolbar">
+                    <div class="record-search"><label for="payment-history-search">Find a transaction</label><input id="payment-history-search" type="search" placeholder="Search reference, loan, date, or method" data-record-search></div>
+                    <div class="record-status"><label for="payment-history-status">Status</label><select id="payment-history-status" data-record-status><option value="">All payments</option><option value="approved">Confirmed</option><option value="pending">Pending</option><option value="rejected">Rejected</option></select></div>
+                    <p class="record-count" data-record-count role="status" aria-live="polite">{{ $payments->count() }} records</p>
+                </div>
                 <div class="table-wrap">
                     <table>
                         <thead><tr><th>Reference</th><th>Loan</th><th>Date &amp; time</th><th>Method</th><th>Status</th><th>Amount</th><th>Receipt</th></tr></thead>
@@ -333,19 +357,20 @@
                                         default => 'badge-neutral',
                                     };
                                 @endphp
-                                <tr>
-                                    <td><div class="transaction-ref" title="{{ $payment->reference }}">{{ $payment->reference ?: 'Pending reference' }}</div><div class="cell-secondary">Transaction #{{ $payment->id }}</div></td>
-                                    <td><div>{{ $payment->loan?->loanType?->display_name ?? $payment->loan?->loanType?->name ?? 'Loan' }}</div><div class="cell-secondary">{{ $payment->loan?->loan_code ?: 'Loan #'.$payment->loan_id }}</div></td>
-                                    <td><div>{{ $paymentTime?->format('M d, Y') ?? '—' }}</div><div class="cell-secondary">{{ $paymentTime?->format('h:i A') ?? '' }} PHT · {{ $payment->paid_at ? 'Confirmed' : 'Submitted' }}</div></td>
-                                    <td>{{ $payment->method_label }}</td>
-                                    <td><span class="badge {{ $statusClass }}">{{ ucfirst($payment->status) }}</span></td>
-                                    <td class="amount">&#8369;{{ number_format($payment->amount, 2) }}</td>
-                                    <td><a class="receipt-link" href="{{ route('payments.receipt', $payment) }}" download="payment-receipt-{{ $payment->id }}.pdf" data-no-transition>Download PDF</a></td>
+                                <tr data-record-row data-record-status-value="{{ $payment->status }}">
+                                    <td data-label="Reference"><div class="transaction-ref" title="{{ $payment->reference }}">{{ $payment->reference ?: 'Pending reference' }}</div><div class="cell-secondary">Transaction #{{ $payment->id }}</div></td>
+                                    <td data-label="Loan"><div>{{ $payment->loan?->loanType?->display_name ?? $payment->loan?->loanType?->name ?? 'Loan' }}</div><div class="cell-secondary">{{ $payment->loan?->loan_code ?: 'Loan #'.$payment->loan_id }}</div></td>
+                                    <td data-label="Date"><div>{{ $paymentTime?->format('M d, Y') ?? '—' }}</div><div class="cell-secondary">{{ $paymentTime?->format('h:i A') ?? '' }} PHT · {{ $payment->paid_at ? 'Confirmed' : 'Submitted' }}</div></td>
+                                    <td data-label="Method">{{ $payment->method_label }}</td>
+                                    <td data-label="Status"><span class="badge {{ $statusClass }}">{{ $payment->status === 'approved' ? 'Confirmed' : ucfirst($payment->status) }}</span></td>
+                                    <td class="amount" data-label="Amount">&#8369;{{ number_format($payment->amount, 2) }}</td>
+                                    <td data-label="Download"><a class="receipt-link" href="{{ route('payments.receipt', $payment) }}" download="payment-receipt-{{ $payment->id }}.pdf" data-no-transition>{{ $payment->status === 'approved' ? 'Receipt PDF' : 'Status PDF' }}</a></td>
                                 </tr>
                             @endforeach
                         </tbody>
                     </table>
                 </div>
+                <div class="record-empty" data-record-empty hidden>No transactions match your search. Try another reference or status.</div>
             @endif
         </section>
     </div>
@@ -386,6 +411,11 @@ const paymentProgress = document.getElementById('payment-progress');
 const paymentProgressState = document.getElementById('payment-progress-state');
 const paymentProgressOpen = document.getElementById('payment-progress-open');
 const paymentProgressCancel = document.getElementById('payment-progress-cancel');
+const paymentError = document.getElementById('payment-error');
+const reviewAmount = document.getElementById('review-payment-amount');
+const reviewAccount = document.getElementById('review-payment-account');
+const reviewMethod = document.getElementById('review-payment-method');
+const paymentGuidance = document.getElementById('payment-guidance');
 let checkoutWindow = null;
 let activeCheckoutUrl = null;
 let activeStatusUrl = null;
@@ -417,7 +447,11 @@ function syncSelectedLoan() {
     const hasLoan = Boolean(selectedLoan?.dataset.balance);
 
     accountPreview.hidden = !hasLoan;
-    loanCards.forEach((card) => card.classList.toggle('active', card.dataset.loanChoice === loanSelect.value));
+    loanCards.forEach((card) => {
+        const selected = card.dataset.loanChoice === loanSelect.value;
+        card.classList.toggle('active', selected);
+        card.setAttribute('aria-pressed', String(selected));
+    });
 
     if (!hasLoan) return;
 
@@ -435,6 +469,7 @@ function syncPaymentAmount(resetAmount = false) {
         amountInput.removeAttribute('max');
         fullBalanceButton.disabled = true;
         amountHelp.textContent = 'Select a loan to load its current outstanding balance.';
+        syncPaymentReview();
         return;
     }
 
@@ -442,6 +477,7 @@ function syncPaymentAmount(resetAmount = false) {
     const maximum = selectedMethod() === 'cash' ? balance : Math.min(balance, 100000);
     amountInput.max = maximum.toFixed(2);
     fullBalanceButton.disabled = false;
+    fullBalanceButton.textContent = maximum < balance ? 'Online maximum' : 'Full balance';
 
     if (resetAmount || !amountInput.value) {
         amountInput.value = Math.min(Number(selectedLoan.dataset.installment), maximum).toFixed(2);
@@ -450,7 +486,19 @@ function syncPaymentAmount(resetAmount = false) {
     }
 
     amountHelp.textContent = `Next scheduled payment: ${peso(selectedLoan.dataset.installment)} · Outstanding balance: ${peso(balance)}${maximum < balance ? ' · Online limit: ₱100,000.00 per transaction' : ''}`;
+    syncPaymentReview();
 }
+
+function syncPaymentReview() {
+    const option = selectedLoanOption();
+    reviewAmount.textContent = peso(amountInput.value || 0);
+    reviewAccount.textContent = option?.dataset.code || 'Select a loan account';
+    reviewMethod.textContent = selectedMethod() === 'cash' ? 'Cash' : 'QR Ph';
+    paymentGuidance.textContent = selectedMethod() === 'cash'
+        ? 'Only submit a cash payment you have already made. Upload the receipt; your balance updates after administrator confirmation.'
+        : 'QR Ph opens a secure PayMongo window. Your balance updates once the payment is confirmed.';
+}
+amountInput.addEventListener('input', syncPaymentReview);
 
 function syncPaymentMethod() {
     const method = selectedMethod();
@@ -471,11 +519,13 @@ methodInputs.forEach((input) => input.addEventListener('change', syncPaymentMeth
 loanCards.forEach((card) => card.addEventListener('click', () => {
     loanSelect.value = card.dataset.loanChoice;
     loanSelect.dispatchEvent(new Event('change'));
-    loanSelect.focus();
+    document.getElementById('make-payment').scrollIntoView({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    loanSelect.focus({ preventScroll: true });
 }));
 fullBalanceButton.addEventListener('click', () => {
     if (!amountInput.max) return;
     amountInput.value = Number(amountInput.max).toFixed(2);
+    syncPaymentReview();
     amountInput.focus();
 });
 proofInput.addEventListener('change', () => {
@@ -533,6 +583,7 @@ paymentProgressCancel.addEventListener('click', () => {
 });
 
 paymentForm.addEventListener('submit', async function (event) {
+    paymentError.hidden = true;
     const isCash = selectedMethod() === 'cash';
 
     if (isCash) {
@@ -588,7 +639,8 @@ paymentForm.addEventListener('submit', async function (event) {
         paymentProgress.close();
         submitButton.disabled = false;
         submitButton.querySelector('span').textContent = `Continue with ${selectedMethodLabel()}`;
-        window.alert(error.message || 'Unable to start the secure payment.');
+        paymentError.textContent = error.message || 'Unable to start the secure payment. Please try again.';
+        paymentError.hidden = false;
     }
 });
 

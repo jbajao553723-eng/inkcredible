@@ -38,16 +38,36 @@ h1 { margin:19px 0 3px; font-size:19px; text-align:center; }
 .signature-name { margin-top:4px; font-weight:bold; }
 .signature-role,.signature-time { color:#667085; font-size:8px; }
 .footer { position:fixed; right:0; bottom:-24px; left:0; color:#98a2b3; font-size:7.5px; text-align:center; }
+@include('partials.pdf-styles')
+.section-title { color:#172033; border-bottom-color:#d7dce4; }
+.reference { background:#f8fafc; border-color:#d7dce4; color:#344054; }
+.financials th { background:#172033; color:#fff; }
+.financials .total td { background:#f2f4f7; color:#172033; }
+.details { table-layout:fixed; }
+.details td { word-wrap:break-word; }
+.signature-section { margin-top:18px; padding:12px; background:#fafbfc; border:1px solid #d7dce4; }
+.signature-cell { height:92px; }
+.signature-image { width:150px; height:45px; }
+body { font-size:9px; line-height:1.4; }
+.document-header { margin-bottom:12px; padding-bottom:10px; }
+.document-title { font-size:21px; }
+.document-subtitle { margin-bottom:10px; font-size:8px; }
+.section { margin-top:10px; }
+.details td { padding:5px 7px; }
+.financials td { padding:5px 8px; }
+.terms li { margin-bottom:3px; }
+.signature-section { margin-top:12px; padding:8px; }
+.signature-cell { height:80px; }
 </style>
 </head>
 <body>
-<table class="header"><tr>
-<td style="width:62px">@if(! empty($logoDataUri))<img class="logo" src="{{ $logoDataUri }}" alt="Inkcredible Lending logo">@endif</td>
-<td class="brand"><strong>Inkcredible Lending</strong><span>LENDING MANAGEMENT SYSTEM</span></td>
-<td class="meta">LOAN AGREEMENT<br>Issued {{ $loan->contract_sent_at?->timezone('Asia/Manila')->format('F j, Y') }}</td>
-</tr></table>
-<h1>Loan Agreement</h1>
-<p class="subtitle">Please review every provision and retain a downloaded copy for your records.</p>
+@include('partials.pdf-header', [
+    'documentReference' => $loan->loan_code ?: 'LOAN-'.$loan->id,
+    'documentDate' => $loan->contract_sent_at?->timezone('Asia/Manila')->format('M d, Y - h:i A') ?? 'Issue date unavailable',
+    'documentCategory' => 'Lending agreement',
+    'documentTitle' => 'Loan agreement',
+    'documentSubtitle' => 'Review the financial disclosure and acknowledgements before signing. Retain a copy for your records.',
+])
 <div class="reference">Contract reference: {{ $loan->loan_code ?: 'LOAN-'.$loan->id }}</div>
 
 <div class="section"><h2 class="section-title">Parties and loan account</h2><table class="details">
@@ -89,6 +109,6 @@ h1 { margin:19px 0 3px; font-size:19px; text-align:center; }
 </td><td style="width:4%"></td>
 </tr></table></div>
 
-<div class="footer">Inkcredible Lending · CM Recto St., Davao City · Contract {{ $loan->loan_code ?: '#'.$loan->id }} · Generated {{ now('Asia/Manila')->format('F j, Y g:i A') }} PHT</div>
+@include('partials.pdf-footer', ['documentFooter' => 'Agreement '.($loan->loan_code ?: '#'.$loan->id).' | Generated '.now('Asia/Manila')->format('Y-m-d')])
 </body>
 </html>

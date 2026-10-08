@@ -30,7 +30,7 @@ document.addEventListener('click', async (event) => {
     event.preventDefault();
     event.stopImmediatePropagation();
 
-    const originalText = link.textContent;
+    if (link.getAttribute('aria-busy') === 'true') return;
     link.setAttribute('aria-busy', 'true');
     link.classList.add('is-loading');
 
@@ -44,6 +44,9 @@ document.addEventListener('click', async (event) => {
         });
 
         if (!response.ok) throw new Error(`Download failed with status ${response.status}`);
+        if (response.headers.get('Content-Type')?.includes('text/html')) {
+            throw new Error('Your session may have expired. Sign in again, then retry the download.');
+        }
 
         const blobUrl = URL.createObjectURL(await response.blob());
         const download = document.createElement('a');
@@ -58,11 +61,12 @@ document.addEventListener('click', async (event) => {
         download.remove();
         window.setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
     } catch (error) {
-        window.alert('The file could not be downloaded. Please try again.');
+        window.alert(error.message.startsWith('Your session')
+            ? error.message
+            : 'The file could not be downloaded. Please try again.');
         console.error(error);
     } finally {
         link.removeAttribute('aria-busy');
         link.classList.remove('is-loading');
-        if (originalText !== null) link.textContent = originalText;
     }
 }, true);

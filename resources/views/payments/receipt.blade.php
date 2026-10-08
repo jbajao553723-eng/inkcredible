@@ -30,6 +30,18 @@ body { margin:0; color:#172033; font-family:DejaVu Sans,sans-serif; font-size:10
 .details td:last-child { font-weight:bold; text-align:right; }
 .notice { margin-top:20px; padding:12px 14px; color:#475467; background:#f8fafc; border-left:4px solid #d71920; }
 .footer { position:fixed; right:0; bottom:-18px; left:0; color:#98a2b3; font-size:8px; text-align:center; }
+@include('partials.pdf-styles')
+.amount { padding:22px; background:#172033; border:0; text-align:left; }
+.amount-label { color:#d0d5dd; }
+.amount-value { color:#fff; font-size:34px; }
+.amount .status { margin-top:5px; }
+.details { table-layout:fixed; }
+.details td { padding:12px 10px; word-wrap:break-word; }
+.details td:first-child { width:33%; }
+.details td:last-child { text-align:left; }
+.section-title { color:#172033; }
+.receipt-reference { margin-top:16px; padding:12px; border:1px solid #d7dce4; }
+.receipt-reference strong { display:block; margin-top:3px; word-wrap:break-word; }
 </style>
 </head>
 <body>
@@ -40,16 +52,15 @@ body { margin:0; color:#172033; font-family:DejaVu Sans,sans-serif; font-size:10
     $reference = $payment->provider_reference ?: $payment->reference ?: 'Payment #'.$payment->id;
     $statusClass = in_array($payment->status, ['pending', 'rejected'], true) ? $payment->status : '';
 @endphp
-<table class="header"><tr>
-<td style="width:62px">@if($logoDataUri)<img class="logo" src="{{ $logoDataUri }}" alt="Inkcredible Lending logo">@endif</td>
-<td class="brand"><strong>Inkcredible Lending</strong><span>LENDING MANAGEMENT SYSTEM</span></td>
-<td class="meta">RECEIPT #{{ str_pad((string) $payment->id, 8, '0', STR_PAD_LEFT) }}<br>{{ $paidAt?->format('F j, Y · g:i A') }} PHT</td>
-</tr></table>
-<h1 class="title">Official Payment Receipt</h1>
-<p class="subtitle">Payment record for {{ $loan?->loan_code ?: 'Loan #'.$payment->loan_id }}</p>
+@include('partials.pdf-header', [
+    'documentReference' => 'RCPT-'.str_pad((string) $payment->id, 8, '0', STR_PAD_LEFT),
+    'documentDate' => $paidAt?->format('M d, Y - h:i A') ?? 'Date unavailable',
+    'documentCategory' => 'Payment records',
+    'documentTitle' => $payment->status === 'approved' ? 'Payment receipt' : 'Payment status record',
+    'documentSubtitle' => 'Account: '.($loan?->loan_code ?: 'Loan #'.$payment->loan_id).' | Keep a copy for your records.',
+])
 <div class="amount"><div class="amount-label">Amount</div><div class="amount-value">PHP {{ number_format((float) $payment->amount, 2) }}</div><span class="status {{ $statusClass }}">{{ strtoupper($payment->status) }}</span></div>
 <div class="section"><h2 class="section-title">Transaction details</h2><table class="details">
-<tr><td>Reference number</td><td>{{ $reference }}</td></tr>
 <tr><td>Transaction ID</td><td>#{{ $payment->id }}</td></tr>
 <tr><td>Payment date</td><td>{{ $paidAt?->format('F j, Y · g:i A') ?? 'Date unavailable' }} PHT</td></tr>
 <tr><td>Payment method</td><td>{{ $payment->method_label }}</td></tr>
@@ -60,7 +71,8 @@ body { margin:0; color:#172033; font-family:DejaVu Sans,sans-serif; font-size:10
 <tr><td>Loan account</td><td>{{ $loan?->loan_code ?: 'Loan #'.$payment->loan_id }}</td></tr>
 <tr><td>Loan product</td><td>{{ $loan?->loanType?->display_name ?? $loan?->loanType?->name ?? 'Loan' }}</td></tr>
 </table></div>
+<div class="receipt-reference"><span class="amount-label" style="color:#667085">Transaction reference</span><strong>{{ $reference }}</strong></div>
 <div class="notice">@if($payment->status === 'approved')This payment was confirmed and applied to the associated loan account. Keep this receipt for your records.@elseif($payment->status === 'pending')This payment is awaiting confirmation and is not proof of final settlement.@else This payment was rejected, and no amount was applied to the associated loan account.@endif</div>
-<div class="footer">Inkcredible Lending · CM Recto St., Davao City · Generated {{ now('Asia/Manila')->format('F j, Y g:i A') }} PHT</div>
+@include('partials.pdf-footer', ['documentFooter' => 'Payment #'.$payment->id.' | Generated '.now('Asia/Manila')->format('Y-m-d h:i A').' PHT'])
 </body>
 </html>

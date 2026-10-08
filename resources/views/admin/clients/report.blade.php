@@ -57,24 +57,29 @@
         .page-footer .center { text-align: center; }
         .page-footer .right { text-align: right; }
         .page-number:before { content: counter(page); }
+        @include('partials.pdf-styles')
+        .metrics { width:100%; margin:0; border-spacing:5px; }
+        .metric-value { color:#172033; font-size:11px; }
+        .section-heading { color:#172033; font-size:12px; }
+        .loan-title { background:#172033; }
+        .data th { background:#f0f3f7; font-size:7px; }
+        .data td { padding:7px 6px; }
+        .loan-summary .value { font-size:8px; }
+        .loan-history { page-break-before:auto; margin-top:22px; }
+        .loan + .loan { page-break-before:always; margin-top:0; }
+        .loan-title,.subheading { page-break-after:avoid; }
+        .privacy { background:#f8fafc; border-color:#d7dce4; }
     </style>
 </head>
 <body>
-<table class="masthead">
-    <tr>
-        <td>
-            <div class="brand">Inkcredible Lending</div>
-            <h1>Client Account Report</h1>
-            <div class="header-subtitle">A plain-language summary of the client's account and lending activity</div>
-        </td>
-        <td class="report-meta">
-            <span class="confidential">CONFIDENTIAL</span><br>
-            Report ID: ICR-{{ str_pad((string) $client->id, 6, '0', STR_PAD_LEFT) }}<br>
-            Prepared: {{ $preparedAt->format('M d, Y - h:i A') }} PHT<br>
-            Currency: Philippine Peso (PHP)
-        </td>
-    </tr>
-</table>
+@include('partials.pdf-header', [
+    'documentReference' => 'ICR-'.str_pad((string) $client->id, 6, '0', STR_PAD_LEFT),
+    'documentDate' => $preparedAt->format('M d, Y - h:i A'),
+    'documentClassification' => 'Confidential - authorized account review',
+    'documentCategory' => 'Client records',
+    'documentTitle' => 'Client account report',
+    'documentSubtitle' => 'Personal information, verification, loan accounts, and repayment activity. All amounts are in PHP.',
+])
 
 <div class="section">
     <h2 class="section-heading">1. Client information</h2>
@@ -256,6 +261,6 @@
     @endforelse
 </div>
 
-<table class="page-footer"><tr><td>Inkcredible Lending | Client report ICR-{{ str_pad((string) $client->id, 6, '0', STR_PAD_LEFT) }}</td><td class="center">Page <span class="page-number"></span></td><td class="right">Generated {{ $preparedAt->format('Y-m-d') }}</td></tr></table>
+@include('partials.pdf-footer', ['documentFooter' => 'Confidential client account report | '.$preparedAt->format('Y-m-d')])
 </body>
 </html>

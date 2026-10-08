@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <title>Dashboard | Inkcredible</title>
+<link rel="icon" type="image/png" href="{{ asset('images/inkcredible-logo.png') }}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -128,6 +129,15 @@
     .dashboard-table td::before { display: block; margin-bottom: 7px; color: #98a2b3; content: attr(data-label); font-size: 9px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
     .dashboard-table .progress-track { width: 100%; }
 }
+@include('partials.client-workspace-styles')
+.overview-grid { margin-bottom:24px; }
+.balance-card { background:linear-gradient(125deg,#172033,#34317e); box-shadow:0 10px 24px rgba(23,32,51,.12); }
+.stats-grid { gap:14px; }
+.stat-card::after { display:none; }
+.stat-card { box-shadow:none; }
+.dashboard-panel .panel-header { padding:20px 22px; }
+.dashboard-table td { padding-top:18px; padding-bottom:18px; }
+.readiness-panel { box-shadow:none; }
 </style>
 @vite('resources/js/app.js')
 </head>
@@ -146,7 +156,7 @@
         ->first();
     $nextLoan = $nextSchedule ? $approvedLoans->firstWhere('id', $nextSchedule->loan_id) : null;
     $nextAmount = $nextSchedule
-        ? max(0, (float) $nextSchedule->scheduled_amount - (float) $nextSchedule->paid_amount)
+        ? max(0, (float) $nextSchedule->scheduled_amount + (float) $nextSchedule->penalty_amount - (float) $nextSchedule->paid_amount)
         : 0;
     $nextDueDate = $nextSchedule?->due_date
         ? \Carbon\Carbon::parse($nextSchedule->due_date)->timezone('Asia/Manila')->startOfDay()
@@ -181,6 +191,7 @@
         'rejected' => 'Needs update',
         default => 'Incomplete',
     };
+    $contractsToSign = $loans->filter(fn ($loan) => $loan->status === 'pending' && $loan->contract_sent_at && ! $loan->signed_contract_path);
 @endphp
 
 @include('partials.client-sidebar', ['active' => 'dashboard'])
@@ -231,7 +242,18 @@
             </div>
         @endif
 
-        <div class="dashboard-section-head"><div><h2>Financial overview</h2><p>Live account information based on your current loan and payment records.</p></div><span class="dashboard-section-tag">Updated now</span></div>
+        <nav class="workspace-nav" aria-label="Dashboard sections">
+            <a class="nav-current" href="#dashboard-overview" data-no-transition>Overview</a>
+            <a href="#dashboard-loans" data-no-transition>My loans <span>{{ $loans->count() }}</span></a>
+            <a href="#dashboard-payments" data-no-transition>Recent payments</a>
+            <a href="#dashboard-profile" data-no-transition>Credit profile</a>
+            <a href="{{ route('payments.index') }}#payment-history">Receipts &amp; history</a>
+        </nav>
+        @if($contractsToSign->isNotEmpty())
+            <section class="action-banner" aria-label="Contract action required"><div><strong>{{ $contractsToSign->count() }} {{ Str::plural('agreement', $contractsToSign->count()) }} ready to review</strong><p>Your loan needs a signed agreement before final approval. Review the terms and apply your verified signature.</p></div><a class="button button-primary" href="{{ route('loan.contract.show', $contractsToSign->first()) }}">Review agreement &rarr;</a></section>
+        @endif
+
+        <div class="dashboard-section-head" id="dashboard-overview"><div><h2>Financial overview</h2><p>Balances, due dates, and account status at a glance.</p></div><span class="dashboard-section-tag">Current records</span></div>
         <section class="stats-grid" aria-label="Account summary">
             <article class="stat-card">
                 <div class="stat-head"><span class="stat-label">Account verification</span><span class="stat-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3.5 19 6v5c0 4.5-2.8 7.8-7 9.5C7.8 18.8 5 15.5 5 11V6zM9 11.5l2 2 4-4"/></svg></span></div>
@@ -280,7 +302,7 @@
                 <div class="next-amount">@if($nextSchedule)&#8369;{{ number_format($nextAmount, 2) }}@else Nothing due @endif</div>
                 <div class="next-date">{{ $nextDueDate?->format('M d, Y') ?? 'You are all caught up' }}</div>
                 <div class="next-note">@if($nextSchedule){{ $nextLoan?->loanType?->display_name ?? $nextLoan?->loanType?->name ?? 'Loan' }} &middot; {{ $nextLoan?->loan_code ?: 'Loan #'.$nextSchedule->loan_id }} &middot; Installment {{ $nextSchedule->installment_number }}@else Your next due date will appear after a repayment schedule is created. @endif</div>
-                @if($nextSchedule)<a class="panel-link next-action" href="{{ route('payments.index') }}">Pay this installment &rarr;</a>@endif
+                @if($nextSchedule)<a class="panel-link next-action" href="{{ route('payments.index', ['loan' => $nextSchedule->loan_id]) }}">Pay this installment &rarr;</a>@endif
             </article>
         </section>
 
@@ -298,7 +320,7 @@
             };
             $paymentHistoryCount = $riskProfile['earlyPayments'] + $riskProfile['onTimePayments'] + $riskProfile['latePayments'];
         @endphp
-        <div class="dashboard-section-head"><div><h2>Credit profile</h2><p>{{ $riskProfile['isAssessed'] ? 'See which verified behaviors improve your approval readiness.' : 'Complete verification before your approval readiness is assessed.' }}</p></div><span class="dashboard-section-tag">Behavior based</span></div>
+        <div class="dashboard-section-head" id="dashboard-profile"><div><h2>Credit profile</h2><p>{{ $riskProfile['isAssessed'] ? 'See which verified behaviors improve your approval readiness.' : 'Complete verification before your approval readiness is assessed.' }}</p></div><span class="dashboard-section-tag">Behavior based</span></div>
         <section class="panel readiness-panel" aria-labelledby="readiness-title">
             <div class="readiness-score {{ $riskProfile['isAssessed'] ? '' : 'is-pending' }}">
                 @if($riskProfile['isAssessed'])
@@ -327,7 +349,7 @@
 
         <div class="dashboard-section-head"><div><h2>Account activity</h2><p>Track applications and confirmed payments without leaving your dashboard.</p></div><span class="dashboard-section-tag">Recent records</span></div>
         <div class="section-stack">
-            <section class="panel dashboard-panel">
+            <section class="panel dashboard-panel" id="dashboard-loans" data-record-list>
                 <div class="panel-header">
                     <div><h2 class="panel-title">My loans</h2><p class="panel-description">Balances and repayment progress for every application.</p></div>
                     <a class="panel-link" href="{{ route('loan.create') }}">Request a loan &rarr;</a>
@@ -335,9 +357,14 @@
                 @if($loans->isEmpty())
                     <div class="empty-state"><strong>No loans yet</strong>Start a loan request when you are ready.</div>
                 @else
+                    <div class="record-toolbar">
+                        <div class="record-search"><label for="dashboard-loan-search">Find a loan</label><input id="dashboard-loan-search" type="search" placeholder="Search reference, product, or purpose" data-record-search></div>
+                        <div class="record-status"><label for="dashboard-loan-status">Status</label><select id="dashboard-loan-status" data-record-status><option value="">All loans</option><option value="approved">Active</option><option value="pending">Pending</option><option value="paid">Paid</option><option value="rejected">Rejected</option></select></div>
+                        <p class="record-count" data-record-count role="status" aria-live="polite">{{ $loans->count() }} records</p>
+                    </div>
                     <div class="table-wrap">
                         <table class="dashboard-table">
-                            <thead><tr><th>Loan</th><th>Principal</th><th>Total payable</th><th>Remaining</th><th>Progress</th><th>Status</th></tr></thead>
+                            <thead><tr><th>Loan</th><th>Principal</th><th>Total payable</th><th>Remaining</th><th>Progress</th><th>Status</th><th>Actions</th></tr></thead>
                             <tbody>
                                 @foreach($loans as $loan)
                                     @php
@@ -353,22 +380,30 @@
                                             default => 'badge-neutral',
                                         };
                                     @endphp
-                                    <tr>
+                                    <tr data-record-row data-record-status-value="{{ $loan->status }}">
                                         <td data-label="Loan"><div class="cell-title">{{ $loan->loanType?->display_name ?? $loan->loanType?->name ?? 'Loan' }}</div><span class="loan-code">{{ $loan->loan_code ?: 'Loan #'.$loan->id }}</span>@if($loan->purpose)<div class="cell-secondary">Purpose: {{ $loan->purpose }}</div>@endif</td>
                                         <td class="amount" data-label="Principal">&#8369;{{ number_format($loan->amount, 2) }}</td>
                                         <td data-label="Total payable">&#8369;{{ number_format($total, 2) }}</td>
-                                        <td data-label="Remaining">@if($remaining <= 0)Fully paid @else &#8369;{{ number_format($remaining, 2) }} @endif</td>
-                                        <td data-label="Repayment progress"><div class="progress-track"><div class="progress-bar" style="width: {{ $progress }}%"></div></div><div class="progress-value">{{ number_format($progress) }}% paid</div></td>
+                                        <td data-label="Remaining">@if(in_array($loan->status, ['pending','rejected'], true))<span class="cell-secondary">Not in repayment</span>@elseif($remaining <= 0)Fully paid @else &#8369;{{ number_format($remaining, 2) }} @endif</td>
+                                        <td data-label="Repayment progress">@if(in_array($loan->status, ['approved','paid'], true))<div class="progress-track"><div class="progress-bar" style="width: {{ $progress }}%"></div></div><div class="progress-value">{{ number_format($progress) }}% paid</div>@else<span class="cell-secondary">Not started</span>@endif</td>
                                         <td data-label="Status"><span class="badge {{ $loanStatusClass }}">{{ ucfirst($loan->status) }}</span>@if($loan->status === 'pending' && $loan->contract_sent_at)<a class="contract-link" href="{{ route('loan.contract.show', $loan) }}">{{ $loan->signed_contract_path ? 'View submitted contract' : 'Review and sign contract' }} &rarr;</a>@endif @if($loan->status === 'rejected' && $loan->rejection_reason)<div class="rejection-reason"><strong>Reason:</strong> {{ $loan->rejection_reason }}</div>@endif</td>
+                                        @if($loan->status === 'approved' || $loan->contract_sent_at)
+                                            <td data-label="Actions"><div class="row-actions">
+                                                @if($loan->status === 'approved' && $remaining > 0)<a class="row-action" href="{{ route('payments.index', ['loan' => $loan->id]) }}">Make payment</a>@endif
+                                                @if($loan->contract_sent_at)<a class="row-action" href="{{ route('loan.contract.download', $loan) }}" download data-no-transition>Agreement PDF</a>@endif
+                                                @if($loan->signed_contract_path)<a class="row-action" href="{{ route('loan.contract.signed.download', $loan) }}" download data-no-transition>Signed copy</a>@endif
+                                            </div></td>
+                                        @else<td data-label="Actions"><span class="cell-secondary">No action needed</span></td>@endif
                                     </tr>
                                 @endforeach
                             </tbody>
                         </table>
                     </div>
+                    <div class="record-empty" data-record-empty hidden>No loans match your search. Try another reference or status.</div>
                 @endif
             </section>
 
-            <section class="panel dashboard-panel">
+            <section class="panel dashboard-panel" id="dashboard-payments">
                 <div class="panel-header">
                     <div><h2 class="panel-title">Recent payments</h2><p class="panel-description">Your five latest payment transactions in Philippine Time.</p></div>
                     <a class="panel-link" href="{{ route('payments.index') }}">View all payments &rarr;</a>
@@ -378,7 +413,7 @@
                 @else
                     <div class="table-wrap">
                         <table class="dashboard-table">
-                            <thead><tr><th>Reference</th><th>Loan</th><th>Date &amp; time</th><th>Method</th><th>Status</th><th>Amount</th></tr></thead>
+                            <thead><tr><th>Reference</th><th>Loan</th><th>Date &amp; time</th><th>Method</th><th>Status</th><th>Amount</th><th>Receipt</th></tr></thead>
                             <tbody>
                                 @foreach($recentPayments as $payment)
                                     @php
@@ -397,6 +432,7 @@
                                         <td data-label="Method">{{ $payment->method_label }}</td>
                                         <td data-label="Status"><span class="badge {{ $paymentStatusClass }}">{{ ucfirst($payment->status) }}</span></td>
                                         <td class="amount" data-label="Amount">&#8369;{{ number_format($payment->amount, 2) }}</td>
+                                        <td data-label="Receipt"><a class="row-action" href="{{ route('payments.receipt', $payment) }}" download data-no-transition>{{ $payment->status === 'approved' ? 'Receipt PDF' : 'Status PDF' }}</a></td>
                                     </tr>
                                 @endforeach
                             </tbody>
