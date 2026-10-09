@@ -1,4 +1,5 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
+import './responsive-workspace';
 import Modal from 'bootstrap/js/dist/modal';
 import './ui-motion';
 import './file-downloads';

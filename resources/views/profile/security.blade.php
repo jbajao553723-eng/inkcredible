@@ -13,16 +13,16 @@
 .email-verification-body { display:grid; grid-template-columns:48px minmax(0,1fr) auto; gap:15px; align-items:center; }
 .email-verification-icon { display:grid; place-items:center; width:48px; height:48px; color:#4f46e5; background:#eef2ff; border:1px solid #d9d6fe; border-radius:13px; }
 .email-verification-icon svg { width:22px; height:22px; }
-.email-verification-copy strong { display:block; color:#344054; font-size:13px; }
-.email-verification-copy span { display:block; margin-top:5px; color:#667085; font-size:10px; line-height:1.55; overflow-wrap:anywhere; }
-.email-verification-meta { padding:9px 11px; color:#067647; background:#ecfdf3; border:1px solid #abefc6; border-radius:10px; font-size:10px; font-weight:700; white-space:nowrap; }
+.email-verification-copy strong { display:block; color:#344054; font-size:0.8125rem; }
+.email-verification-copy span { display:block; margin-top:5px; color:#667085; font-size:0.625rem; line-height:1.55; overflow-wrap:anywhere; }
+.email-verification-meta { padding:9px 11px; color:#067647; background:#ecfdf3; border:1px solid #abefc6; border-radius:10px; font-size:0.625rem; font-weight:700; white-space:nowrap; }
 .two-factor-card { border-color:#d9d6fe; }
 .two-factor-body { display:grid; grid-template-columns:minmax(0,1fr) minmax(260px,.7fr); gap:22px; align-items:start; }
 .two-factor-copy { display:grid; grid-template-columns:48px minmax(0,1fr); gap:15px; align-items:start; }
-.two-factor-copy strong { display:block; color:#344054; font-size:13px; }
-.two-factor-copy p { margin:6px 0 0; color:#667085; font-size:10px; line-height:1.6; }
+.two-factor-copy strong { display:block; color:#344054; font-size:0.8125rem; }
+.two-factor-copy p { margin:6px 0 0; color:#667085; font-size:0.625rem; line-height:1.6; }
 .two-factor-points { display:grid; gap:7px; margin:13px 0 0; padding:0; list-style:none; }
-.two-factor-points li { color:#475467; font-size:10px; }
+.two-factor-points li { color:#475467; font-size:0.625rem; }
 .two-factor-points li::before { margin-right:7px; color:#12b76a; font-weight:800; content:'\2713'; }
 .two-factor-form { padding:15px; background:#f8fafc; border:1px solid #e4e7ec; border-radius:11px; }
 .two-factor-form .save-button { width:100%; }

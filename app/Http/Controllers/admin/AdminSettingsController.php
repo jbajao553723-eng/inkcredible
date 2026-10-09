@@ -88,12 +88,14 @@ class AdminSettingsController extends Controller
     {
         $request->validateWithBag('motion', [
             'reduce_motion' => ['nullable', 'boolean'],
+            'text_size' => ['sometimes', 'required', 'in:small,normal,large,extra-large'],
         ]);
 
         $request->user()->forceFill([
             'ui_preferences' => [
                 ...($request->user()->ui_preferences ?? []),
                 'reduce_motion' => $request->boolean('reduce_motion'),
+                'text_size' => $request->input('text_size', data_get($request->user()->ui_preferences, 'text_size', 'normal')),
             ],
         ])->save();
 

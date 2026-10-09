@@ -12,9 +12,9 @@
 @include('partials.motion-styles')
 .recovery-icon { display:grid; place-items:center; width:48px; height:48px; margin-bottom:20px; color:#4f46e5; background:#eef2ff; border:1px solid #d9d6fe; border-radius:14px; box-shadow:0 8px 18px rgba(79,70,229,.08); }
 .recovery-icon svg { width:23px; height:23px; }
-.password-guidance { margin:4px 0 18px; padding:12px 14px; color:#475467; background:#f8fafc; border:1px solid #eaecf0; border-radius:10px; font-size:10px; line-height:1.6; }
-.password-guidance strong { display:block; margin-bottom:3px; color:#344054; font-size:11px; }
-.back-link { display:inline-flex; align-items:center; justify-content:center; gap:7px; margin-top:22px; color:#475467; font-size:12px; font-weight:600; text-decoration:none; }
+.password-guidance { margin:4px 0 18px; padding:12px 14px; color:#475467; background:#f8fafc; border:1px solid #eaecf0; border-radius:10px; font-size:0.625rem; line-height:1.6; }
+.password-guidance strong { display:block; margin-bottom:3px; color:#344054; font-size:0.6875rem; }
+.back-link { display:inline-flex; align-items:center; justify-content:center; gap:7px; margin-top:22px; color:#475467; font-size:0.75rem; font-weight:600; text-decoration:none; }
 .back-link:hover { color:#4338ca; }
 .back-link svg { width:15px; height:15px; }
 </style>

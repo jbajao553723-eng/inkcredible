@@ -10,37 +10,37 @@
 @include('partials.admin-styles')
 .payment-hero { display:grid; grid-template-columns:minmax(240px,.75fr) minmax(0,1.25fr); margin-bottom:22px; overflow:hidden; border-color:#d9d6fe; box-shadow:0 10px 28px rgba(79,70,229,.07); }
 .payment-hero-main { padding:26px; color:#fff; background:linear-gradient(135deg,#3730a3,#4f46e5 62%,#7c3aed); }
-.payment-hero-label { color:#c7d2fe; font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
-.payment-hero-amount { margin-top:8px; font-size:32px; font-weight:700; letter-spacing:-.04em; }
-.payment-hero-status { display:inline-flex; align-items:center; gap:7px; margin-top:13px; padding:6px 9px; color:#fff; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.2); border-radius:999px; font-size:10px; font-weight:700; }
+.payment-hero-label { color:#c7d2fe; font-size:0.625rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+.payment-hero-amount { margin-top:8px; font-size:2rem; font-weight:700; letter-spacing:-.04em; }
+.payment-hero-status { display:inline-flex; align-items:center; gap:7px; margin-top:13px; padding:6px 9px; color:#fff; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.2); border-radius:999px; font-size:0.625rem; font-weight:700; }
 .payment-hero-status::before { width:7px; height:7px; background:currentColor; border-radius:50%; content:''; }
 .payment-hero-facts { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); align-items:center; background:#fff; }
 .payment-hero-fact { min-width:0; padding:20px; border-left:1px solid #eaecf0; }
-.payment-hero-fact span { display:block; color:#667085; font-size:9px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; }
-.payment-hero-fact strong { display:block; margin-top:7px; color:#344054; font-size:12px; line-height:1.4; overflow-wrap:anywhere; }
+.payment-hero-fact span { display:block; color:#667085; font-size:0.5625rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase; }
+.payment-hero-fact strong { display:block; margin-top:7px; color:#344054; font-size:0.75rem; line-height:1.4; overflow-wrap:anywhere; }
 .payment-review-layout { display:grid; grid-template-columns:minmax(0,1fr) 360px; gap:22px; align-items:start; }
 .payment-main-stack,.payment-side-stack { display:grid; gap:18px; }
 .payment-side-stack { position:sticky; top:24px; }
 .overview-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 24px; }
 .client-card { display:flex; align-items:center; gap:13px; padding:15px; background:#f8fafc; border:1px solid #eaecf0; border-radius:12px; }
-.client-avatar { display:grid; place-items:center; width:42px; height:42px; flex:0 0 42px; color:#4338ca; background:#eef2ff; border-radius:12px; font-size:14px; font-weight:700; }
-.client-copy { min-width:0; }.client-copy strong { display:block; font-size:13px; }.client-copy span { display:block; margin-top:3px; color:#667085; font-size:10px; overflow-wrap:anywhere; }
+.client-avatar { display:grid; place-items:center; width:42px; height:42px; flex:0 0 42px; color:#4338ca; background:#eef2ff; border-radius:12px; font-size:0.875rem; font-weight:700; }
+.client-copy { min-width:0; }.client-copy strong { display:block; font-size:0.8125rem; }.client-copy span { display:block; margin-top:3px; color:#667085; font-size:0.625rem; overflow-wrap:anywhere; }
 .loan-summary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; margin-top:12px; }
 .loan-summary-item { min-width:0; padding:12px; background:#f8fafc; border-radius:10px; }
-.loan-summary-item span { display:block; color:#667085; font-size:9px; text-transform:uppercase; }.loan-summary-item strong { display:block; margin-top:5px; color:#344054; font-size:11px; overflow-wrap:anywhere; }
+.loan-summary-item span { display:block; color:#667085; font-size:0.5625rem; text-transform:uppercase; }.loan-summary-item strong { display:block; margin-top:5px; color:#344054; font-size:0.6875rem; overflow-wrap:anywhere; }
 .technical-details { border-top:1px solid #eaecf0; }
-.technical-details summary { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 22px; color:#475467; cursor:pointer; font-size:11px; font-weight:600; list-style:none; }
-.technical-details summary::-webkit-details-marker { display:none; }.technical-details summary::after { content:'+'; font-size:17px; }.technical-details[open] summary::after { content:'−'; }
+.technical-details summary { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 22px; color:#475467; cursor:pointer; font-size:0.6875rem; font-weight:600; list-style:none; }
+.technical-details summary::-webkit-details-marker { display:none; }.technical-details summary::after { content:'+'; font-size:1.0625rem; }.technical-details[open] summary::after { content:'−'; }
 .technical-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; padding:0 22px 20px; }
-.technical-item { min-width:0; padding:11px; background:#f8fafc; border-radius:9px; }.technical-item span { display:block; color:#667085; font-size:9px; }.technical-item code { display:block; margin-top:5px; color:#344054; font-family:inherit; font-size:10px; overflow-wrap:anywhere; }
+.technical-item { min-width:0; padding:11px; background:#f8fafc; border-radius:9px; }.technical-item span { display:block; color:#667085; font-size:0.5625rem; }.technical-item code { display:block; margin-top:5px; color:#344054; font-family:inherit; font-size:0.625rem; overflow-wrap:anywhere; }
 .proof-panel .panel-body { padding:16px; }.proof-image { max-height:270px; }
 .proof-actions { display:grid; margin-top:10px; }.proof-actions .button { width:100%; }
 .decision-panel { border-color:#fedf89; box-shadow:0 9px 24px rgba(220,104,3,.08); }
 .decision-panel .panel-header { background:#fffcf5; border-bottom-color:#fef0c7; }
-.decision-note { display:flex; gap:9px; margin-bottom:14px; color:#854a0e; font-size:10px; line-height:1.5; }.decision-note svg { width:16px; height:16px; flex:0 0 16px; }
+.decision-note { display:flex; gap:9px; margin-bottom:14px; color:#854a0e; font-size:0.625rem; line-height:1.5; }.decision-note svg { width:16px; height:16px; flex:0 0 16px; }
 .decision-actions { display:grid; grid-template-columns:1fr 1fr; gap:9px; }.decision-actions .button { width:100%; min-height:42px; }
-.automation-note { display:flex; gap:10px; padding:14px; color:#05603a; background:#ecfdf3; border:1px solid #abefc6; border-radius:10px; font-size:10px; line-height:1.5; }.automation-note svg { width:17px; height:17px; flex:0 0 17px; }
-.status-timeline { display:grid; gap:13px; }.timeline-row { display:flex; gap:10px; color:#667085; font-size:10px; line-height:1.45; }.timeline-dot { width:9px; height:9px; flex:0 0 9px; margin-top:3px; background:#c7d2fe; border:2px solid #eef2ff; border-radius:50%; box-sizing:content-box; }.timeline-row.current .timeline-dot { background:#6366f1; }.timeline-row strong { display:block; color:#344054; font-size:11px; }
+.automation-note { display:flex; gap:10px; padding:14px; color:#05603a; background:#ecfdf3; border:1px solid #abefc6; border-radius:10px; font-size:0.625rem; line-height:1.5; }.automation-note svg { width:17px; height:17px; flex:0 0 17px; }
+.status-timeline { display:grid; gap:13px; }.timeline-row { display:flex; gap:10px; color:#667085; font-size:0.625rem; line-height:1.45; }.timeline-dot { width:9px; height:9px; flex:0 0 9px; margin-top:3px; background:#c7d2fe; border:2px solid #eef2ff; border-radius:50%; box-sizing:content-box; }.timeline-row.current .timeline-dot { background:#6366f1; }.timeline-row strong { display:block; color:#344054; font-size:0.6875rem; }
 @media(max-width:1100px){.payment-review-layout{grid-template-columns:1fr}.payment-side-stack{position:static;grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:760px){.payment-hero{grid-template-columns:1fr}.payment-hero-facts{grid-template-columns:1fr 1fr 1fr}.payment-side-stack{grid-template-columns:1fr}.overview-grid,.technical-grid{grid-template-columns:1fr}.loan-summary{grid-template-columns:1fr 1fr 1fr}}
 @media(max-width:520px){.payment-hero-facts,.loan-summary,.decision-actions{grid-template-columns:1fr}.payment-hero-fact{border-left:0;border-top:1px solid #eaecf0}}

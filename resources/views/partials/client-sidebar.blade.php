@@ -9,8 +9,10 @@
 @endphp
 
 <a class="skip-link" href="#main-content">Skip to main content</a>
-<aside class="sidebar">
+@include('partials.mobile-navigation', ['mobileDashboard' => route('dashboard')])
+<aside class="sidebar" id="workspace-navigation" aria-label="Client workspace navigation">
     <div class="sidebar-inner">
+        <button class="mobile-menu-dismiss" type="button" data-mobile-menu-close aria-label="Close navigation menu">Close <span aria-hidden="true">&times;</span></button>
         <a class="sidebar-brand" href="{{ route('dashboard') }}" aria-label="Inkcredible client dashboard">
             <x-brand-mark />
             <span class="brand-copy"><strong>Inkcredible</strong><small>Client workspace</small></span>

@@ -12,9 +12,9 @@
 @include('partials.motion-styles')
 .recovery-icon { display:grid; place-items:center; width:48px; height:48px; margin-bottom:20px; color:#4f46e5; background:#eef2ff; border:1px solid #d9d6fe; border-radius:14px; box-shadow:0 8px 18px rgba(79,70,229,.08); }
 .recovery-icon svg { width:23px; height:23px; }
-.recovery-note { display:flex; gap:10px; margin:20px 0 0; padding:13px 14px; color:#475467; background:#f8fafc; border:1px solid #eaecf0; border-radius:10px; font-size:11px; line-height:1.55; }
+.recovery-note { display:flex; gap:10px; margin:20px 0 0; padding:13px 14px; color:#475467; background:#f8fafc; border:1px solid #eaecf0; border-radius:10px; font-size:0.6875rem; line-height:1.55; }
 .recovery-note svg { width:17px; height:17px; flex:0 0 17px; color:#667085; }
-.back-link { display:inline-flex; align-items:center; justify-content:center; gap:7px; margin-top:22px; color:#475467; font-size:12px; font-weight:600; text-decoration:none; }
+.back-link { display:inline-flex; align-items:center; justify-content:center; gap:7px; margin-top:22px; color:#475467; font-size:0.75rem; font-weight:600; text-decoration:none; }
 .back-link:hover { color:#4338ca; }
 .back-link svg { width:15px; height:15px; }
 </style>

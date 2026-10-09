@@ -9,10 +9,10 @@
 <style>
 @include('partials.admin-styles')
 .client-tabs { display:flex; gap:6px; margin-bottom:22px; padding:6px; width:max-content; max-width:100%; background:#eef1f6; border-radius:12px; }
-.client-tab { display:flex; align-items:center; gap:8px; min-height:40px; padding:9px 14px; color:#475467; border-radius:8px; font-size:12px; font-weight:600; text-decoration:none; }
+.client-tab { display:flex; align-items:center; gap:8px; min-height:40px; padding:9px 14px; color:#475467; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; }
 .client-tab:hover { color:#344054; background:#f8fafc; }
 .client-tab.active { color:#4338ca; background:#fff; box-shadow:0 1px 3px rgba(16,24,40,.12); }
-.tab-count { display:inline-flex; align-items:center; justify-content:center; min-width:21px; height:21px; padding:0 6px; color:#475467; background:#e9edf3; border-radius:999px; font-size:10px; }
+.tab-count { display:inline-flex; align-items:center; justify-content:center; min-width:21px; height:21px; padding:0 6px; color:#475467; background:#e9edf3; border-radius:999px; font-size:0.625rem; }
 .client-tab.active .tab-count { color:#4338ca; background:#eef2ff; }
 .client-photo { object-fit:cover; box-shadow:0 0 0 2px #fff,0 0 0 3px #e4e7ec; }
 .client-panel[hidden] { display:none; }

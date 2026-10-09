@@ -10,8 +10,10 @@
 @endphp
 
 <a class="skip-link" href="#main-content">Skip to main content</a>
-<aside class="sidebar">
+@include('partials.mobile-navigation', ['mobileDashboard' => $isSuperAdmin ? route('admin.security.dashboard') : route('admin.dashboard')])
+<aside class="sidebar" id="workspace-navigation" aria-label="Administrator workspace navigation">
     <div class="sidebar-inner">
+        <button class="mobile-menu-dismiss" type="button" data-mobile-menu-close aria-label="Close navigation menu">Close <span aria-hidden="true">&times;</span></button>
         <a class="sidebar-brand" href="{{ $isSuperAdmin ? route('admin.security.dashboard') : route('admin.dashboard') }}" aria-label="Inkcredible {{ $isSuperAdmin ? 'security' : 'admin' }} dashboard">
             <x-brand-mark />
             <span class="brand-copy"><strong>Inkcredible</strong><small>{{ $isSuperAdmin ? 'Security workspace' : 'Admin workspace' }}</small></span>

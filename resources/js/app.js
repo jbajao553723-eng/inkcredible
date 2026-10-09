@@ -1,4 +1,5 @@
 import './bootstrap';
+import './responsive-workspace';
 import './ui-motion';
 import './file-downloads';
 import './client-records';

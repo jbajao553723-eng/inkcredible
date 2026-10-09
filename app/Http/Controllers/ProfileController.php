@@ -50,7 +50,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * Display motion accessibility settings.
+     * Display accessibility settings.
      */
     public function motion(Request $request): View
     {
@@ -60,18 +60,20 @@ class ProfileController extends Controller
     }
 
     /**
-     * Update the client's motion accessibility setting.
+     * Update the client's accessibility settings.
      */
     public function updateMotion(Request $request): RedirectResponse
     {
         $request->validate([
             'reduce_motion' => ['nullable', 'boolean'],
+            'text_size' => ['sometimes', 'required', 'in:small,normal,large,extra-large'],
         ]);
 
         $request->user()->forceFill([
             'ui_preferences' => [
                 ...($request->user()->ui_preferences ?? []),
                 'reduce_motion' => $request->boolean('reduce_motion'),
+                'text_size' => $request->input('text_size', data_get($request->user()->ui_preferences, 'text_size', 'normal')),
             ],
         ])->save();
 

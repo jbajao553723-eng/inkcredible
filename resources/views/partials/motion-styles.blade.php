@@ -1,4 +1,12 @@
-html { scroll-behavior: smooth; }
+@php
+    $textScale = match (data_get(auth()->user()?->ui_preferences, 'text_size', 'normal')) {
+        'small' => .875,
+        'large' => 1.125,
+        'extra-large' => 1.25,
+        default => 1,
+    };
+@endphp
+html { --app-text-scale:{{ $textScale }}; font-size:calc(16px * var(--app-text-scale)); scroll-behavior: smooth; }
 
 body {
     animation: motion-first-paint .68s ease-out 45ms backwards;

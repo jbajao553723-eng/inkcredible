@@ -12,20 +12,20 @@
 @include('partials.motion-styles')
 .otp-icon { display:grid; place-items:center; width:52px; height:52px; margin-bottom:20px; color:#4f46e5; background:#eef2ff; border:1px solid #d9d6fe; border-radius:15px; box-shadow:0 8px 18px rgba(79,70,229,.09); }
 .otp-icon svg { width:25px; height:25px; }
-.otp-input { height:58px; padding:10px 18px; font-size:24px; font-weight:700; letter-spacing:.42em; text-align:center; font-variant-numeric:tabular-nums; }
+.otp-input { height:58px; padding:10px 18px; font-size:1.5rem; font-weight:700; letter-spacing:.42em; text-align:center; font-variant-numeric:tabular-nums; }
 .otp-input::placeholder { color:#d0d5dd; letter-spacing:.35em; }
-.otp-meta { display:flex; align-items:center; justify-content:space-between; gap:14px; margin:8px 0 22px; color:#667085; font-size:10px; }
+.otp-meta { display:flex; align-items:center; justify-content:space-between; gap:14px; margin:8px 0 22px; color:#667085; font-size:0.625rem; }
 .otp-meta span { display:inline-flex; align-items:center; gap:6px; }
 .otp-meta svg { width:14px; height:14px; }
-.resend-row { display:flex; align-items:center; justify-content:center; gap:5px; margin-top:20px; color:#667085; font-size:11px; }
+.resend-row { display:flex; align-items:center; justify-content:center; gap:5px; margin-top:20px; color:#667085; font-size:0.6875rem; }
 .resend-form { margin:0; }
-.resend-button { padding:0; color:#4f46e5; background:transparent; border:0; font-size:11px; font-weight:700; cursor:pointer; }
+.resend-button { padding:0; color:#4f46e5; background:transparent; border:0; font-size:0.6875rem; font-weight:700; cursor:pointer; }
 .resend-button:hover { color:#4338ca; text-decoration:underline; }
-.resend-button:disabled { color:#98a2b3; cursor:wait; text-decoration:none; }.resend-row { flex-wrap:wrap; }.resend-help { margin:10px 0 0; color:#667085; font-size:11px; line-height:1.5; text-align:center; }
-.back-link { display:flex; align-items:center; justify-content:center; gap:7px; margin-top:20px; color:#475467; font-size:12px; font-weight:600; text-decoration:none; }
+.resend-button:disabled { color:#98a2b3; cursor:wait; text-decoration:none; }.resend-row { flex-wrap:wrap; }.resend-help { margin:10px 0 0; color:#667085; font-size:0.6875rem; line-height:1.5; text-align:center; }
+.back-link { display:flex; align-items:center; justify-content:center; gap:7px; margin-top:20px; color:#475467; font-size:0.75rem; font-weight:600; text-decoration:none; }
 .back-link:hover { color:#4338ca; }
 .back-link svg { width:15px; height:15px; }
-@media(max-width:420px){.otp-input{font-size:21px;letter-spacing:.32em}.otp-meta{align-items:flex-start;flex-direction:column;gap:7px}}
+@media(max-width:420px){.otp-input{font-size:1.3125rem;letter-spacing:.32em}.otp-meta{align-items:flex-start;flex-direction:column;gap:7px}}
 </style>
 @vite('resources/js/app.js')
 </head>

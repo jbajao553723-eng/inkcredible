@@ -524,7 +524,7 @@ const enableScrollProgress = () => {
 };
 
 const enableDynamicMotion = () => {
-    if (!('MutationObserver' in window)) return;
+    if (!('MutationObserver' in window) || !document.body) return;
 
     const animate = (element) => {
         if (!(element instanceof Element) || prefersReducedMotion()) return;

@@ -12,18 +12,18 @@
 @include('partials.motion-styles')
 .otp-icon { display:grid; place-items:center; width:52px; height:52px; margin-bottom:20px; color:#4f46e5; background:#eef2ff; border:1px solid #d9d6fe; border-radius:15px; box-shadow:0 8px 18px rgba(79,70,229,.09); }
 .otp-icon svg { width:25px; height:25px; }
-.otp-input { height:58px; padding:10px 18px; font-size:24px; font-weight:700; letter-spacing:.42em; text-align:center; font-variant-numeric:tabular-nums; }
+.otp-input { height:58px; padding:10px 18px; font-size:1.5rem; font-weight:700; letter-spacing:.42em; text-align:center; font-variant-numeric:tabular-nums; }
 .otp-input::placeholder { color:#d0d5dd; letter-spacing:.35em; }
-.otp-meta { display:flex; align-items:center; justify-content:space-between; gap:14px; margin:8px 0 22px; color:#667085; font-size:10px; }
+.otp-meta { display:flex; align-items:center; justify-content:space-between; gap:14px; margin:8px 0 22px; color:#667085; font-size:0.625rem; }
 .otp-meta span { display:inline-flex; align-items:center; gap:6px; }
 .otp-meta svg { width:14px; height:14px; }
-.resend-row { display:flex; align-items:center; justify-content:center; gap:5px; margin-top:20px; color:#667085; font-size:11px; }
+.resend-row { display:flex; align-items:center; justify-content:center; gap:5px; margin-top:20px; color:#667085; font-size:0.6875rem; }
 .inline-form { display:inline; margin:0; }
 .text-button { padding:0; color:#4f46e5; background:transparent; border:0; font:inherit; font-weight:700; cursor:pointer; }
 .text-button:hover { color:#4338ca; text-decoration:underline; }
-.session-row { display:flex; align-items:center; justify-content:center; gap:8px; margin-top:20px; color:#98a2b3; font-size:11px; }
+.session-row { display:flex; align-items:center; justify-content:center; gap:8px; margin-top:20px; color:#98a2b3; font-size:0.6875rem; }
 .session-row .text-button { color:#475467; }
-@media(max-width:420px){.otp-input{font-size:21px;letter-spacing:.32em}.otp-meta{align-items:flex-start;flex-direction:column;gap:7px}}
+@media(max-width:420px){.otp-input{font-size:1.3125rem;letter-spacing:.32em}.otp-meta{align-items:flex-start;flex-direction:column;gap:7px}}
 </style>
 @vite('resources/js/app.js')
 </head>

@@ -8,29 +8,29 @@
 @vite('resources/js/admin.js')
 <style>
 @include('partials.admin-styles')
-textarea { width:100%; min-height:96px; padding:11px; color:#344054; border:1px solid #d0d5dd; border-radius:9px; resize:vertical; font:inherit; font-size:12px; }
+textarea { width:100%; min-height:96px; padding:11px; color:#344054; border:1px solid #d0d5dd; border-radius:9px; resize:vertical; font:inherit; font-size:0.75rem; }
 textarea:focus { outline:none; border-color:#818cf8; box-shadow:0 0 0 3px rgba(99,102,241,.1); }
 .review-identity { display:grid; grid-template-columns:auto minmax(0,1fr) minmax(185px,.38fr); gap:20px; align-items:center; margin-bottom:22px; padding:22px; border-color:#dfe3ea; box-shadow:0 8px 24px rgba(16,24,40,.045); }
-.review-photo { display:grid; place-items:center; width:86px; height:86px; overflow:hidden; color:#4338ca; background:linear-gradient(145deg,#eef2ff,#e0e7ff); border:4px solid #fff; border-radius:20px; box-shadow:0 6px 18px rgba(16,24,40,.12); font-size:24px; font-weight:700; }
+.review-photo { display:grid; place-items:center; width:86px; height:86px; overflow:hidden; color:#4338ca; background:linear-gradient(145deg,#eef2ff,#e0e7ff); border:4px solid #fff; border-radius:20px; box-shadow:0 6px 18px rgba(16,24,40,.12); font-size:1.5rem; font-weight:700; }
 .review-photo img { width:100%; height:100%; object-fit:cover; }
-.review-kicker { color:#6366f1; font-size:9px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
-.review-name { margin:5px 0 0; font-size:20px; letter-spacing:-.025em; }
-.review-contact { display:flex; gap:8px 16px; margin-top:10px; color:#667085; font-size:10px; flex-wrap:wrap; }
-.review-address { margin-top:8px; color:#98a2b3; font-size:10px; line-height:1.45; }
+.review-kicker { color:#6366f1; font-size:0.5625rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+.review-name { margin:5px 0 0; font-size:1.25rem; letter-spacing:-.025em; }
+.review-contact { display:flex; gap:8px 16px; margin-top:10px; color:#667085; font-size:0.625rem; flex-wrap:wrap; }
+.review-address { margin-top:8px; color:#98a2b3; font-size:0.625rem; line-height:1.45; }
 .review-account { display:grid; gap:10px; padding-left:20px; border-left:1px solid #f2f4f7; }
 .review-account-row { display:flex; justify-content:space-between; gap:12px; }
-.review-account-row span { color:#98a2b3; font-size:9px; }
-.review-account-row strong { color:#344054; font-size:10px; font-weight:600; text-align:right; }
+.review-account-row span { color:#98a2b3; font-size:0.5625rem; }
+.review-account-row strong { color:#344054; font-size:0.625rem; font-weight:600; text-align:right; }
 .document-card { display:block; padding:16px; color:#344054; background:#f9fafb; border:1px solid var(--border); border-radius:12px; text-decoration:none; }
 .document-card:hover { border-color:#c7d2fe; }
 .document-card strong { display:block; margin-bottom:5px; }
-.privacy-note { padding:14px; color:#344054; background:#f8fafc; border:1px solid var(--border); border-radius:10px; font-size:11px; line-height:1.55; }
+.privacy-note { padding:14px; color:#344054; background:#f8fafc; border:1px solid var(--border); border-radius:10px; font-size:0.6875rem; line-height:1.55; }
 .signature-review { padding:14px; background:#fff; border:1px solid #d9d6fe; border-radius:12px; text-align:center; }
 .signature-review img { width:100%; height:72px; object-fit:contain; }
-.signature-review span { display:block; margin-top:7px; color:#667085; font-size:9px; }
+.signature-review span { display:block; margin-top:7px; color:#667085; font-size:0.5625rem; }
 .decision-body { display:grid; gap:16px; }
 .decision-reason { display:grid; gap:7px; }
-.decision-help { margin:0; color:var(--muted); font-size:11px; line-height:1.45; }
+.decision-help { margin:0; color:var(--muted); font-size:0.6875rem; line-height:1.45; }
 .decision-actions { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; padding-top:2px; }
 .decision-actions .button { width:100%; min-height:42px; }
 @media (max-width:760px) { .review-identity { grid-template-columns:auto minmax(0,1fr); } .review-account { grid-column:1/-1; padding:16px 0 0; border-top:1px solid #f2f4f7; border-left:0; } }
@@ -82,7 +82,7 @@ textarea:focus { outline:none; border-color:#818cf8; box-shadow:0 0 0 3px rgba(9
         <article class="stat-card"><div class="stat-label">Monthly income</div><div class="stat-value">PHP {{ number_format((float) $verification->monthly_income, 2) }}</div><div class="stat-note">Client-declared amount</div></article>
         <article class="stat-card"><div class="stat-label">Employment length</div><div class="stat-value">{{ $verification->employment_length_months }}</div><div class="stat-note">Months declared</div></article>
         <article class="stat-card"><div class="stat-label">Existing loans</div><div class="stat-value">{{ $loanCount }}</div><div class="stat-note">Loans attached to this client</div></article>
-        <article class="stat-card"><div class="stat-label">Submitted</div><div class="stat-value" style="font-size:18px">{{ $submitted?->format('M d, Y') }}</div><div class="stat-note">{{ $submitted?->format('h:i A') }} PHT</div></article>
+        <article class="stat-card"><div class="stat-label">Submitted</div><div class="stat-value" style="font-size:1.125rem">{{ $submitted?->format('M d, Y') }}</div><div class="stat-note">{{ $submitted?->format('h:i A') }} PHT</div></article>
     </section>
 
     <div class="detail-layout">
