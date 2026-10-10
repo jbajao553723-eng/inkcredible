@@ -17,6 +17,7 @@
         .report-meta { width: 34%; color: #d0d5dd; line-height: 1.65; text-align: right; }
         .confidential { display: inline-block; margin-bottom: 4px; padding: 3px 7px; color: #fff; background: #4f46e5; border-radius: 8px; font-size: 6px; font-weight: bold; letter-spacing: .5px; }
         .scope { padding: 8px 10px; color: #475467; background: #f8fafc; border: 1px solid #e4e7ec; border-radius: 4px; }
+        .download-attribution { margin: 0 0 10px; padding: 7px 10px; color: #344054; background: #f8fafc; border-left: 3px solid #b91c1c; overflow-wrap: break-word; }
         .section { margin-top: 12px; }
         .section.break { page-break-before: always; margin-top: 0; }
         .section-heading { margin: 0 0 6px; padding-bottom: 5px; color: #101828; border-bottom: 1px solid #d0d5dd; font-size: 10px; }
@@ -129,6 +130,8 @@
     'documentTitle' => 'Business performance report',
     'documentSubtitle' => 'Portfolio, collections, credit risk, and operational controls. All recorded activity; amounts in PHP.',
 ])
+
+<div class="download-attribution"><strong>Downloaded by:</strong> {{ $downloadedByName ?? 'Administrator' }}</div>
 
 <div class="scope"><strong>Reporting basis:</strong> This report uses approved payment records as the collection ledger, approved and paid loans as the originated portfolio, and installment schedules for penalty and overdue exposure. Pending and rejected transactions are excluded from recognized collections.</div>
 

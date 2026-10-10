@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Services\BusinessReportService;
 use App\Services\PdfBranding;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -39,10 +40,11 @@ class ClientReportController extends Controller
         return view('admin.reports.index', compact('clients', 'stats', 'business'));
     }
 
-    public function downloadBusiness(BusinessReportService $businessReport, PdfBranding $branding): Response
+    public function downloadBusiness(Request $request, BusinessReportService $businessReport, PdfBranding $branding): Response
     {
         $report = $businessReport->generate();
         $report['logoDataUri'] = $branding->logoDataUri();
+        $report['downloadedByName'] = $request->user()->name;
         $preparedAt = $report['preparedAt'];
         $filename = 'business-report-'.$preparedAt->format('Ymd').'.pdf';
 

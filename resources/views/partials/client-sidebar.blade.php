@@ -41,11 +41,7 @@
 
             <div class="nav-section">
                 <div class="nav-label">Account</div>
-                <a class="nav-link {{ request()->routeIs('profile.verification.*') ? 'active' : '' }}" href="{{ route('profile.verification.edit') }}" @if(request()->routeIs('profile.verification.*')) aria-current="page" @endif>
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3 20 6v6c0 4-4 7-8 9-4-2-8-5-8-9V6zM8 12l3 3 5-6"/></svg>
-                    <span>Verification</span>
-                </a>
-                <a class="nav-link {{ $active === 'settings' && ! request()->routeIs('profile.verification.*') ? 'active' : '' }}" href="{{ route('profile.edit') }}" @if($active === 'settings' && ! request()->routeIs('profile.verification.*')) aria-current="page" @endif>
+                <a class="nav-link {{ $active === 'settings' ? 'active' : '' }}" href="{{ route('profile.edit') }}" @if($active === 'settings') aria-current="page" @endif>
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3" stroke-width="1.8"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5 20c.5-4.5 2.8-7 7-7s6.5 2.5 7 7"/></svg>
                     <span>Settings</span>
                 </a>
